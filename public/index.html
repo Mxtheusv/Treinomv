@@ -1230,6 +1230,11 @@
   .sa-tier-progress-track { height: 6px; border-radius: 999px; background: rgba(var(--sa-tint-rgb),.14); margin-top: 14px; overflow: hidden; }
   .sa-tier-progress-fill { height: 100%; border-radius: 999px; }
   .sa-tier-progress-note { font-size: 11px; color: var(--sa-text-muted); margin-top: 8px; font-weight: 600; }
+  .sa-micro-bar { background: var(--sa-panel); border: 1px solid var(--sa-border); border-radius: 14px; padding: 12px 14px; margin: 12px 0 14px; }
+  .sa-micro-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 13px; color: var(--sa-text-muted); font-weight: 600; }
+  .sa-micro-top b { color: var(--sa-text); font-family: "Saira Condensed", sans-serif; font-size: 18px; }
+  .sa-micro-track { margin-top: 8px; }
+  .sa-micro-note { font-size: 11px; color: var(--sa-text-muted); margin-top: 6px; font-weight: 600; }
 
   /* ---------- Atividade livre (registro manual, mantém a sequência em dias
      sem treino do plano -- corrida de fim de semana e afins) ---------- */
@@ -9392,6 +9397,47 @@ function startApp() {
     }
     return SA_STREAK_TIERS[SA_STREAK_TIERS.length - 1];
   }
+  // ---------- Microciclo (blocos de 28 dias contados a partir do início do plano) ----------
+  // A barra embaixo de "Microciclo N" mostra quantos dias desse bloco já foram treinados.
+  var SA_MICRO_DIAS = 28;
+  function saMicrocicloInfo(s, plan) {
+    var base;
+    if (plan && plan.startDate && /^\d{4}-\d{2}-\d{2}/.test(plan.startDate)) { var p = plan.startDate.split("-"); base = new Date(+p[0], +p[1] - 1, +p[2]); }
+    else base = new Date((plan && plan.createdAt) || Date.now());
+    base = new Date(base.getFullYear(), base.getMonth(), base.getDate());
+    var hoje = new Date(); hoje = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
+    var dias = Math.max(0, Math.round((hoje - base) / 86400000));
+    var ciclo = Math.floor(dias / SA_MICRO_DIAS);
+    var inicio = new Date(base.getFullYear(), base.getMonth(), base.getDate() + ciclo * SA_MICRO_DIAS);
+    var set = saAllActiveDatesSet(s), feitos = 0;
+    for (var i = 0; i < SA_MICRO_DIAS; i++) {
+      var d = new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate() + i);
+      if (d > hoje) break;
+      if (set[isoFromDate(d)]) feitos++;
+    }
+    return { feitos: feitos, total: SA_MICRO_DIAS, dia: dias - ciclo * SA_MICRO_DIAS + 1, pct: Math.round(feitos / SA_MICRO_DIAS * 100) };
+  }
+  function microcicloBarHtml(s, plan) {
+    if (!plan) return "";
+    var m = saMicrocicloInfo(s, plan);
+    return '<div class="sa-micro-bar">' +
+      '<div class="sa-micro-top"><span>Dia ' + m.dia + ' de ' + m.total + ' do microciclo</span><b>' + m.pct + '%</b></div>' +
+      '<div class="sa-tier-progress-track sa-micro-track"><div class="sa-tier-progress-fill" style="width:' + m.pct + '%;background:linear-gradient(90deg,var(--sa-teal),#ffc247)"></div></div>' +
+      '<div class="sa-micro-note">' + m.feitos + ' dia' + (m.feitos === 1 ? "" : "s") + ' treinado' + (m.feitos === 1 ? "" : "s") + ' neste ciclo</div>' +
+      '</div>';
+  }
+
+  // ---------- Ilustração do tipo de treino (card de sequência) ----------
+  // Musculação mostra um halter; corrida mostra uma pessoa correndo. Vale o último treino do mês.
+  var SA_ICONE_HALTER = '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="gt-halter" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#FF5A1F"></stop><stop offset="1" stop-color="#FFC247"></stop></linearGradient></defs><rect x="4" y="27" width="9" height="26" rx="3" fill="url(#gt-halter)"></rect><rect x="13" y="32" width="7" height="16" rx="2" fill="#B9C4DE"></rect><rect x="20" y="38" width="24" height="5" rx="2.5" fill="#E8EDF8"></rect><rect x="44" y="32" width="7" height="16" rx="2" fill="#B9C4DE"></rect><rect x="51" y="27" width="9" height="26" rx="3" fill="url(#gt-halter)"></rect></svg>';
+  var SA_ICONE_CORRIDA = '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="41" cy="12" r="6" fill="#FFC247" stroke="none"></circle><path d="M37 22 L31 38" stroke="#FF6A2B" stroke-width="7"></path><path d="M36 25 L46 31 L50 23" stroke="#FF6A2B" stroke-width="5"></path><path d="M35 26 L27 30 L21 27" stroke="#FFB547" stroke-width="5"></path><path d="M31 38 L42 42 L38 54" stroke="#FF6A2B" stroke-width="6"></path><path d="M31 38 L22 46 L12 46" stroke="#FFB547" stroke-width="6"></path><path d="M4 22 H14 M7 31 H18 M3 40 H11" stroke="#FFC247" stroke-width="3" opacity=".6"></path></g><rect x="4" y="58" width="56" height="3" rx="1.5" fill="#E8EDF8"></rect></svg>';
+  function saIconeTipoMes(s) {
+    var mes = todayISO().slice(0, 7), ult = null;
+    (s.sessoes || []).forEach(function (ss) { if (ss.date && ss.date.slice(0, 7) === mes && (!ult || (ss.ts || 0) >= (ult.ts || 0))) ult = ss; });
+    if (!ult) return "";
+    return ult.kind === "corrida" ? SA_ICONE_CORRIDA : SA_ICONE_HALTER;
+  }
+
   // Barra de progresso até a próxima fase (fase máxima não tem "próxima",
   // mostra 100% com nota de nível máximo). dias já é a sequência atual.
   function saStreakProgressHtml(tier, dias) {
@@ -9599,7 +9645,7 @@ function startApp() {
     // Ícone é a arte colorida própria de cada fase (sem "currentColor" --
     // ela já vem com seu próprio gradiente); sem fase ainda (0 dias), cai no
     // ícone da Chama mesmo assim, só como ilustração neutra de "começo".
-    var streakIconSvg = streakTier ? streakTier.icone : SA_STREAK_TIERS[0].icone;
+    var streakIconSvg = saIconeTipoMes(s) || (streakTier ? streakTier.icone : SA_STREAK_TIERS[0].icone);
     var streakTierBadgeHtml = streakTier ? ' <span class="sa-tier-badge" style="color:' + streakTier.cor + ';background:' + streakTier.badgeBg + '">' + escapeHtml(streakTier.nome) + '</span>' : "";
     var streakLabelText = streakTier ? streakTier.desc : ("Treine hoje e acenda o fogo de " + saMesNome());
     var streakHtml = '<div class="sa-card sa-streak-card" style="' + streakCardStyle + '"><div class="sa-card-inner">' +
@@ -9687,6 +9733,7 @@ function startApp() {
     return '<div class="sa-body">' +
       '<div class="sa-greeting sa-display">OLÁ, ' + escapeHtml(((s.nome || "").split(/\s+/)[0] || "ALUNO").toUpperCase()) + '</div>' +
       '<div class="sa-subtitle">' + escapeHtml(plan.microciclo || "") + '</div>' +
+      microcicloBarHtml(s, plan) +
       pushBoxHtml(true) +
       saFotoDicaHtml(s) +
       reavCardAlunoHtml(s, plan) +
@@ -11043,6 +11090,11 @@ function startApp() {
         state.saTab = "hoje";
         var recsNova = saFeedPreparaTreino(s, novaSessao);
         saFeedSequencia(s);
+        // No atendimento presencial o treino vai pro feed em nome do aluno, sem pergunta.
+        if (state.atendimento) {
+          var nomeFeed = String(novaSessao.nome || "Treino").slice(0, 60);
+          saFeedAuto(s, "treino", nomeFeed + " · " + Math.max(1, Math.round(durationSec / 60)) + " min", { treino: nomeFeed });
+        }
         var metasNovas = cmMetasAtualiza(s).novas;
         saveNow(metasNovas.length ? "Treino concluído! 💪 Meta batida 🏆" : "Treino concluído! 💪", true);
         saFeedPerguntaPostar(s, novaSessao, recsNova);
@@ -11889,7 +11941,8 @@ function startApp() {
     return compact ? "" : '<div class="push-t"><b>Avisos indisponíveis</b><span>Este navegador não oferece notificações. No Android use o Chrome.</span></div>';
   }
   function pushBoxHtml(compact) {
-    return '<div class="push-box' + (compact ? " push-compact" : "") + '" data-compact="' + (compact ? 1 : 0) + '">' + pushBoxInner(compact) + '</div>';
+    var h = pushBoxInner(compact);
+    return '<div class="push-box' + (compact ? " push-compact" : "") + '" data-compact="' + (compact ? 1 : 0) + '"' + (h ? "" : ' style="display:none"') + '>' + h + '</div>';
   }
   function pushRefreshBoxes() {
     Array.prototype.forEach.call(document.querySelectorAll(".push-box"), function (b) {

@@ -1,0 +1,33 @@
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+
+# O service worker nunca pode ficar em cache do navegador: senão uma versão nova do app
+# demora a chegar nos celulares.
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+    Cache-Control = "no-cache"
+
+# Páginas avulsas (fora do app): landing page de captação e guia de instalação.
+[[redirects]]
+  from = "/consultoria"
+  to = "/consultoria.html"
+  status = 200
+
+[[redirects]]
+  from = "/instalar"
+  to = "/instalar.html"
+  status = 200
+
+# /i/<código do aluno>: guia de instalação com o código do aluno na tela
+[[redirects]]
+  from = "/i/*"
+  to = "/instalar.html"
+  status = 200

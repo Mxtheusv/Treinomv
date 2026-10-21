@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Instalar o Treino Online</title>
+<meta name="description" content="Passo a passo para colocar o app Treino Online na tela do seu celular, no iPhone ou no Android.">
+<meta name="theme-color" content="#080d1a">
+<meta name="robots" content="noindex">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icons/icon-192.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Treino MV">
+<style>
+  :root { --bg:#080d1a; --panel:#101a31; --panel2:#0a1122; --line:rgba(140,165,225,.2); --ink:#eef2ff; --soft:#a8b4d4; --faint:#7482a8; --gold:#ffc220; --gold-ink:#1a1300; --blue:#2e6bff; --teal:#38d39f; --red:#ff8f8f; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:17px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; -webkit-font-smoothing:antialiased; padding:max(20px,env(safe-area-inset-top)) 20px max(40px,env(safe-area-inset-bottom)); }
+  .wrap { width:min(560px,100%); margin-inline:auto; }
+  .logo { display:flex; align-items:center; gap:12px; margin-bottom:22px; }
+  .logo img { width:48px; height:48px; border-radius:12px; }
+  .logo b { display:block; font-size:18px; line-height:1.1; }
+  .logo span { font-size:13px; color:var(--soft); }
+  h1 { font-size:clamp(28px,7vw,36px); line-height:1.1; margin:0 0 8px; letter-spacing:-.01em; text-wrap:balance; }
+  .sub { color:var(--soft); margin:0 0 22px; }
+  .codigo { display:none; background:var(--panel); border:1.5px dashed rgba(255,194,32,.55); border-radius:16px; padding:14px 16px; margin-bottom:20px; }
+  .codigo small { display:block; color:var(--soft); font-size:13px; }
+  .codigo .linha { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:4px; }
+  .codigo code { font:700 22px/1.2 ui-monospace,Menlo,Consolas,monospace; color:var(--gold); word-break:break-all; }
+  .mini { background:var(--panel2); color:var(--ink); border:1px solid var(--line); border-radius:10px; padding:9px 14px; font:600 14px system-ui; cursor:pointer; white-space:nowrap; }
+  .alerta { display:none; background:#2a1a10; border:1.5px solid rgba(255,160,80,.6); border-radius:16px; padding:16px; margin-bottom:20px; }
+  .alerta b { display:block; font-size:18px; margin-bottom:6px; color:#ffc79a; }
+  .alerta p { margin:0 0 10px; color:#f1dccb; font-size:16px; }
+  .alerta .btn { margin-top:4px; }
+  .tabs { display:grid; grid-template-columns:1fr 1fr; gap:6px; background:var(--panel2); border:1px solid var(--line); border-radius:14px; padding:5px; margin-bottom:18px; }
+  .tabs button { border:0; border-radius:10px; padding:13px 8px; background:transparent; color:var(--soft); font:700 16px system-ui; cursor:pointer; }
+  .tabs button[aria-selected="true"] { background:var(--gold); color:var(--gold-ink); }
+  .passo { background:var(--panel); border:1px solid var(--line); border-radius:20px; padding:18px; margin-bottom:14px; }
+  .passo h2 { display:flex; gap:12px; align-items:center; font-size:19px; margin:0 0 6px; line-height:1.2; }
+  .passo h2 i { flex:none; display:grid; place-items:center; width:32px; height:32px; border-radius:50%; background:var(--gold); color:var(--gold-ink); font:800 17px system-ui; font-style:normal; }
+  .passo p { margin:0 0 12px; color:var(--soft); font-size:16px; }
+  .passo svg { display:block; width:100%; height:auto; border-radius:14px; background:#060a15; }
+  .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%; border:0; border-radius:999px; background:var(--gold); color:var(--gold-ink); font:800 18px/1 system-ui; padding:18px 24px; cursor:pointer; text-decoration:none; }
+  .btn.ghost { background:transparent; color:var(--ink); border:1.5px solid var(--line); font-weight:700; }
+  .btn:focus-visible,.mini:focus-visible,.tabs button:focus-visible,a:focus-visible { outline:3px solid #fff; outline-offset:3px; }
+  .ok { display:none; background:rgba(56,211,159,.12); border:1.5px solid rgba(56,211,159,.5); border-radius:16px; padding:16px; margin-bottom:18px; color:#bff3dd; }
+  .depois { margin-top:22px; padding:18px; border-radius:18px; background:var(--panel2); border:1px solid var(--line); }
+  .depois b { display:block; margin-bottom:6px; }
+  .depois p { margin:0 0 14px; color:var(--soft); font-size:16px; }
+  .rodape { text-align:center; margin-top:22px; font-size:14px; color:var(--faint); }
+  .rodape a { color:var(--soft); }
+  [hidden] { display:none !important; }
+  @keyframes pulso { 0%,100% { opacity:.25; r:17; } 50% { opacity:.9; r:22; } }
+  .pulso { animation:pulso 1.6s ease-in-out infinite; }
+  @media (prefers-reduced-motion: reduce) { .pulso { animation:none; opacity:.6; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo"><img src="/icons/icon-192.png" alt="" width="48" height="48"><div><b>Treino Online</b><span>Consultoria Matheus Venâncio</span></div></div>
+
+  <h1>Coloque o app na tela do seu celular</h1>
+  <p class="sub">Leva menos de 1 minuto. Depois é só tocar no ícone, como qualquer app.</p>
+
+  <div class="codigo" id="codigo">
+    <small>Seu código de acesso (você digita só na primeira vez que abrir o app)</small>
+    <div class="linha"><code id="codigoTxt"></code><button class="mini" id="copiaCodigo" type="button">Copiar</button></div>
+  </div>
+
+  <div class="alerta" id="alertaApp">
+    <b>Passo zero: abra no navegador do celular</b>
+    <p id="alertaTxt"></p>
+    <a class="btn" id="abrirChrome" href="#" hidden>Abrir no Chrome</a>
+    <button class="btn ghost" id="copiaLink" type="button" style="margin-top:10px">Copiar o link</button>
+  </div>
+
+  <div class="ok" id="okInst"><b>Pronto!</b> O app já está instalado. Abra pelo ícone na tela do celular.</div>
+
+  <div class="tabs" role="tablist" aria-label="Escolha o seu celular">
+    <button type="button" role="tab" id="tabIos" aria-selected="false" aria-controls="painelIos">iPhone</button>
+    <button type="button" role="tab" id="tabAnd" aria-selected="false" aria-controls="painelAnd">Android</button>
+  </div>
+
+  <!-- ===== iPHONE ===== -->
+  <div id="painelIos" role="tabpanel" hidden>
+    <div class="passo">
+      <h2><i>1</i> Toque em Compartilhar</h2>
+      <p>É o quadrado com uma seta para cima, na barra de baixo do <b>Safari</b>. Se não achar, toque nos três pontinhos (⋯) e depois em Compartilhar.</p>
+      <svg viewBox="0 0 320 170" role="img" aria-label="Barra de baixo do Safari com o botão Compartilhar destacado">
+        <rect x="20" y="8" width="280" height="154" rx="22" fill="#0e1730" stroke="#26345c"/>
+        <rect x="40" y="26" width="240" height="48" rx="10" fill="#16203d"/>
+        <rect x="56" y="44" width="150" height="10" rx="5" fill="#2b3a66"/>
+        <rect x="40" y="98" width="240" height="52" rx="26" fill="#1a2547" stroke="#2b3a66"/>
+        <path d="M70 124l-8 0M62 124l8-7M62 124l8 7" stroke="#6f7ea5" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="160" cy="124" r="19" class="pulso" fill="#ffc220"/>
+        <rect x="150" y="121" width="20" height="17" rx="3" fill="none" stroke="#fff" stroke-width="2.6"/>
+        <path d="M160 128V108M160 108l-6 6M160 108l6 6" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="236" cy="124" r="3" fill="#6f7ea5"/><circle cx="246" cy="124" r="3" fill="#6f7ea5"/><circle cx="256" cy="124" r="3" fill="#6f7ea5"/>
+      </svg>
+    </div>
+    <div class="passo">
+      <h2><i>2</i> Adicionar à Tela de Início</h2>
+      <p>Role a lista para cima e toque em <b>Adicionar à Tela de Início</b>. Se não aparecer, toque em <b>Ver mais</b> no fim da lista.</p>
+      <svg viewBox="0 0 320 190" role="img" aria-label="Lista de opções com Adicionar à Tela de Início destacado">
+        <rect x="20" y="8" width="280" height="174" rx="22" fill="#0e1730" stroke="#26345c"/>
+        <rect x="36" y="22" width="248" height="34" rx="9" fill="#16203d"/><rect x="50" y="34" width="110" height="9" rx="4" fill="#2b3a66"/>
+        <rect x="36" y="62" width="248" height="34" rx="9" fill="#16203d"/><rect x="50" y="74" width="140" height="9" rx="4" fill="#2b3a66"/>
+        <rect x="36" y="102" width="248" height="44" rx="10" fill="#ffc220" class="pulso" style="animation-name:none;opacity:1"/>
+        <rect x="50" y="113" width="22" height="22" rx="5" fill="none" stroke="#1a1300" stroke-width="2.4"/><path d="M61 118v12M55 124h12" stroke="#1a1300" stroke-width="2.4" stroke-linecap="round"/>
+        <text x="84" y="130" fill="#1a1300" font-family="system-ui,sans-serif" font-size="15" font-weight="800">Adicionar à Tela de Início</text>
+        <rect x="36" y="152" width="248" height="22" rx="8" fill="#16203d"/>
+      </svg>
+    </div>
+    <div class="passo">
+      <h2><i>3</i> Toque em Adicionar</h2>
+      <p>É o botão no canto de cima, à direita. O ícone <b>Treino MV</b> aparece na sua tela.</p>
+      <svg viewBox="0 0 320 150" role="img" aria-label="Janela de confirmação com o botão Adicionar destacado">
+        <rect x="20" y="8" width="280" height="134" rx="22" fill="#0e1730" stroke="#26345c"/>
+        <text x="42" y="40" fill="#a8b4d4" font-family="system-ui,sans-serif" font-size="14">Cancelar</text>
+        <rect x="216" y="20" width="76" height="30" rx="15" fill="#ffc220" class="pulso" style="animation-name:none;opacity:1"/>
+        <text x="254" y="41" text-anchor="middle" fill="#1a1300" font-family="system-ui,sans-serif" font-size="15" font-weight="800">Adicionar</text>
+        <rect x="42" y="72" width="52" height="52" rx="13" fill="#004aad"/>
+        <rect x="108" y="82" width="140" height="11" rx="5" fill="#2b3a66"/><rect x="108" y="104" width="100" height="9" rx="4" fill="#1f2c52"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- ===== ANDROID ===== -->
+  <div id="painelAnd" role="tabpanel" hidden>
+    <div class="passo" id="instalaRapido" hidden>
+      <h2><i>★</i> Instalar com um toque</h2>
+      <p>Toque no botão e confirme. O app vai para a sua tela.</p>
+      <button class="btn" id="btnInstalar" type="button">Instalar o app</button>
+    </div>
+    <div class="passo">
+      <h2><i>1</i> Abra o menu do Chrome</h2>
+      <p>Toque nos <b>três pontinhos (⋮)</b> no canto de cima, à direita.</p>
+      <svg viewBox="0 0 320 130" role="img" aria-label="Barra do Chrome com o menu de três pontinhos destacado">
+        <rect x="20" y="8" width="280" height="114" rx="22" fill="#0e1730" stroke="#26345c"/>
+        <rect x="36" y="26" width="196" height="40" rx="20" fill="#16203d"/><rect x="54" y="42" width="120" height="9" rx="4" fill="#2b3a66"/>
+        <circle cx="264" cy="46" r="19" class="pulso" fill="#ffc220"/>
+        <circle cx="264" cy="37" r="3.2" fill="#fff"/><circle cx="264" cy="46" r="3.2" fill="#fff"/><circle cx="264" cy="55" r="3.2" fill="#fff"/>
+        <rect x="36" y="82" width="248" height="26" rx="9" fill="#101a31"/>
+      </svg>
+    </div>
+    <div class="passo">
+      <h2><i>2</i> Instalar app</h2>
+      <p>Toque em <b>Instalar app</b> (em alguns celulares aparece como <b>Adicionar à tela inicial</b>).</p>
+      <svg viewBox="0 0 320 170" role="img" aria-label="Menu do Chrome com Instalar app destacado">
+        <rect x="20" y="8" width="280" height="154" rx="22" fill="#0e1730" stroke="#26345c"/>
+        <rect x="36" y="22" width="248" height="30" rx="9" fill="#16203d"/><rect x="50" y="33" width="100" height="9" rx="4" fill="#2b3a66"/>
+        <rect x="36" y="58" width="248" height="30" rx="9" fill="#16203d"/><rect x="50" y="69" width="130" height="9" rx="4" fill="#2b3a66"/>
+        <rect x="36" y="94" width="248" height="40" rx="10" fill="#ffc220"/>
+        <rect x="50" y="104" width="20" height="20" rx="4" fill="none" stroke="#1a1300" stroke-width="2.4"/><path d="M60 108v9M56 114l4 4 4-4" stroke="#1a1300" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="82" y="120" fill="#1a1300" font-family="system-ui,sans-serif" font-size="16" font-weight="800">Instalar app</text>
+        <rect x="36" y="140" width="248" height="16" rx="7" fill="#16203d"/>
+      </svg>
+    </div>
+    <div class="passo">
+      <h2><i>3</i> Confirme em Instalar</h2>
+      <p>Toque em <b>Instalar</b> na janelinha. Pronto: o ícone <b>Treino MV</b> aparece na tela.</p>
+      <svg viewBox="0 0 320 140" role="img" aria-label="Janela de confirmação com o botão Instalar destacado">
+        <rect x="20" y="8" width="280" height="124" rx="22" fill="#0e1730" stroke="#26345c"/>
+        <rect x="42" y="26" width="46" height="46" rx="12" fill="#004aad"/>
+        <rect x="102" y="32" width="130" height="11" rx="5" fill="#2b3a66"/><rect x="102" y="54" width="90" height="9" rx="4" fill="#1f2c52"/>
+        <text x="190" y="112" fill="#a8b4d4" font-family="system-ui,sans-serif" font-size="14">Cancelar</text>
+        <rect x="236" y="92" width="52" height="28" rx="14" fill="#ffc220"/><text x="262" y="111" text-anchor="middle" fill="#1a1300" font-family="system-ui,sans-serif" font-size="14" font-weight="800">Instalar</text>
+      </svg>
+    </div>
+  </div>
+
+  <div class="depois">
+    <b>Depois de instalar</b>
+    <p>Abra o app pelo ícone <b>Treino MV</b>. Na primeira vez ele pede o seu código de acesso; é só digitar o código que o Matheus te passou.</p>
+    <a class="btn ghost" id="abrirApp" href="/">Abrir o app agora (sem instalar)</a>
+  </div>
+  <p class="rodape">Problema para instalar? Mande uma mensagem para o Matheus no WhatsApp. · <a href="/consultoria">Conheça a consultoria</a></p>
+</div>
+
+<script>
+(function () {
+  function $(id) { return document.getElementById(id); }
+  var ua = navigator.userAgent || "";
+  var ehIos = /iphone|ipad|ipod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  var ehAndroid = /android/i.test(ua);
+  var emApp = /Instagram|FBAN|FBAV|FB_IAB|Messenger|WhatsApp|TikTok|musical_ly|Snapchat|Line\/|Twitter|LinkedInApp/i.test(ua);
+  var jaInstalado = false;
+  try { jaInstalado = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true; } catch (e) {}
+
+  // código do aluno vem no endereço: /i/<código>
+  var m = /^\/i\/([a-z0-9-]{1,80})\/?$/i.exec(location.pathname);
+  var slug = m ? m[1].toLowerCase() : "";
+  if (slug) {
+    $("codigoTxt").textContent = slug; $("codigo").style.display = "block";
+    $("abrirApp").setAttribute("href", "/#aluno=" + encodeURIComponent(slug));
+  }
+  function copia(txt, btn, rotulo) {
+    function ok() { var t = btn.textContent; btn.textContent = "Copiado!"; setTimeout(function () { btn.textContent = rotulo || t; }, 1600); }
+    try { navigator.clipboard.writeText(txt).then(ok, fallback); } catch (e) { fallback(); }
+    function fallback() { var a = document.createElement("textarea"); a.value = txt; a.style.position = "fixed"; a.style.opacity = "0"; document.body.appendChild(a); a.select(); try { document.execCommand("copy"); ok(); } catch (e) {} a.remove(); }
+  }
+  $("copiaCodigo").onclick = function () { copia(slug, this, "Copiar"); };
+  var link = location.origin + (slug ? "/i/" + slug : "/instalar");
+  $("copiaLink").onclick = function () { copia(link, this, "Copiar o link"); };
+
+  // navegador de dentro do Instagram/WhatsApp não instala: manda abrir no navegador de verdade
+  if (emApp && !jaInstalado) {
+    $("alertaApp").style.display = "block";
+    if (ehIos) {
+      $("alertaTxt").textContent = "Você abriu este link dentro de outro app (Instagram, WhatsApp...). Ali não dá para instalar. Toque nos três pontinhos (⋯) ou no ícone de bússola, no canto da tela, e escolha “Abrir no Safari”. Se preferir, copie o link e cole no Safari.";
+    } else {
+      $("alertaTxt").textContent = "Você abriu este link dentro de outro app (Instagram, WhatsApp...). Ali não dá para instalar. Toque no botão abaixo para abrir no Chrome.";
+      if (ehAndroid) { var a = $("abrirChrome"); a.hidden = false; a.href = "intent://" + location.host + location.pathname + "#Intent;scheme=https;package=com.android.chrome;end"; }
+    }
+  }
+  if (jaInstalado) { $("okInst").style.display = "block"; }
+
+  // abas
+  function aba(qual) {
+    var ios = qual === "ios";
+    $("painelIos").hidden = !ios; $("painelAnd").hidden = ios;
+    $("tabIos").setAttribute("aria-selected", ios ? "true" : "false"); $("tabAnd").setAttribute("aria-selected", ios ? "false" : "true");
+  }
+  $("tabIos").onclick = function () { aba("ios"); }; $("tabAnd").onclick = function () { aba("and"); };
+  aba(ehIos ? "ios" : ehAndroid ? "and" : "ios");
+
+  // Android/Chrome: botão de instalar com um toque
+  var evt = null;
+  window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); evt = e; $("instalaRapido").hidden = false; });
+  window.addEventListener("appinstalled", function () { $("okInst").style.display = "block"; $("instalaRapido").hidden = true; });
+  $("btnInstalar").onclick = function () { if (!evt) return; evt.prompt(); evt.userChoice.then(function () { evt = null; $("instalaRapido").hidden = true; }); };
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(function () {});
+})();
+</script>
+</body>
+</html>

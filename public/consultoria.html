@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Treine como atleta, viva como gente · Método Venâncio</title>
+<meta name="description" content="Consultoria online de treino com o método da preparação física de atleta, adaptado para quem treina por saúde, estética ou performance. Treino no seu ritmo e 1 mês para experimentar.">
+<meta name="theme-color" content="#080d1a">
+<meta property="og:title" content="Treine como atleta, viva como gente · Método Venâncio">
+<meta property="og:description" content="O método da preparação física de atleta, no seu ritmo, com treino montado para você.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="/lp/hoje.jpg">
+<link rel="icon" href="/icons/icon-192.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@1,800;1,900&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080d1a; --bg2: #0c1428; --panel: #101a31; --line: rgba(140,165,225,.18);
+    --ink: #eef2ff; --soft: #a3b0d0; --faint: #6f7ea5;
+    --gold: #ffc220; --gold-ink: #1a1300; --blue: #2e6bff; --teal: #38d39f;
+    --display: "Barlow Condensed", "Arial Narrow", Impact, sans-serif;
+    --body: "Barlow", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 17px/1.55 var(--body); -webkit-font-smoothing: antialiased; padding-bottom: env(safe-area-inset-bottom, 0); }
+  img { max-width: 100%; display: block; }
+  a { color: inherit; }
+  .wrap { width: min(1080px, 100% - 40px); margin-inline: auto; }
+  h1, h2, h3 { font-family: var(--display); font-style: italic; font-weight: 900; text-transform: uppercase; line-height: .98; margin: 0; text-wrap: balance; letter-spacing: .005em; }
+  h2 { font-size: clamp(34px, 6vw, 54px); }
+  h3 { font-size: 24px; }
+  p { margin: 0; }
+  .eyebrow { font-weight: 700; font-size: 13px; letter-spacing: .16em; text-transform: uppercase; color: var(--gold); }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 0; cursor: pointer; text-decoration: none; font: 700 17px/1 var(--body); padding: 17px 28px; border-radius: 999px; background: var(--gold); color: var(--gold-ink); box-shadow: 0 8px 30px rgba(255,194,32,.22); transition: transform .15s, box-shadow .15s; }
+  .btn:hover { transform: translateY(-1px); box-shadow: 0 10px 34px rgba(255,194,32,.34); }
+  .btn:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+  .btn.ghost { background: transparent; color: var(--ink); border: 1.5px solid var(--line); box-shadow: none; }
+  .btn.ghost:hover { border-color: var(--gold); box-shadow: none; }
+
+  /* topo */
+  .top { position: sticky; top: 0; z-index: 20; background: rgba(8,13,26,.86); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); padding-top: env(safe-area-inset-top, 0); }
+  .top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 62px; }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; min-width: 0; }
+  .brand img { width: 36px; height: 36px; border-radius: 9px; }
+  .brand b { font-family: var(--display); font-style: italic; font-weight: 900; text-transform: uppercase; font-size: 19px; line-height: 1; white-space: nowrap; }
+  .brand small { display: block; font-size: 11.5px; color: var(--soft); letter-spacing: .02em; }
+  .top .btn { padding: 11px 18px; font-size: 14.5px; box-shadow: none; }
+
+  /* herói */
+  .hero { position: relative; overflow: hidden; padding: 54px 0 70px; background: radial-gradient(1100px 520px at 85% -8%, rgba(46,107,255,.30), transparent 62%), radial-gradient(700px 420px at -5% 105%, rgba(255,194,32,.10), transparent 60%), var(--bg); }
+  .hero .wrap { display: grid; grid-template-columns: 1.1fr .9fr; gap: 48px; align-items: center; }
+  .hero h1 { font-size: clamp(44px, 9vw, 96px); margin: 14px 0 20px; }
+  .hero h1 em { font-style: italic; color: var(--gold); }
+  .lead { font-size: clamp(18px, 2.4vw, 21px); color: var(--soft); max-width: 34em; }
+  .lead b { color: var(--ink); font-weight: 600; }
+  .hero-cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+  .hero-note { margin-top: 16px; font-size: 14px; color: var(--faint); }
+  .phone { position: relative; width: min(300px, 78%); margin-inline: auto; border-radius: 38px; padding: 9px; background: linear-gradient(160deg, #26345c, #0e1730); box-shadow: 0 40px 80px rgba(0,0,0,.55), 0 0 0 1px rgba(140,165,225,.22); }
+  .phone img { border-radius: 30px; width: 100%; height: auto; }
+  .hero .phone { transform: rotate(3deg); }
+
+  /* seções */
+  section { padding: 76px 0; }
+  .alt { background: var(--bg2); border-block: 1px solid var(--line); }
+  .sec-head { max-width: 40em; margin-bottom: 40px; }
+  .sec-head h2 { margin-top: 12px; }
+  .sec-head p { margin-top: 16px; color: var(--soft); }
+
+  .dores { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .dor { padding: 24px; border: 1px solid var(--line); border-radius: 20px; background: var(--panel); }
+  .dor h3 { font-size: 26px; margin-bottom: 10px; }
+  .dor p { color: var(--soft); font-size: 16px; }
+
+  .passos { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; counter-reset: p; }
+  .passos li { counter-increment: p; position: relative; padding: 26px 22px 24px; border-radius: 20px; background: var(--panel); border: 1px solid var(--line); }
+  .passos li::before { content: counter(p); display: block; font: italic 900 56px/1 var(--display); color: var(--gold); margin-bottom: 10px; }
+  .passos h3 { font-size: 22px; margin-bottom: 8px; }
+  .passos p { font-size: 15.5px; color: var(--soft); }
+
+  .galeria { display: flex; gap: 26px; overflow-x: auto; padding: 6px 20px 26px; margin-inline: -20px; scroll-snap-type: x mandatory; scrollbar-width: thin; }
+  .shot { flex: 0 0 min(246px, 74vw); scroll-snap-align: center; }
+  .shot .phone { width: 100%; }
+  .shot figcaption { margin-top: 18px; }
+  .shot figcaption b { display: block; font: italic 900 22px/1.05 var(--display); text-transform: uppercase; margin-bottom: 6px; }
+  .shot figcaption span { color: var(--soft); font-size: 15px; line-height: 1.45; display: block; }
+  .shot { margin: 0; }
+
+  .recebe { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px 40px; list-style: none; margin: 0; padding: 0; }
+  .recebe li { display: grid; grid-template-columns: 30px 1fr; gap: 12px; padding: 16px 0; border-top: 1px solid var(--line); }
+  .recebe li::before { content: "✓"; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: rgba(56,211,159,.16); color: var(--teal); font-weight: 800; font-size: 14px; margin-top: 2px; }
+  .recebe b { display: block; font-weight: 700; }
+  .recebe span { color: var(--soft); font-size: 15.5px; }
+
+  .quem { display: grid; grid-template-columns: .9fr 1.1fr; gap: 40px; align-items: center; }
+  .cred { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+  .cred li { padding: 15px 0; border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 16px; font-size: 16px; }
+  .cred li:last-child { border-bottom: 1px solid var(--line); }
+  .cred span { color: var(--soft); text-align: right; }
+  .quem p + p { margin-top: 14px; }
+  .quem p { color: var(--soft); }
+  .quem p b { color: var(--ink); }
+  .quem-foto { margin: 0 0 26px; }
+  .cert { margin: 26px 0 0; }
+  .cert img { width: 100%; height: auto; border-radius: 14px; border: 1px solid var(--line); box-shadow: 0 18px 40px rgba(0,0,0,.35); }
+  .cert figcaption { margin-top: 10px; color: var(--faint); font-size: 14px; }
+  .quem-foto img { width: 100%; max-width: 380px; aspect-ratio: 4 / 5; object-fit: cover; border-radius: 24px; border: 1px solid var(--line); box-shadow: 0 24px 60px rgba(0,0,0,.4); }
+
+  /* últimas vagas + planos */
+  .vagas { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; padding: 18px 22px; margin-bottom: 44px; border-radius: 18px; background: rgba(255,194,32,.08); border: 1px solid rgba(255,194,32,.45); }
+  .vagas-tag { font: italic 900 22px/1 var(--display); text-transform: uppercase; color: var(--gold-ink); background: var(--gold); padding: 10px 16px; border-radius: 999px; white-space: nowrap; }
+  .vagas p { flex: 1 1 280px; color: var(--soft); font-size: 16px; }
+  .planos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; align-items: stretch; }
+  .plano { position: relative; display: flex; flex-direction: column; padding: 30px 26px 26px; border-radius: 22px; background: var(--panel); border: 1px solid var(--line); }
+  .plano h3 { font-size: 26px; }
+  .plano .preco { display: flex; align-items: baseline; gap: 6px; margin-top: 14px; }
+  .plano .preco b { font: italic 900 60px/1 var(--display); color: var(--ink); }
+  .plano .preco span { color: var(--soft); font-size: 17px; }
+  .plano .sub { margin-top: auto; padding-top: 16px; color: var(--soft); font-size: 15.5px; }
+  .plano.destaque { border-color: var(--gold); box-shadow: 0 24px 60px rgba(255,194,32,.14); }
+  .plano.destaque .preco b { color: var(--gold); }
+  .selo { position: absolute; top: -13px; left: 26px; background: var(--gold); color: var(--gold-ink); font-weight: 800; font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase; padding: 6px 12px; border-radius: 999px; }
+  .planos-note { margin-top: 26px; color: var(--faint); font-size: 14.5px; }
+
+  /* formulário */
+  .form-sec { background: radial-gradient(900px 480px at 15% 0%, rgba(255,194,32,.12), transparent 60%), var(--bg); }
+  .form-grid { display: grid; grid-template-columns: .9fr 1.1fr; gap: 48px; align-items: start; }
+  .form-grid h2 { margin: 12px 0 16px; }
+  .form-grid .lead { margin-bottom: 22px; }
+  .garantias { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; color: var(--soft); font-size: 15.5px; }
+  .garantias li::before { content: "•"; color: var(--gold); font-weight: 900; margin-right: 10px; }
+  form { background: var(--panel); border: 1px solid var(--line); border-radius: 24px; padding: 28px; display: grid; gap: 16px; }
+  label { display: grid; gap: 7px; font-weight: 600; font-size: 14.5px; color: var(--ink); }
+  label small { font-weight: 400; color: var(--faint); }
+  input, select, textarea { font: 500 17px var(--body); color: var(--ink); background: #0a1122; border: 1.5px solid var(--line); border-radius: 12px; padding: 14px 15px; width: 100%; }
+  input::placeholder, textarea::placeholder { color: var(--faint); }
+  textarea { min-height: 84px; resize: vertical; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+  form .btn { width: 100%; padding: 19px; font-size: 18px; }
+  .consent { display: flex; gap: 10px; align-items: flex-start; font-weight: 400; font-size: 14.5px; color: var(--soft); }
+  .consent input { width: auto; margin-top: 3px; flex: none; }
+  .consent a { color: var(--gold); }
+  .fine { font-size: 13px; color: var(--faint); text-align: center; line-height: 1.45; }
+  .erro { color: #ff8f8f; font-size: 14.5px; text-align: center; display: none; }
+  .ok { display: none; text-align: center; padding: 38px 28px; background: var(--panel); border: 1px solid rgba(56,211,159,.4); border-radius: 24px; }
+  .ok .big { font: italic 900 38px/1 var(--display); text-transform: uppercase; color: var(--teal); margin-bottom: 12px; }
+  .ok p { color: var(--soft); }
+  .ok .btn { margin-top: 22px; }
+
+  .faq details { border-top: 1px solid var(--line); padding: 20px 0; }
+  .faq details:last-child { border-bottom: 1px solid var(--line); }
+  .faq summary { cursor: pointer; font-weight: 700; font-size: 18px; list-style: none; display: flex; justify-content: space-between; gap: 16px; align-items: center; }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after { content: "+"; font-size: 26px; color: var(--gold); line-height: 1; flex: none; }
+  .faq details[open] summary::after { content: "–"; }
+  .faq p { margin-top: 12px; color: var(--soft); max-width: 44em; }
+
+  footer { padding: 40px 0 120px; border-top: 1px solid var(--line); color: var(--faint); font-size: 14px; }
+  footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 14px; }
+  footer a { color: var(--soft); }
+
+  .sticky { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; padding: 12px 20px calc(12px + env(safe-area-inset-bottom, 0)); background: linear-gradient(to top, var(--bg) 60%, transparent); display: none; transition: transform .25s, opacity .25s; }
+  .sticky .btn { width: 100%; }
+  .sticky.off { transform: translateY(120%); opacity: 0; pointer-events: none; }
+
+  @media (max-width: 860px) {
+    section { padding: 56px 0; }
+    .hero { padding: 36px 0 54px; }
+    .hero .wrap, .quem, .form-grid { grid-template-columns: 1fr; gap: 34px; }
+    .hero .phone { transform: none; width: min(250px, 70%); }
+    .dores { grid-template-columns: 1fr; }
+    .passos { grid-template-columns: 1fr 1fr; }
+    .recebe { grid-template-columns: 1fr; }
+    .planos { grid-template-columns: 1fr; }
+    .brand small { display: none; }
+    .sticky { display: block; }
+  }
+  @media (max-width: 520px) {
+    body { font-size: 16.5px; }
+    .passos { grid-template-columns: 1fr; }
+    .two { grid-template-columns: 1fr; }
+    form { padding: 22px 18px; }
+    .hero-cta .btn { width: 100%; }
+    .top .btn { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .btn, .sticky { transition: none; } }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#topo" aria-label="Início">
+      <img src="/icons/icon-192.png" alt="" width="36" height="36">
+      <span><b>Método Venâncio</b><small>Consultoria de treino</small></span>
+    </a>
+    <a class="btn" href="#form">Quero conhecer</a>
+  </div>
+</header>
+
+<main id="topo">
+  <div class="hero">
+    <div class="wrap">
+      <div>
+        <div class="eyebrow">Consultoria de treino</div>
+        <h1>Treine como atleta, <em>viva como gente.</em></h1>
+        <p class="lead">Treino montado para você, com a organização da <b>preparação física de atletas</b>, adaptada para quem treina por saúde, estética ou para se sentir melhor.</p>
+        <div class="hero-cta">
+          <a class="btn" href="#form">Quero conhecer</a>
+          <a class="btn ghost" href="#como">Ver como funciona</a>
+        </div>
+        <p class="hero-note">Sem cobrança para começar. Você conhece o método, testa 1 mês se fizer sentido e decide depois.</p>
+      </div>
+      <div class="phone"><img src="/lp/hoje.jpg" width="560" height="1149" alt="Tela inicial do app mostrando os dias treinados no mês e a semana de treinos"></div>
+    </div>
+  </div>
+
+  <section class="alt" id="para-quem">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="eyebrow">Para quem é</div>
+        <h2>Para quem quer treinar com mais clareza e sem pressa</h2>
+      </div>
+      <div class="dores">
+        <div class="dor"><h3>Planilha pronta</h3><p>Um modelo sem considerar a sua idade, a sua rotina nem as suas limitações.</p></div>
+        <div class="dor"><h3>Dúvida na carga</h3><p>Não saber quando subir o peso, quando segurar e se o progresso está acontecendo.</p></div>
+        <div class="dor"><h3>Execução sem retorno</h3><p>Sem alguém para olhar, fica difícil saber se o movimento está certo e confortável.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="como">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="eyebrow">Como funciona</div>
+        <h2>Do formulário ao primeiro treino</h2>
+        <p>Tudo acontece pelo WhatsApp e pelo app. Sem ir a lugar nenhum e sem complicação.</p>
+      </div>
+      <ol class="passos">
+        <li><h3>Você preenche</h3><p>Um formulário rápido com o seu objetivo, nível e onde você treina.</p></li>
+        <li><h3>Eu analiso</h3><p>Leio a sua ficha de saúde com atenção a lesões e limitações e monto o seu treino.</p></li>
+        <li><h3>Você instala o app</h3><p>Chamo você no WhatsApp com o link e o passo a passo para colocar o app na tela do celular.</p></li>
+        <li><h3>Treina e evolui</h3><p>Registra as cargas, manda vídeo quando quiser e eu ajusto o seu treino com base nos seus dados.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="alt" id="app">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="eyebrow">O app por dentro</div>
+        <h2>Tudo do seu treino na palma da mão</h2>
+        <p>É o app que os alunos usam hoje. Telas reais, com dados de exemplo.</p>
+      </div>
+    </div>
+    <div class="wrap">
+      <div class="galeria" tabindex="0" aria-label="Telas do app (deslize para o lado)">
+        <figure class="shot"><div class="phone"><img src="/lp/treino.jpg" width="560" height="1149" alt="Tela do treino do dia com séries, repetições e campos de carga"></div><figcaption><b>Seu treino do dia</b><span>Séries, repetições, descanso e as cargas da última vez. É só tocar e registrar.</span></figcaption></figure>
+        <figure class="shot"><div class="phone"><img src="/lp/anim.jpg" width="560" height="1212" alt="Animação de como executar o supino na máquina, com texto explicativo"></div><figcaption><b>Como fazer, em cada exercício</b><span>Animação ou vídeo e uma explicação curta de como executar. Dúvida na hora do treino resolvida.</span></figcaption></figure>
+        <figure class="shot"><div class="phone"><img src="/lp/hist.jpg" width="560" height="1149" alt="Calendário de treinos e gráfico de evolução de cargas"></div><figcaption><b>Evolução que você vê</b><span>Calendário dos dias treinados e gráfico de carga por exercício. Você enxerga o progresso.</span></figcaption></figure>
+        <figure class="shot"><div class="phone"><img src="/lp/comunidade.jpg" width="560" height="1149" alt="Aba Comunidade com destaques da semana e feed da turma"></div><figcaption><b>Uma turma que puxa você</b><span>Feed, metas do mês, conquistas e ranking de quem mais treinou. Motivação de verdade.</span></figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <section id="recebe">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="eyebrow">O que você recebe</div>
+        <h2>Acompanhamento que se adapta a você</h2>
+      </div>
+      <ul class="recebe">
+        <li><div><b>Treino individual</b><span>Montado a partir da sua ficha de saúde, do seu nível e do tempo que você tem.</span></div></li>
+        <li><div><b>Ajuste de carga com dados</b><span>Olho o que você registrou e digo quando progredir, manter ou aliviar.</span></div></li>
+        <li><div><b>Correção de execução por vídeo</b><span>Você envia vídeos das suas séries e eu devolvo os ajustes de execução.</span></div></li>
+        <li><div><b>Cuidado com lesões e limitações</b><span>A ficha de saúde orienta as escolhas de exercício desde o primeiro treino. Se tiver lesão ou dor, procure avaliação médica antes de começar.</span></div></li>
+        <li><div><b>Metas do mês</b><span>Objetivos claros para treinar com direção, e não por impulso.</span></div></li>
+        <li><div><b>Lembretes no celular</b><span>Se você quiser, o app avisa nos seus dias de treino e quando falta pouco para a sua meta.</span></div></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="alt" id="quem">
+    <div class="wrap quem">
+      <div>
+        <figure class="quem-foto"><img src="/lp/matheus-tecnico.jpg" width="720" height="900" alt="Matheus Venâncio na beira do campo, com apito e prancheta, durante um treino"></figure>
+        <div class="eyebrow">Quem conduz</div>
+        <h2 style="margin:12px 0 18px">Matheus Venâncio</h2>
+        <p>Profissional de Educação Física e <b>preparador físico</b>. Trago para o treino de qualquer pessoa a organização e a progressão que uso na preparação física de atletas.</p>
+        <p>A ideia é simples: <b>método de atleta, no ritmo da sua vida</b>. Cada escolha no seu treino tem uma razão, e o ritmo é seu.</p>
+      </div>
+      <div class="cred-wrap">
+      <ul class="cred">
+        <li>Registro profissional <span>CREF 038618-G/SC</span></li>
+        <li>Preparação física <span>Licença B CBF de Preparador Físico</span></li>
+        <li>Especializações <span>CHPC Level 2 · BK Training II · Dx I</span></li>
+        <li>Formação <span>UDESC / CEFID</span></li>
+      </ul>
+      <figure class="cert">
+        <img src="/lp/certificado-chpc.jpg" width="802" height="564" alt="Certificado CHPC Level 2 da Athletic Lab Coaching Academy, em nome de Matheus Venâncio">
+        <figcaption>Certificado CHPC Level 2 · Athletic Lab Coaching Academy</figcaption>
+      </figure>
+      </div>
+    </div>
+  </section>
+
+  <section id="planos">
+    <div class="wrap">
+      <div class="vagas" role="note">
+        <span class="vagas-tag">Atendimento individual</span>
+        <p>Atendo um número limitado de alunos por vez para acompanhar cada treino de perto.</p>
+      </div>
+      <div class="sec-head">
+        <div class="eyebrow">Planos e valores</div>
+        <h2>Depois do mês de teste, você escolhe o seu ritmo</h2>
+        <p>Quanto mais tempo você se compromete, menor o valor por mês.</p>
+      </div>
+      <div class="planos">
+        <article class="plano">
+          <h3>Mensal</h3>
+          <p class="preco"><b>R$ 120</b><span>/ mês</span></p>
+          <p class="sub">Pague mês a mês.</p>
+        </article>
+        <article class="plano">
+          <h3>Trimestral</h3>
+          <p class="preco"><b>R$ 100</b><span>/ mês</span></p>
+          <p class="sub">Pagamento de R$ 300 a cada 3 meses.</p>
+        </article>
+        <article class="plano destaque">
+          <span class="selo">Melhor valor</span>
+          <h3>Semestral</h3>
+          <p class="preco"><b>R$ 80</b><span>/ mês</span></p>
+          <p class="sub">Pagamento de R$ 480 a cada 6 meses.</p>
+        </article>
+      </div>
+      <p class="planos-note">Todos os planos começam com 1 mês de teste, sem pagar, se fizer sentido para você.</p>
+    </div>
+  </section>
+
+  <section class="form-sec" id="form">
+    <div class="wrap form-grid">
+      <div>
+        <div class="eyebrow">Comece agora</div>
+        <h2>Quer conversar primeiro?</h2>
+        <p class="lead">Se fizer sentido para você, a gente começa com 1 mês de teste. Preencha o formulário e eu te chamo no WhatsApp para conversar, sem compromisso.</p>
+        <ul class="garantias">
+          <li>1 mês de teste, sem pagar, se fizer sentido.</li>
+          <li>Eu leio o seu formulário antes de qualquer contato.</li>
+          <li>Seus dados são usados só para o nosso contato. Veja a <a href="/privacidade.html">política de privacidade</a>.</li>
+        </ul>
+      </div>
+      <div>
+        <form id="lead" novalidate>
+          <label>Seu nome
+            <input id="f-nome" name="nome" autocomplete="name" required maxlength="120" placeholder="Como você se chama?">
+          </label>
+          <label>WhatsApp
+            <input id="f-whats" name="whats" type="tel" inputmode="tel" autocomplete="tel" required maxlength="40" placeholder="(48) 99999-9999">
+          </label>
+          <div class="two">
+            <label>Seu objetivo
+              <select id="f-obj" name="objetivo">
+                <option>Hipertrofia</option><option>Emagrecimento</option><option>Condicionamento</option><option>Força</option><option>Saúde geral</option><option>Outro</option>
+              </select>
+            </label>
+            <label>Seu nível
+              <select id="f-exp" name="experiencia">
+                <option>Iniciante</option><option>Intermediário</option><option>Avançado</option>
+              </select>
+            </label>
+          </div>
+          <label>Onde você treina?
+            <select id="f-local" name="local">
+              <option>Academia</option><option>Condomínio</option><option>Casa</option><option>Outro</option>
+            </select>
+          </label>
+          <label>Alguma lesão ou limitação? <small>(opcional)</small>
+            <textarea id="f-rest" name="restricoes" maxlength="1500" placeholder="Ex.: dor no joelho, hérnia de disco, cirurgia recente..."></textarea>
+          </label>
+          <div class="hp" aria-hidden="true"><label>Não preencha<input id="f-site" name="site" tabindex="-1" autocomplete="off"></label></div>
+          <label class="consent"><input id="f-consent" name="consentimento" type="checkbox"><span>Autorizo o uso das informações de saúde que informei para montar meu treino. Necessário só se você preencher o campo de lesões. Veja a <a href="/privacidade.html">política de privacidade</a>.</span></label>
+          <p class="erro" id="erro" role="alert"></p>
+          <button class="btn" type="submit" id="enviar">Enviar e conversar</button>
+          <p class="fine">Ao enviar, você concorda em ser contatado pelo WhatsApp. Não enviamos spam.</p>
+        </form>
+        <div class="ok" id="ok" role="status">
+          <div class="big">Recebi!</div>
+          <p>Obrigado, <b id="ok-nome"></b>. Vou analisar o seu formulário e te chamo no WhatsApp em breve para montar o seu treino.</p>
+          <a class="btn ghost" href="https://www.instagram.com/matheusvenancio.pf/" rel="noopener">Ver meu Instagram</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="duvidas">
+    <div class="wrap faq">
+      <div class="sec-head"><div class="eyebrow">Dúvidas</div><h2>Perguntas frequentes</h2></div>
+      <details><summary>Como funciona o 1 mês grátis?</summary><p>Você testa a consultoria completa por 1 mês: treino montado, app e acompanhamento. Depois a gente conversa e você decide se quer continuar.</p></details>
+      <details><summary>Preciso baixar o app na loja?</summary><p>Não. O app abre direto no celular e você coloca o ícone na tela inicial em poucos toques. Eu te mando o passo a passo ilustrado, para iPhone e Android.</p></details>
+      <details><summary>Funciona para quem está começando?</summary><p>Sim. O treino é montado para o seu nível, e cada exercício tem animação ou vídeo de como fazer.</p></details>
+      <details><summary>E se eu tiver alguma lesão?</summary><p>Você conta na anamnese e eu considero isso desde o primeiro treino. Em casos que precisam de avaliação presencial ou médica, eu te oriento a procurar o profissional certo.</p></details>
+      <details><summary>Quanto custa depois do mês grátis?</summary><p>Na seção de planos você vê os valores: R$ 120 por mês no mensal, R$ 100 por mês no trimestral e R$ 80 por mês no semestral.</p></details>
+      <details><summary>Preciso ser atleta para treinar com você?</summary><p>Não. O método vem da preparação física de atletas, mas o treino é montado para o seu objetivo e para o seu ritmo, seja para saúde, estética, força ou para se sentir melhor no dia a dia.</p></details>
+      <details><summary>Preciso treinar em academia?</summary><p>O treino é montado para o local que você informar: academia, condomínio ou casa.</p></details>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Método Venâncio · Matheus Venâncio · CREF 038618-G/SC</span>
+    <span><a href="https://www.instagram.com/matheusvenancio.pf/" rel="noopener">@matheusvenancio.pf</a> · <a href="/">Já sou aluno</a> · <a href="/privacidade.html">Privacidade</a></span>
+  </div>
+</footer>
+
+<div class="sticky" id="sticky"><a class="btn" href="#form">Quero conhecer</a></div>
+
+<script>
+(function () {
+  var form = document.getElementById("lead"), ok = document.getElementById("ok"), erro = document.getElementById("erro"), btn = document.getElementById("enviar");
+  function $(id) { return document.getElementById(id); }
+  function mostraErro(t) { erro.textContent = t; erro.style.display = "block"; }
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    erro.style.display = "none";
+    var nome = $("f-nome").value.trim(), whats = $("f-whats").value.trim();
+    if (!nome) { mostraErro("Digite o seu nome."); $("f-nome").focus(); return; }
+    if (whats.replace(/\D/g, "").length < 10) { mostraErro("Digite o seu WhatsApp com DDD."); $("f-whats").focus(); return; }
+    if ($("f-rest").value.trim() && !$("f-consent").checked) { mostraErro("Marque a autorização para usar as informações de saúde que você informou."); $("f-consent").focus(); return; }
+    var feito = function () { $("ok-nome").textContent = nome.split(/\s+/)[0]; form.style.display = "none"; ok.style.display = "block"; ok.scrollIntoView({ behavior: "smooth", block: "center" }); };
+    if ($("f-site").value) { feito(); return; } // isca para robôs: finge que deu certo e não envia
+    btn.disabled = true; btn.textContent = "Enviando...";
+    var lead = { nome: nome, whats: whats, objetivo: $("f-obj").value, experiencia: $("f-exp").value, local: $("f-local").value, restricoes: $("f-rest").value.trim(), consentimento: !!$("f-consent").checked };
+    fetch("/api/lead", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ lead: lead }) })
+      .then(function (r) {
+        if (r.ok) { feito(); return; }
+        btn.disabled = false; btn.textContent = "Enviar e conversar";
+        mostraErro(r.status === 429 ? "Muitas tentativas. Tente de novo mais tarde." : "Não consegui enviar agora. Tente de novo em instantes.");
+      })
+      .catch(function () { btn.disabled = false; btn.textContent = "Enviar e conversar"; mostraErro("Sem conexão. Confira a internet e tente de novo."); });
+  });
+  // o botão fixo do celular some quando o formulário está na tela
+  var st = $("sticky"), alvo = $("form");
+  if (st && alvo && "IntersectionObserver" in window) {
+    new IntersectionObserver(function (es) { st.classList.toggle("off", es[0].isIntersecting); }, { threshold: 0.15 }).observe(alvo);
+  }
+})();
+</script>
+</body>
+</html>

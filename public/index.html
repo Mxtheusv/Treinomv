@@ -1252,8 +1252,8 @@
   .sa-nav { position: fixed; left: 0; right: 0; bottom: 0; display: flex; background: var(--sa-bg); border-top: 1px solid var(--sa-border); padding: 8px 4px calc(8px + env(safe-area-inset-bottom,0px)); z-index: 20; }
   .sa-nav button { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; background: none; border: 0; color: var(--sa-text-muted); font-size: 11px; font-weight: 600; padding: 6px 0; cursor: pointer; }
   .sa-nav button.active { color: var(--sa-accent-text); }
-  .sa-nav-icon { width: 18px; height: 18px; border: 2px solid currentColor; border-radius: 6px; }
-  .sa-nav button.active .sa-nav-icon { background: var(--sa-accent); border-color: var(--sa-accent); }
+  .sa-nav-icon { width: 24px; height: 24px; display: block; }
+  .sa-nav-icon svg { width: 100%; height: 100%; display: block; }
 
   .sa-treino-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--sa-border); }
   .sa-treino-head-title { font-size: 20px; }
@@ -9287,6 +9287,14 @@ function startApp() {
     return SA_NOVIDADES.filter(function (n) { return n.versao > vistas; });
   }
   var SA_BLOCO_COLORS = ["--sa-blue", "--sa-accent", "--sa-teal", "--sa-purple"];
+  // Ícones da barra de baixo, desenhados na cor do texto (ficam amarelos quando a aba está ativa).
+  var SA_NAV_ICONS = {
+    hoje: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="15" cy="4.5" r="2.2" fill="currentColor"></circle><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 9 L11 14.5"></path><path d="M13 10.5 L17 12.5 L18.5 10"></path><path d="M12.5 10.5 L8.5 11.5 L6.5 9.5"></path><path d="M11 14.5 L15 15.5 L14 20"></path><path d="M11 14.5 L8 16.5 L4.5 16.5"></path></g></svg>',
+    treino: '<svg viewBox="0 0 24 24" aria-hidden="true"><g fill="currentColor"><rect x="1.5" y="8" width="3.5" height="8" rx="1.2"></rect><rect x="5" y="10" width="2" height="4" rx="0.6"></rect><rect x="7" y="11" width="10" height="2" rx="0.6"></rect><rect x="17" y="10" width="2" height="4" rx="0.6"></rect><rect x="19" y="8" width="3.5" height="8" rx="1.2"></rect></g></svg>',
+    historico: '<svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"></rect><path d="M3 10h18"></path><path d="M8 3v4M16 3v4"></path><path d="M8.5 15l2.3 2.3 4.7-4.6"></path></g></svg>',
+    comunidade: '<svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"></circle><path d="M3 19.5c0-3.3 2.7-5.2 6-5.2s6 1.9 6 5.2"></path><circle cx="17" cy="9" r="2.4"></circle><path d="M16.5 14.4c2.5.2 4.5 1.8 4.5 4.6"></path></g></svg>',
+    perfil: '<svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"></circle><path d="M4.5 21c0-4.2 3.4-6.8 7.5-6.8s7.5 2.6 7.5 6.8"></path></g></svg>'
+  };
   var SA_TABS = [
     { key: "hoje", label: "Hoje" },
     { key: "treino", label: "Treino" },
@@ -9397,7 +9405,7 @@ function startApp() {
     }
     return SA_STREAK_TIERS[SA_STREAK_TIERS.length - 1];
   }
-  // ---------- Microciclo (blocos de 28 dias contados a partir do início do plano) ----------
+  // ---------- Microciclo (os primeiros 28 dias do plano, sem reiniciar sozinho) ----------
   // A barra embaixo de "Microciclo N" mostra quantos dias desse bloco já foram treinados.
   var SA_MICRO_DIAS = 28;
   function saMicrocicloInfo(s, plan) {
@@ -9407,23 +9415,21 @@ function startApp() {
     base = new Date(base.getFullYear(), base.getMonth(), base.getDate());
     var hoje = new Date(); hoje = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
     var dias = Math.max(0, Math.round((hoje - base) / 86400000));
-    var ciclo = Math.floor(dias / SA_MICRO_DIAS);
-    var inicio = new Date(base.getFullYear(), base.getMonth(), base.getDate() + ciclo * SA_MICRO_DIAS);
     var set = saAllActiveDatesSet(s), feitos = 0;
     for (var i = 0; i < SA_MICRO_DIAS; i++) {
-      var d = new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate() + i);
+      var d = new Date(base.getFullYear(), base.getMonth(), base.getDate() + i);
       if (d > hoje) break;
       if (set[isoFromDate(d)]) feitos++;
     }
-    return { feitos: feitos, total: SA_MICRO_DIAS, dia: dias - ciclo * SA_MICRO_DIAS + 1, pct: Math.round(feitos / SA_MICRO_DIAS * 100) };
+    return { feitos: feitos, total: SA_MICRO_DIAS, dia: Math.min(dias + 1, SA_MICRO_DIAS), concluido: dias >= SA_MICRO_DIAS, pct: Math.round(feitos / SA_MICRO_DIAS * 100) };
   }
   function microcicloBarHtml(s, plan) {
     if (!plan) return "";
     var m = saMicrocicloInfo(s, plan);
     return '<div class="sa-micro-bar">' +
-      '<div class="sa-micro-top"><span>Dia ' + m.dia + ' de ' + m.total + ' do microciclo</span><b>' + m.pct + '%</b></div>' +
+      '<div class="sa-micro-top"><span>' + (m.concluido ? "Microciclo concluído" : "Dia " + m.dia + " de " + m.total + " do microciclo") + '</span><b>' + m.pct + '%</b></div>' +
       '<div class="sa-tier-progress-track sa-micro-track"><div class="sa-tier-progress-fill" style="width:' + m.pct + '%;background:linear-gradient(90deg,var(--sa-teal),#ffc247)"></div></div>' +
-      '<div class="sa-micro-note">' + m.feitos + ' dia' + (m.feitos === 1 ? "" : "s") + ' treinado' + (m.feitos === 1 ? "" : "s") + ' neste ciclo</div>' +
+      '<div class="sa-micro-note">' + m.feitos + ' dia' + (m.feitos === 1 ? "" : "s") + ' treinado' + (m.feitos === 1 ? "" : "s") + (m.concluido ? " neste microciclo" : " até agora neste microciclo") + '</div>' +
       '</div>';
   }
 
@@ -13253,7 +13259,7 @@ function startApp() {
       '</div>';
 
     var navHtml = '<div class="sa-nav">' + saTabsFor(s).map(function (tb) {
-      return '<button type="button" data-sa-tab="' + tb.key + '" class="' + (state.saTab === tb.key ? "active" : "") + '"><span class="sa-nav-icon"></span>' + tb.label + '</button>';
+      return '<button type="button" data-sa-tab="' + tb.key + '" class="' + (state.saTab === tb.key ? "active" : "") + '"><span class="sa-nav-icon">' + (SA_NAV_ICONS[tb.key] || "") + '</span>' + tb.label + '</button>';
     }).join("") + '</div>';
 
     // #headerControls (where the classic "← Meus alunos" link normally

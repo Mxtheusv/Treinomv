@@ -11027,7 +11027,7 @@ function startApp() {
         }
         var data = saSessionData(s, plan, sess);
         var durationSec = Math.max(1, Math.floor((Date.now() - sess.startedAt) / 1000));
-        var seriesTotal = 0, seriesLogadas = 0;
+        var seriesTotal = 0, seriesLogadas = 0, volumeKg = 0;
         // A per-set snapshot of what was actually logged this session, kept
         // alongside the session record so "cargas ao longo do tempo" has a
         // real history to chart from -- ex.cargas itself only ever holds the
@@ -11066,6 +11066,12 @@ function startApp() {
                 feitasEx++;
                 var qN = data.isComp ? 0 : tecDropN(ex), qs = [];
                 for (var qk = 1; qk <= qN; qk++) { var qv = ex.cargas ? ex.cargas["s" + (i + 1) + "d" + qk] : ""; if (qv) qs.push(qv); }
+                // Volume do treino = carga x repetições de cada série feita (as quedas do drop-set entram também).
+                if (!data.isComp) {
+                  var repsVol = parseFloat(String(ex.reps || "").replace(",", ".")) || 0;
+                  volumeKg += (parseFloat(String(v || "").replace(",", ".")) || 0) * repsVol;
+                  for (var qv2 = 0; qv2 < qs.length; qv2++) volumeKg += (parseFloat(String(qs[qv2]).replace(",", ".")) || 0) * repsVol;
+                }
                 if (v) {
                   var logE = { exercicio: ex.nome || "", serie: data.isComp ? "CARGA" : ("S" + (i + 1)), valor: v };
                   if (qs.length) logE.quedas = qs;
@@ -11085,7 +11091,7 @@ function startApp() {
           kind: sess.kind, treinoId: sess.treinoId || null, nome: data ? data.titulo : "Treino",
           duracaoSeg: durationSec, seriesTotal: seriesTotal, seriesLogadas: seriesLogadas,
           pse: pse, cargasLog: cargasLog, obsLog: obsLog, seriesPorEx: seriesPorEx,
-          inicio: sess.startedAt
+          inicio: sess.startedAt, volumeKg: Math.round(volumeKg * 10) / 10
         };
         s.sessoes.push(novaSessao);
         saSessoesNovas[novaSessao.id] = true;
@@ -11323,7 +11329,7 @@ function startApp() {
       return { ts: ses.ts || 0, html: '<div class="sa-hist-item">' +
         '<div class="sa-hist-date"><span class="num">' + dm.day + '</span><span class="mon">' + String(dm.mon).toUpperCase() + '</span></div>' +
         '<div class="sa-hist-body"><div class="sa-hist-title">' + escapeHtml(String(ses.nome || "Treino").toUpperCase()) + '</div>' +
-        '<div class="sa-hist-meta">' + saFormatDuration(ses.duracaoSeg) + (ses.kind === "corrida" ? (ses.distanciaM ? ' · ' + wearFmtDist(ses.distanciaM) : ' · corrida') : ' · ' + (ses.seriesTotal || 0) + ' séries') + '</div>' + obsHtml + ((ses.id && ses.kind !== "corrida") ? '<button type="button" class="sa-hist-del" data-del-ses="' + escapeAttr(ses.id) + '">remover</button>' : '') + '</div>' +
+        '<div class="sa-hist-meta">' + saFormatDuration(ses.duracaoSeg) + (ses.kind === "corrida" ? (ses.distanciaM ? ' · ' + wearFmtDist(ses.distanciaM) : ' · corrida') : ' · ' + (ses.seriesTotal || 0) + ' séries') + '</div>' + obsHtml + (ses.id ? '<button type="button" class="sa-hist-del" data-cartao-ses="' + escapeAttr(ses.id) + '">📸 Cartão</button>' : '') + ((ses.id && ses.kind !== "corrida") ? '<button type="button" class="sa-hist-del" data-del-ses="' + escapeAttr(ses.id) + '">remover</button>' : '') + '</div>' +
         pseHtml + '</div>' };
     });
     importadas.forEach(function (a) {
@@ -11465,6 +11471,123 @@ function startApp() {
     return fetch("/api/feed", { method: "POST", headers: feedHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify(Object.assign({ slug: state.slug, action: "post", tipo: tipo, texto: texto, foto: foto || "" }, extra || {})) });
   }
+  // ---------- Cartão do treino: imagem estilo Strava para postar (foto de fundo opcional) ----------
+  function saCartaoDuracao(sec) {
+    sec = Math.round(sec || 0);
+    var h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), r = sec % 60;
+    var p2 = function (n) { return (n < 10 ? "0" : "") + n; };
+    return h ? h + ":" + p2(m) + ":" + p2(r) : m + ":" + p2(r);
+  }
+  function saCartaoLinhas(ctx, txt, maxW) {
+    var palavras = String(txt || "").split(/\s+/), linhas = [], atual = "";
+    palavras.forEach(function (w) {
+      var tenta = atual ? atual + " " + w : w;
+      if (ctx.measureText(tenta).width > maxW && atual) { linhas.push(atual); atual = w; } else atual = tenta;
+    });
+    if (atual) linhas.push(atual);
+    return linhas.slice(0, 2);
+  }
+  function saDesenhaCartao(cv, ses, foto) {
+    var W = 1080, H = 1350, ctx = cv.getContext("2d");
+    cv.width = W; cv.height = H;
+    var fonteTitulo = "800 {T}px 'Saira Condensed', 'Arial Narrow', Arial, sans-serif";
+    if (foto) {
+      var k = Math.max(W / foto.width, H / foto.height), fw = foto.width * k, fh = foto.height * k;
+      ctx.drawImage(foto, (W - fw) / 2, (H - fh) / 2, fw, fh);
+    } else {
+      var g = ctx.createLinearGradient(0, 0, W, H); g.addColorStop(0, "#0b1020"); g.addColorStop(1, "#1d2a4d");
+      ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+      var glow = ctx.createRadialGradient(W * 0.8, H * 0.12, 40, W * 0.8, H * 0.12, 720);
+      glow.addColorStop(0, "rgba(255,194,71,.38)"); glow.addColorStop(1, "rgba(255,194,71,0)");
+      ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
+    }
+    // degradê escuro embaixo: o texto aparece em qualquer foto
+    var sombra = ctx.createLinearGradient(0, H * 0.4, 0, H);
+    sombra.addColorStop(0, "rgba(0,0,0,0)"); sombra.addColorStop(0.5, "rgba(0,0,0,.7)"); sombra.addColorStop(1, "rgba(0,0,0,.92)");
+    ctx.fillStyle = sombra; ctx.fillRect(0, 0, W, H);
+    // topo: marca
+    ctx.fillStyle = "#ffc247"; ctx.font = fonteTitulo.replace("{T}", 46);
+    ctx.fillText("TREINO ONLINE", 70, 120);
+    // nome do treino e data
+    var nome = ses.nome || "Treino";
+    ctx.fillStyle = "#ffffff"; ctx.font = fonteTitulo.replace("{T}", 104);
+    var linhas = saCartaoLinhas(ctx, nome, W - 140);
+    linhas.forEach(function (ln, i) { ctx.fillText(ln, 70, 250 + i * 110); });
+    var yData = 250 + (linhas.length - 1) * 110 + 70;
+    ctx.fillStyle = "#e6ecff"; ctx.font = "600 40px Arial, sans-serif";
+    ctx.fillText(formatDateBR(ses.date) || "", 70, yData);
+    // estatísticas (estilo Strava): valor grande + rótulo embaixo
+    var stats;
+    if (ses.kind === "corrida") {
+      var km = ses.distanciaM ? ses.distanciaM / 1000 : 0;
+      var ritmo = km && ses.duracaoSeg ? Math.round(ses.duracaoSeg / km) : 0;
+      stats = [
+        { v: km ? km.toFixed(2).replace(".", ",") : "—", l: "km" },
+        { v: saCartaoDuracao(ses.duracaoSeg), l: "duração" },
+        { v: ritmo ? saCartaoDuracao(ritmo).replace(/^0:/, "") : "—", l: "min/km" }
+      ];
+    } else {
+      stats = [
+        { v: ses.volumeKg ? Math.round(ses.volumeKg).toLocaleString("pt-BR") : "—", l: "kg de volume" },
+        { v: saCartaoDuracao(ses.duracaoSeg), l: "duração" },
+        { v: String(ses.seriesLogadas || ses.seriesTotal || 0), l: "séries" }
+      ];
+    }
+    // valor principal grande; os outros dois numa linha abaixo
+    ctx.fillStyle = "#ffffff"; ctx.font = fonteTitulo.replace("{T}", 230);
+    ctx.fillText(stats[0].v, 70, 960);
+    ctx.fillStyle = "#c9d3ea"; ctx.font = "700 34px Arial, sans-serif";
+    ctx.fillText(stats[0].l.toUpperCase(), 74, 1010);
+    [[70, stats[1]], [560, stats[2]]].forEach(function (par) {
+      ctx.fillStyle = "#ffffff"; ctx.font = fonteTitulo.replace("{T}", 120);
+      ctx.fillText(par[1].v, par[0], 1120);
+      ctx.fillStyle = "#c9d3ea"; ctx.font = "700 32px Arial, sans-serif";
+      ctx.fillText(par[1].l.toUpperCase(), par[0] + 4, 1170);
+    });
+    // rodapé: quem treinou
+    ctx.fillStyle = "#c9d3ea"; ctx.font = "600 36px Arial, sans-serif";
+    ctx.fillText("Matheus Venâncio · CREF 038618-G/SC", 70, H - 70);
+  }
+  function saAbrirCartao(s, sesId) {
+    var ses = (s.sessoes || []).filter(function (x) { return x.id === sesId; })[0];
+    if (!ses) return;
+    var velho = document.getElementById("saCartaoOv"); if (velho) velho.remove();
+    var ov = document.createElement("div"); ov.id = "saCartaoOv"; ov.className = "sa-modal-overlay";
+    ov.innerHTML = '<div class="sa-modal" style="max-width:420px;width:94%;max-height:94vh;overflow:auto">' +
+      '<div class="sa-card-title sa-display" style="margin-bottom:10px">Cartão do treino</div>' +
+      '<canvas id="saCartaoCv" style="width:100%;height:auto;border-radius:14px;display:block"></canvas>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">' +
+      '<label class="sa-cta-ghost" style="flex:1;text-align:center;cursor:pointer">📷 Foto<input type="file" accept="image/*" id="saCartaoFoto" style="display:none"></label>' +
+      '<button type="button" class="sa-cta" id="saCartaoBaixar" style="flex:1">Baixar</button>' +
+      '<button type="button" class="sa-cta-ghost" id="saCartaoCompartilhar" style="flex:1">Compartilhar</button>' +
+      '</div><button type="button" class="sa-cta-ghost" id="saCartaoFechar" style="width:100%;margin-top:10px">Fechar</button></div>';
+    document.body.appendChild(ov);
+    var cv = document.getElementById("saCartaoCv"), foto = null;
+    var desenha = function () { saDesenhaCartao(cv, ses, foto); };
+    desenha();
+    document.getElementById("saCartaoFoto").onchange = function (e) {
+      var f = e.target.files && e.target.files[0]; if (!f) return;
+      var img = new Image();
+      img.onload = function () { foto = img; desenha(); };
+      img.src = URL.createObjectURL(f);
+    };
+    document.getElementById("saCartaoBaixar").onclick = function () {
+      cv.toBlob(function (b) {
+        var a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "cartao-treino-" + (ses.date || "") + ".png";
+        document.body.appendChild(a); a.click();
+        setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+      }, "image/png");
+    };
+    document.getElementById("saCartaoCompartilhar").onclick = function () {
+      cv.toBlob(function (b) {
+        var arq = new File([b], "treino.png", { type: "image/png" });
+        if (navigator.canShare && navigator.canShare({ files: [arq] })) navigator.share({ files: [arq], title: "Meu treino", text: ses.nome || "" }).catch(function () {});
+        else showToast("Este aparelho não compartilha direto. Use Baixar e envie pelo Instagram.", true);
+      }, "image/png");
+    };
+    document.getElementById("saCartaoFechar").onclick = function () { ov.remove(); };
+  }
+
   function saFeedPodePostar(s) { return !state.trainerPreview && !s.feedOff && !!state.slug; }
   // Fire-and-forget: nunca atrapalha concluir o treino.
   function saFeedAuto(s, tipo, texto, extra) {
@@ -13494,6 +13617,10 @@ function startApp() {
         sesRemover(s, btn.getAttribute("data-del-ses"));
         saveNow("Treino removido do histórico", true);
       };
+    });
+
+    Array.prototype.forEach.call(document.querySelectorAll("[data-cartao-ses]"), function (btn) {
+      btn.onclick = function () { saAbrirCartao(s, btn.getAttribute("data-cartao-ses")); };
     });
 
     var btnSair = document.getElementById("btnSairTreino");
@@ -15696,9 +15823,33 @@ function startApp() {
   })();
 
   var saveTimer = null;
+  // Check-in automático: o aluno mexeu no treino de hoje (marcou série ou mudou carga), não concluiu,
+  // e já se passaram SA_CHECKIN_MIN minutos sem nova mudança -> o dia conta como treinado.
+  var SA_CHECKIN_MIN = 30;
+  function saCheckinPorInatividade() {
+    try {
+      if (!state.slug || !isStudentView() || state.atendimento || state.trainerPreview) return;
+      var s = student();
+      var sess = s && s.sessaoEmAndamento;
+      if (!sess || !sess.ultimaMudanca) return;
+      if (isoFromDate(new Date(sess.ultimaMudanca)) !== todayISO()) return; // só conta o que foi feito hoje
+      if (hasCheckedInToday(s)) return;
+      if (Date.now() - sess.ultimaMudanca < SA_CHECKIN_MIN * 60000) return;
+      addCheckinToday(s);
+      scheduleSave();
+    } catch (e) {}
+  }
+  setInterval(saCheckinPorInatividade, 60000);
+  window.addEventListener("focus", saCheckinPorInatividade);
+
   function scheduleSave(rerenderAfter) {
     undoCapture();
     state.dirty = true;
+    // Aluno: guarda a hora da última mudança no treino em andamento (base do check-in automático).
+    try {
+      var sAtiva = state.slug && isStudentView() && !state.trainerPreview && !state.atendimento ? student() : null;
+      if (sAtiva && sAtiva.sessaoEmAndamento) sAtiva.sessaoEmAndamento.ultimaMudanca = Date.now();
+    } catch (e) {}
     if (saveTimer) clearTimeout(saveTimer);
     saveTimer = setTimeout(function () { saveNow("Salvo", rerenderAfter); }, 900);
   }
@@ -16433,6 +16584,46 @@ function startApp() {
       return r;
     });
   }
+
+  // Página de demonstração (#aluno=demo): mostra o app do aluno com dados FICTÍCIOS. Tudo fica só na memória
+  // desta aba: as chamadas ao servidor são respondidas aqui e nada é gravado. Recarregar volta ao exemplo.
+  (function demoLocal() {
+    if (!/(?:^#|[#&])aluno=demo(?:&|$)/.test(location.hash)) return;
+    var diasAtras = function (n) {
+      var d = new Date(); d.setDate(d.getDate() - n);
+      return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    };
+    var ex = function (id, nome, series, reps, carga) {
+      return { id: id, nome: nome, series: series, reps: reps, intervalo: "90s", equipamento: "", obs: "", obsAluno: "", cargas: { s1: carga, s2: carga, s3: carga } };
+    };
+    var treinos = [
+      { id: "dA", nome: "Treino A · Peito e costas", blocos: [{ id: "dAb", bloco: "A", titulo: "", exercicios: [ex("dA1", "PEITO SUPINO RETO", "3", "10", "50"), ex("dA2", "COSTAS PUXADA POLIA/CABO PEGADA FECHADA", "3", "12", "45")] }], aerobicos: [] },
+      { id: "dB", nome: "Treino B · Pernas", blocos: [{ id: "dBb", bloco: "B", titulo: "", exercicios: [ex("dB1", "COXA AGACHAMENTO HACK", "4", "10", "120"), ex("dB2", "GLÚTEO MÁQUINA ABDUTORA", "3", "15", "60")] }], aerobicos: [] },
+      { id: "dC", nome: "Treino C · Ombros e core", blocos: [{ id: "dCb", bloco: "C", titulo: "", exercicios: [ex("dC1", "OMBRO DESENVOLVIMENTO HALTERES SENTADO", "3", "10", "16"), ex("dC2", "COSTAS REMADA HALTERES PRANCHA", "3", "12", "14")] }], aerobicos: [] }
+    ];
+    var hist = [[1, "dA", 3, 1900], [3, "dB", 4, 2200], [4, "dC", 3, 1500], [6, "dA", 3, 1850], [8, "dB", 4, 2100], [10, "dC", 3, 1450], [11, "dA", 3, 1800]];
+    var sessoes = hist.map(function (h) {
+      var t = treinos.filter(function (x) { return x.id === h[1]; })[0];
+      return { id: "demo" + h[0], date: diasAtras(h[0]), ts: Date.now() - h[0] * 86400000, inicio: Date.now() - h[0] * 86400000 - 3e6, kind: "treino", treinoId: t.id, nome: t.nome,
+        duracaoSeg: 2400 + h[0] * 30, seriesTotal: h[2], seriesLogadas: h[2], volumeKg: h[3], pse: 7, cargasLog: [], obsLog: [], seriesPorEx: [] };
+    });
+    sessoes.push({ id: "demoC5", date: diasAtras(5), ts: Date.now() - 5 * 86400000, kind: "corrida", nome: "Corrida leve", duracaoSeg: 1620, distanciaM: 5000 });
+    var aluna = { nome: "Ana Exemplo", plans: [{ id: "dp1", label: "Plano 1", createdAt: Date.now() - 18 * 86400000, archived: false, microciclo: "Microciclo 1", startDate: null, endDate: null, rotationIdx: 0, complementarHidden: true,
+      treinos: treinos, complementar: { nome: "VELOCIDADE, AGILIDADE E POTÊNCIA", protocolos: [], grupos: [], nota: "" } }],
+      activePlanId: "dp1", checkins: sessoes.map(function (x) { return x.date; }), feedback: [], notas: "", sessoes: sessoes, humor: {}, sessaoEmAndamento: null,
+      novidadesVistas: 99, criadoEm: Date.now() - 18 * 86400000, primeiroAcessoEm: Date.now() - 18 * 86400000 };
+    var mem = { version: 1, data: { students: { demo: aluna }, templates: [], leads: [], alertaCheckinDias: 7 }, catalog: [] };
+    var realFetch = window.fetch.bind(window);
+    window.fetch = function (url, init) {
+      var u = String(url || "");
+      if (u.indexOf("/api/") !== 0) return realFetch(url, init);
+      var corpo;
+      if (u.indexOf("/api/state") === 0) corpo = mem;
+      else if (u.indexOf("/api/feed") === 0 || u.indexOf("/api/comunidade") === 0 || u.indexOf("/api/turma") === 0) corpo = { posts: [], turma: null, ok: true };
+      else corpo = { ok: true, version: mem.version };
+      return Promise.resolve(new Response(JSON.stringify(corpo), { status: 200, headers: { "Content-Type": "application/json" } }));
+    };
+  })();
 
   var isIntake = false;
   try { isIntake = new URLSearchParams(location.search).get("novo") === "1"; } catch (e) {}

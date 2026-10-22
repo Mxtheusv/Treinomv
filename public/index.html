@@ -11487,7 +11487,40 @@ function startApp() {
     if (atual) linhas.push(atual);
     return linhas.slice(0, 2);
   }
-  function saDesenhaCartao(cv, ses, foto) {
+  // Logo da marca (ícone do app), carregada uma vez para a marca d'água dos cartões.
+  var SA_LOGO_IMG = null, SA_LOGO_MARCA = null, SA_LOGO_FILA = [], SA_LOGO_CARREGANDO = false;
+  // Versão da logo sem o fundo branco, para a marca d'água ficar só com o desenho.
+  function saLogoSemFundo(img) {
+    try {
+      var c = document.createElement("canvas");
+      c.width = img.naturalWidth || img.width; c.height = img.naturalHeight || img.height;
+      var x = c.getContext("2d"); x.drawImage(img, 0, 0);
+      var d = x.getImageData(0, 0, c.width, c.height), p = d.data;
+      for (var i = 0; i < p.length; i += 4) {
+        var mn = Math.min(p[i], p[i + 1], p[i + 2]);
+        if (mn >= 226) p[i + 3] = 0;
+        else if (mn > 186) p[i + 3] = Math.round(p[i + 3] * (226 - mn) / 40);
+      }
+      x.putImageData(d, 0, 0);
+      return c;
+    } catch (e) { return null; }
+  }
+  function saCartaoLogo(cb) {
+    if (SA_LOGO_IMG !== null || SA_LOGO_FILA === null) return cb(SA_LOGO_IMG, SA_LOGO_MARCA);
+    SA_LOGO_FILA.push(cb);
+    if (SA_LOGO_CARREGANDO) return;
+    SA_LOGO_CARREGANDO = true;
+    var fim = function (img) {
+      SA_LOGO_IMG = img; SA_LOGO_MARCA = img ? saLogoSemFundo(img) : null;
+      var fila = SA_LOGO_FILA || []; SA_LOGO_FILA = null;
+      fila.forEach(function (f) { f(SA_LOGO_IMG, SA_LOGO_MARCA); });
+    };
+    var im = new Image();
+    im.onload = function () { fim(im); };
+    im.onerror = function () { fim(null); };
+    im.src = "/icons/icon-192.png";
+  }
+  function saDesenhaCartao(cv, ses, foto, nomeAluno) {
     var W = 1080, H = 1350, ctx = cv.getContext("2d");
     cv.width = W; cv.height = H;
     var fonteTitulo = "800 {T}px 'Saira Condensed', 'Arial Narrow', Arial, sans-serif";
@@ -11505,15 +11538,14 @@ function startApp() {
     var sombra = ctx.createLinearGradient(0, H * 0.4, 0, H);
     sombra.addColorStop(0, "rgba(0,0,0,0)"); sombra.addColorStop(0.5, "rgba(0,0,0,.7)"); sombra.addColorStop(1, "rgba(0,0,0,.92)");
     ctx.fillStyle = sombra; ctx.fillRect(0, 0, W, H);
-    // topo: marca
-    ctx.fillStyle = "#ffc247"; ctx.font = fonteTitulo.replace("{T}", 46);
-    ctx.fillText("TREINO ONLINE", 70, 120);
-    // nome do treino e data
+    // topo: nome do aluno (só ele), nome do treino e data
+    ctx.fillStyle = "#ffc247"; ctx.font = fonteTitulo.replace("{T}", 60);
+    ctx.fillText(String(nomeAluno || "").toUpperCase(), 70, 150);
     var nome = ses.nome || "Treino";
     ctx.fillStyle = "#ffffff"; ctx.font = fonteTitulo.replace("{T}", 104);
     var linhas = saCartaoLinhas(ctx, nome, W - 140);
-    linhas.forEach(function (ln, i) { ctx.fillText(ln, 70, 250 + i * 110); });
-    var yData = 250 + (linhas.length - 1) * 110 + 70;
+    linhas.forEach(function (ln, i) { ctx.fillText(ln, 70, 270 + i * 110); });
+    var yData = 270 + (linhas.length - 1) * 110 + 70;
     ctx.fillStyle = "#e6ecff"; ctx.font = "600 40px Arial, sans-serif";
     ctx.fillText(formatDateBR(ses.date) || "", 70, yData);
     // estatísticas (estilo Strava): valor grande + rótulo embaixo
@@ -11544,9 +11576,20 @@ function startApp() {
       ctx.fillStyle = "#c9d3ea"; ctx.font = "700 32px Arial, sans-serif";
       ctx.fillText(par[1].l.toUpperCase(), par[0] + 4, 1170);
     });
-    // rodapé: quem treinou
-    ctx.fillStyle = "#c9d3ea"; ctx.font = "600 36px Arial, sans-serif";
-    ctx.fillText("Matheus Venâncio · CREF 038618-G/SC", 70, H - 70);
+    // marca d'água: nome do personal no rodapé + logo (a logo grande e clarinha ao fundo)
+    ctx.fillStyle = "#ffffff"; ctx.font = "700 38px Arial, sans-serif";
+    ctx.fillText("Matheus Venâncio · CREF 038618-G/SC", 178, H - 100);
+    ctx.fillStyle = "#ffc247"; ctx.font = fonteTitulo.replace("{T}", 34);
+    ctx.fillText("TREINO ONLINE", 178, H - 52);
+    var versao = cv._versaoCartao = (cv._versaoCartao || 0) + 1;
+    saCartaoLogo(function (logo, marca) {
+      // só desenha se esta ainda for a última versão do cartão (evita marca d'água dupla)
+      if (!logo || cv._versaoCartao !== versao) return;
+      ctx.save();
+      ctx.globalAlpha = 0.2; ctx.drawImage(marca || logo, W * 0.5, H * 0.2, 500, 500);
+      ctx.restore();
+      ctx.drawImage(logo, 70, H - 150, 96, 96);
+    });
   }
   function saAbrirCartao(s, sesId) {
     var ses = (s.sessoes || []).filter(function (x) { return x.id === sesId; })[0];
@@ -11563,7 +11606,8 @@ function startApp() {
       '</div><button type="button" class="sa-cta-ghost" id="saCartaoFechar" style="width:100%;margin-top:10px">Fechar</button></div>';
     document.body.appendChild(ov);
     var cv = document.getElementById("saCartaoCv"), foto = null;
-    var desenha = function () { saDesenhaCartao(cv, ses, foto); };
+    var primeiroNome = String(s.nome || "").split(/\s+/)[0] || "";
+    var desenha = function () { saDesenhaCartao(cv, ses, foto, primeiroNome); };
     desenha();
     document.getElementById("saCartaoFoto").onchange = function (e) {
       var f = e.target.files && e.target.files[0]; if (!f) return;

@@ -576,6 +576,9 @@
   .ex-load-up { color: #15803d; font-weight: 800; }
   .ex-load-down { color: #b91c1c; font-weight: 800; }
   .ex-load-flat { color: #b45309; }
+  /* Sugestão de carga dentro do cartão do aluno: usa os tokens do app do aluno (tema escuro). */
+  .sa-ex-card .ex-load-note { margin: 8px 0 0; font-size: 13px; color: var(--sa-text-muted); }
+  .sa-ex-card .ex-load-note strong { color: var(--sa-text); }
   .ex-tools { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
   .ex-tool-btn {
     border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; font: inherit;
@@ -3754,7 +3757,7 @@ function startApp() {
     [/gluteo.*ponte/, "3013"],
     // ---- peito ----
     [/crucifixo inverso/, "0383"],
-    [/crucifixo.*inclinado/, "0319"],
+    [/crucifixo.*inclinado/, ""],
     [/maquina crucifixo|voador|peck/, "0596"],
     [/crucifixo/, "0308"],
     [/supino.*peso corporal/, "0662"],
@@ -3764,7 +3767,10 @@ function startApp() {
     [/supino.*maquina/, "0577"],
     [/triceps supino/, "0289"],
     [/supino.*halter.*inclinado/, "0314"],
-    [/supino.*halter/, "0289"],
+    [/supino.*declinado.*halter/, "0289"],
+    [/supino.*halter/, ""],
+    [/supino reto/, "0025"],
+    [/supino.*(declinado|inclinado).*barra/, ""],
     [/supino.*barra/, "0025"],
     // ---- ombro ----
     [/desenvolvimento.*maquina/, "0603"],
@@ -3807,7 +3813,8 @@ function startApp() {
   function gifPadrao(nome) {
     var n = execNorm(nome);
     if (!n) return "";
-    for (var i = 0; i < GIF_PADRAO.length; i++) if (GIF_PADRAO[i][0].test(n)) return "/exercicios-ref/" + GIF_PADRAO[i][1] + ".mp4";
+    // Código vazio = movimento sem animação fiel: não mostra nenhuma em vez de mostrar outro exercício.
+    for (var i = 0; i < GIF_PADRAO.length; i++) if (GIF_PADRAO[i][0].test(n)) return GIF_PADRAO[i][1] ? "/exercicios-ref/" + GIF_PADRAO[i][1] + ".mp4" : "";
     return "";
   }
   var MOB_FOTO = {"0": ["Foot-SMR"], "1": ["Calves-SMR"], "2": ["Hamstring-SMR"], "3": ["Quadriceps-SMR"], "5": ["Iliotibial_Tract-SMR"], "6": ["Piriformis-SMR"], "7": ["Lower_Back-SMR"], "8": ["Rhomboids-SMR"], "11": ["Anterior_Tibialis-SMR"], "15": ["Ankle_Circles"], "16": ["Hug_Knees_To_Chest", "One_Knee_To_Chest"], "17": ["Kneeling_Hip_Flexor", "Standing_Hip_Flexors"], "18": ["Ankle_On_The_Knee", "Hip_Circles_prone"], "19": ["Standing_Hip_Circles"], "20": ["Cat_Stretch"], "21": ["Torso_Rotation"], "22": ["Shoulder_Stretch"], "23": ["Chest_And_Front_Of_Shoulder_Stretch"], "24": ["External_Rotation_with_Band", "Internal_Rotation_with_Band"], "25": ["Round_The_World_Shoulder_Stretch", "Shoulder_Circles"], "26": ["Dead_Bug"], "27": ["Pallof_Press"], "28": ["Side_Bridge"], "31": ["External_Rotation_with_Band", "Face_Pull"]};
@@ -6939,6 +6946,43 @@ function startApp() {
     }
     return '<div class="' + cls + '">' + txt + '</div>';
   }
+  // Sugestão de carga para a próxima sessão, com base na última vez que o exercício foi feito.
+  // Regra simples (não é IA): se a última sessão com esse exercício fez todas as séries
+  // planejadas e o PSE foi até 8, sugere +2,5 kg sobre a maior carga usada; senão, mantém.
+  // Usa só o que o app já guarda (cargasLog, seriesPorEx, pse). O app não registra as
+  // repetições feitas, então "todas as séries" é o critério de conclusão.
+  function sugestaoCargaNote(ex) {
+    var nome = ((ex && ex.nome) || "").trim();
+    var s = nome ? student() : null;
+    if (!s) return "";
+    var k = normNome(nome), ss = s.sessoes || [], ultima = null;
+    for (var i = ss.length - 1; i >= 0; i--) {
+      if ((ss[i].cargasLog || []).some(function (c) { return normNome(c.exercicio) === k; })) { ultima = ss[i]; break; }
+    }
+    if (!ultima) return "";
+    var pseRaw = ultima.pse;
+    var pse = (pseRaw === null || pseRaw === undefined || pseRaw === "") ? NaN : parseFloat(pseRaw);
+    if (isNaN(pse)) return "";
+    var maxVal = 0, feitas = 0;
+    ultima.cargasLog.forEach(function (c) {
+      if (normNome(c.exercicio) !== k) return;
+      var v = parseFloat(String(c.valor).replace(",", "."));
+      if (!isNaN(v) && v > maxVal) maxVal = v;
+    });
+    if (!(maxVal > 0)) return "";
+    (ultima.seriesPorEx || []).forEach(function (x) { if (normNome(x.exercicio) === k) feitas += x.n || 0; });
+    if (!feitas) feitas = ultima.cargasLog.filter(function (c) { return normNome(c.exercicio) === k; }).length;
+    var planejadas = saExSetCount(ex);
+    var txt;
+    if (planejadas && feitas < planejadas) {
+      txt = 'Sugestão: manter <strong>' + fmtKgNum(maxVal) + ' kg</strong> <span class="ex-load-when">· faltaram séries na última vez</span>';
+    } else if (pse > 8) {
+      txt = 'Sugestão: manter <strong>' + fmtKgNum(maxVal) + ' kg</strong> <span class="ex-load-when">· PSE ' + fmtKgNum(pse) + ' na última vez</span>';
+    } else {
+      txt = 'Sugestão: <strong>' + fmtKgNum(maxVal + 2.5) + ' kg</strong> <span class="ex-load-when">· última vez com PSE ' + fmtKgNum(pse) + ' e séries feitas</span>';
+    }
+    return '<div class="ex-load-note ex-load-sugestao">' + txt + '</div>';
+  }
   function progBadgeHtml(cat) {
     var mi = cat && mobInfo(cat);
     if (!mi) return "";
@@ -6952,7 +6996,7 @@ function startApp() {
     if (!isStudentView() && nome && !cat) {
       out += '<button type="button" class="ex-out-badge" data-fix-ex="1" title="Esse nome não está no Acervo (fica sem vídeo e sem grupo muscular). Toque para adicionar.">⚠️ Fora do Acervo · adicionar</button>';
     }
-    return out + priorUsageNote(ex.nome) + cargaTrendNote(ex.nome);
+    return out + priorUsageNote(ex.nome) + cargaTrendNote(ex.nome) + sugestaoCargaNote(ex);
   }
 
   function treinoTemConteudo(treino) {
@@ -10181,6 +10225,7 @@ function startApp() {
           cardsHtml.push('<div class="sa-ex-card">' +
             '<div class="sa-ex-head"><span class="sa-ex-name">' + escapeHtml(ex.nome || "(exercício)") + '</span><div class="sa-ex-actions"><span class="sa-info-slot">' + infoHtml + timerHtml + '</span>' + checkBtnHtml + '</div></div>' +
             (chainBadgeHtml || badgesHtml ? '<div class="sa-ex-badges">' + chainBadgeHtml + badgesHtml + '</div>' : '') +
+            sugestaoCargaNote(ex) +
             (ex.tecnica && tecInfo(ex.tecnica) ? '<div class="sa-tec"><div class="sa-tec-l"><span class="sa-tec-t">⚡ ' + escapeHtml(tecInfo(ex.tecnica).nome.toUpperCase()) + '</span>' +
               ((ex.tecnicaDet || tecInfo(ex.tecnica).det) ? '<span class="sa-tec-d">' + escapeHtml(ex.tecnicaDet || tecInfo(ex.tecnica).det) + '</span>' : '') + '</div>' +
               '<button type="button" class="sa-tec-btn" data-tec="' + ex.tecnica + '" data-tec-det="' + escapeAttr(ex.tecnicaDet || "") + '">Como fazer</button></div>' : '') +

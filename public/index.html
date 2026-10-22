@@ -9846,7 +9846,7 @@ function startApp() {
     // would open already looking fully done, yellow cells and all, instead
     // of the fresh "vamos de novo" start the trainer asked for.
     state.saView = null;
-    s.sessaoEmAndamento = { kind: kind, treinoId: resolvedTreinoId, date: todayISO(), startedAt: Date.now(), touchedSets: {} };
+    s.sessaoEmAndamento = { kind: kind, treinoId: resolvedTreinoId, date: todayISO(), startedAt: Date.now(), touchedSets: {}, typedSets: {} };
     state.saTab = "treino";
     saveNow("Treino iniciado", true);
   }
@@ -11141,7 +11141,10 @@ function startApp() {
                   volumeKg += (parseFloat(String(v || "").replace(",", ".")) || 0) * repsVol;
                   for (var qv2 = 0; qv2 < qs.length; qv2++) volumeKg += (parseFloat(String(qs[qv2]).replace(",", ".")) || 0) * repsVol;
                 }
-                if (v) {
+                // Só vai pro histórico de cargas o que foi digitado NESTA sessão. Sem isso, tocar no ✓
+                // sem digitar gravava o peso antigo (a referência) como se fosse o de hoje.
+                var typedFinal = !!(sess.typedSets && sess.typedSets[ex.id + ":" + i]);
+                if (v && typedFinal) {
                   var logE = { exercicio: ex.nome || "", serie: data.isComp ? "CARGA" : ("S" + (i + 1)), valor: v };
                   if (qs.length) logE.quedas = qs;
                   cargasLog.push(logE);
@@ -13803,6 +13806,9 @@ function startApp() {
         if (sess) {
           if (!sess.touchedSets) sess.touchedSets = {};
           sess.touchedSets[entry.ex.id + ":" + idx] = !!inp.value;
+          // Carga digitada NESTA sessão: só ela vai pro histórico de cargas (ver o fechamento do treino).
+          if (!sess.typedSets) sess.typedSets = {};
+          sess.typedSets[entry.ex.id + ":" + idx] = !!inp.value;
         }
         scheduleSave();
         var cell = inp.closest(".sa-set-cell");
@@ -13827,7 +13833,7 @@ function startApp() {
         if (!entry.ex.cargas) entry.ex.cargas = {};
         entry.ex.cargas["s" + (idx + 1) + "d" + k] = inp.value;
         var sess = s.sessaoEmAndamento;
-        if (sess && inp.value) { if (!sess.touchedSets) sess.touchedSets = {}; sess.touchedSets[entry.ex.id + ":" + idx] = true; }
+        if (sess && inp.value) { if (!sess.touchedSets) sess.touchedSets = {}; sess.touchedSets[entry.ex.id + ":" + idx] = true; if (!sess.typedSets) sess.typedSets = {}; sess.typedSets[entry.ex.id + ":" + idx] = true; }
         scheduleSave();
         var cell = inp.closest(".sa-set-cell");
         if (cell && inp.value) cell.classList.add("done");

@@ -2775,6 +2775,105 @@ function startApp() {
     }
   })();
 
+  // Avisos de novidade mostrados uma vez para cada aluno na aba Hoje. Cada
+  // entrada tem sua própria "versão" (um número que só sobe conforme novas
+  // melhorias forem lançadas); o aluno vê um cartão com as novidades que
+  // ainda não viu até tocar em "Entendi", que grava a maior versão já vista
+  // em s.novidadesVistas -- dali em diante aquele aviso nunca mais aparece
+  // (nem em outro aparelho, já que isso é salvo no servidor como o resto
+  // dos dados do aluno).
+  var SA_NOVIDADES = [
+    {
+      versao: 1,
+      titulo: "Duas novidades no treino",
+      texto: "Toque no ✓ ao lado do nome do exercício (ou do aeróbico) para marcar tudo como feito de uma vez, sem precisar digitar nada. E se você fechar a aba no meio do treino, o que já foi preenchido agora fica salvo na hora -- sem perder nada."
+    },
+    {
+      versao: 2,
+      titulo: "Sua sequência de treinos 🔥",
+      texto: "Agora você vê quantos dias seguidos está treinando (e seu recorde pessoal) logo na tela inicial. E se um dia não tiver treino do plano -- tipo fim de semana -- mas você se mexeu por fora (corrida, caminhada, um esporte...), é só tocar em \"Fiz outra atividade hoje\" pra isso contar e manter sua sequência viva."
+    },
+    {
+      versao: 3,
+      titulo: "O fogo evolui com você",
+      texto: "Sua sequência agora tem fases: Chama, Halter em Brasa, Fogo Azul e, no topo, Super Fogo. Quanto mais dias seguidos, mais forte fica o seu fogo -- acompanhe na tela inicial quanto falta pra subir de fase."
+    },
+    {
+      versao: 4,
+      titulo: "Importe do seu Garmin ⌚",
+      texto: "Agora dá pra trazer a atividade do seu relógio: em \"Histórico\" (ou em \"Fiz outra atividade hoje\") toque em Importar e escolha o arquivo .FIT, .GPX ou .TCX exportado do Garmin, Suunto, Polar, Coros, Fitbit ou Strava. O app lê tempo, distância e batimentos e já conta o dia na sua sequência. E dá pra colocar o app na tela inicial do celular, como um aplicativo."
+    },
+    {
+      versao: 5,
+      titulo: "Tem vídeo em cada exercício ▶",
+      texto: "Na hora do treino, os exercícios que têm vídeo agora mostram um botão amarelo \"Ver vídeo de como fazer\". Toque nele pra ver a execução certinha antes de começar a série."
+    },
+    {
+      versao: 6,
+      titulo: "Feed da galera 👥",
+      texto: "Na tela inicial agora tem o feed: você vê quem treinou hoje, recordes de carga e sequências da galera, pode curtir e até postar uma foto. Adicione sua foto de perfil na aba Perfil. Não quer aparecer? É só desligar \"Aparecer no feed\" no Perfil."
+    }
+    ,{
+      versao: 7,
+      titulo: "O fogo agora é do mês 🔥",
+      texto: "Mudamos a regra do fogo: ele conta os dias que você treinou no mês, não os dias seguidos. Faltou um dia? Sem drama, o fogo não apaga. No dia 1º ele recomeça e você tenta bater o seu melhor mês."
+    }
+    ,{
+      versao: 8,
+      titulo: "Nova aba Comunidade 👥",
+      texto: "Agora tem uma aba só pra turma: feed com fotos, recordes e cargas, metas que o Matheus define pra você, conquistas (os emojis ao lado do seu nome) e o ranking da semana. Dá pra sair do ranking quando quiser."
+    }
+    ,{
+      versao: 10,
+      titulo: "Técnicas de treino ⚡",
+      texto: "Alguns exercícios agora trazem uma técnica (drop set, cluster set, rest-pause e outras). Toque em 'Como fazer' no exercício para ver o esquema e o passo a passo."
+    }
+    ,{
+      versao: 9,
+      titulo: "Sininho de avisos 🔔",
+      texto: "Agora tem um sininho aqui em cima: ele avisa quando o Matheus responde seu post, publica no feed, define uma meta pra você ou atualiza seu treino. O Matheus também passa a postar no feed pra motivar a turma."
+    }
+    ,{
+      versao: 12,
+      titulo: "Novo jeito de postar o treino 📸",
+      texto: "Ao terminar o treino e dar a PSE, você escolhe: postar com foto, só avisar que treinou (com o nome do treino) ou não postar. Recorde de carga continua indo pro feed. Na PSE, toque num número pra ver o que ele significa. Na tela Hoje, o treino agora abre em VISUALIZAR TREINO e dali você inicia. Quer trocar sua foto? Toque no seu círculo no topo da tela. No Histórico agora tem um calendário com os dias que você treinou, e cada exercício ganhou o \"Ver como fazer\"."
+    }
+    ,{
+      versao: 11,
+      titulo: "Agora você faz parte da turma 🤝",
+      texto: "Nova aba Turma na Comunidade: meta coletiva (todo treino seu conta), desafios de 7 a 14 dias com selo, aluno da semana, encontros presenciais com confirmação de presença e celebrações (boas-vindas, 10, 25, 50 treinos...). Dá pra reagir aos posts com 💪 🔥 👏. E agora os avisos podem chegar no celular: ative em Perfil › Avisos no celular."
+    }
+    ,{
+      versao: 13,
+      titulo: "Seu relógio ficou mais esperto ⌚",
+      texto: "Importou uma corrida? Agora toque em \"Ver detalhes\" no Histórico para ver o pace de cada km, a frequência cardíaca e a altimetria. Quem usa o Intervals.icu pode ligar a sincronização e o app busca as atividades sozinho ao abrir. Ah: bateu um recorde ou uma meta? Vem confete 🎉. Em Perfil tem o \"tour do app\" quando quiser rever."
+    }
+    ,{
+      versao: 14,
+      titulo: "Treino sem sinal na academia 📴",
+      texto: "Abriu o app com internet pelo menos uma vez? Então ele abre mesmo sem sinal, com o seu treino salvo no aparelho. O que você registrar fica guardado e é enviado sozinho quando a internet voltar. Sem sinal, vídeos e a aba Comunidade não carregam."
+    },
+    {
+      versao: 15,
+      titulo: "Tema claro e séries por músculo 🌗",
+      texto: "Em Perfil > Aparência você escolhe o app escuro, claro ou automático (segue o seu celular). E no Histórico apareceu o card \"Séries por músculo\": a barra mostra o que você já fez na semana e a linha o que o seu plano pede."
+    },
+    {
+      versao: 16,
+      titulo: "Reavaliação do mês 📋",
+      texto: "Depois de cerca de um mês no mesmo treino, vai aparecer aqui na tela inicial um cartão de Reavaliação com perguntas rápidas (o que melhorou, dores, o que você quer melhorar). Suas respostas ajudam o Matheus a montar o próximo treino do jeito certo para você."
+    },
+    {
+      versao: 17,
+      titulo: "Técnicas com a carga de cada queda ⚡",
+      texto: "Nos exercícios com técnica, o treino agora mostra o esquema direitinho. No drop set, cada série tem um campo para a carga de cada queda (ex.: 40 → 30 → 20 kg). Na pirâmide, cada série mostra as repetições (S1 · 12). Toque em 'Como fazer' para ver o passo a passo."
+    },
+    {
+      versao: 18,
+      titulo: "Lembretes para te ajudar a treinar 🔔",
+      texto: "Com os avisos ligados no celular, o app agora te lembra de treinar: no seu dia de treino, quando faltar pouco para a meta da semana, quando o seu 🔥 do mês estiver por um fio e se você ficar uns dias sem aparecer. Você também recebe parabéns ao bater a meta. É no máximo um aviso por dia. Ative em 'Avisos no celular'."
+    }
+  ];
   // ---------- plans (per-student training-plan history) ----------
   // A student can accumulate multiple plans over time (each renewal starts a
   // new one). Older single-plan student records store nome/microciclo/
@@ -9206,105 +9305,6 @@ function startApp() {
       };
     });
   }
-  // Avisos de novidade mostrados uma vez para cada aluno na aba Hoje. Cada
-  // entrada tem sua própria "versão" (um número que só sobe conforme novas
-  // melhorias forem lançadas); o aluno vê um cartão com as novidades que
-  // ainda não viu até tocar em "Entendi", que grava a maior versão já vista
-  // em s.novidadesVistas -- dali em diante aquele aviso nunca mais aparece
-  // (nem em outro aparelho, já que isso é salvo no servidor como o resto
-  // dos dados do aluno).
-  var SA_NOVIDADES = [
-    {
-      versao: 1,
-      titulo: "Duas novidades no treino",
-      texto: "Toque no ✓ ao lado do nome do exercício (ou do aeróbico) para marcar tudo como feito de uma vez, sem precisar digitar nada. E se você fechar a aba no meio do treino, o que já foi preenchido agora fica salvo na hora -- sem perder nada."
-    },
-    {
-      versao: 2,
-      titulo: "Sua sequência de treinos 🔥",
-      texto: "Agora você vê quantos dias seguidos está treinando (e seu recorde pessoal) logo na tela inicial. E se um dia não tiver treino do plano -- tipo fim de semana -- mas você se mexeu por fora (corrida, caminhada, um esporte...), é só tocar em \"Fiz outra atividade hoje\" pra isso contar e manter sua sequência viva."
-    },
-    {
-      versao: 3,
-      titulo: "O fogo evolui com você",
-      texto: "Sua sequência agora tem fases: Chama, Halter em Brasa, Fogo Azul e, no topo, Super Fogo. Quanto mais dias seguidos, mais forte fica o seu fogo -- acompanhe na tela inicial quanto falta pra subir de fase."
-    },
-    {
-      versao: 4,
-      titulo: "Importe do seu Garmin ⌚",
-      texto: "Agora dá pra trazer a atividade do seu relógio: em \"Histórico\" (ou em \"Fiz outra atividade hoje\") toque em Importar e escolha o arquivo .FIT, .GPX ou .TCX exportado do Garmin, Suunto, Polar, Coros, Fitbit ou Strava. O app lê tempo, distância e batimentos e já conta o dia na sua sequência. E dá pra colocar o app na tela inicial do celular, como um aplicativo."
-    },
-    {
-      versao: 5,
-      titulo: "Tem vídeo em cada exercício ▶",
-      texto: "Na hora do treino, os exercícios que têm vídeo agora mostram um botão amarelo \"Ver vídeo de como fazer\". Toque nele pra ver a execução certinha antes de começar a série."
-    },
-    {
-      versao: 6,
-      titulo: "Feed da galera 👥",
-      texto: "Na tela inicial agora tem o feed: você vê quem treinou hoje, recordes de carga e sequências da galera, pode curtir e até postar uma foto. Adicione sua foto de perfil na aba Perfil. Não quer aparecer? É só desligar \"Aparecer no feed\" no Perfil."
-    }
-    ,{
-      versao: 7,
-      titulo: "O fogo agora é do mês 🔥",
-      texto: "Mudamos a regra do fogo: ele conta os dias que você treinou no mês, não os dias seguidos. Faltou um dia? Sem drama, o fogo não apaga. No dia 1º ele recomeça e você tenta bater o seu melhor mês."
-    }
-    ,{
-      versao: 8,
-      titulo: "Nova aba Comunidade 👥",
-      texto: "Agora tem uma aba só pra turma: feed com fotos, recordes e cargas, metas que o Matheus define pra você, conquistas (os emojis ao lado do seu nome) e o ranking da semana. Dá pra sair do ranking quando quiser."
-    }
-    ,{
-      versao: 10,
-      titulo: "Técnicas de treino ⚡",
-      texto: "Alguns exercícios agora trazem uma técnica (drop set, cluster set, rest-pause e outras). Toque em 'Como fazer' no exercício para ver o esquema e o passo a passo."
-    }
-    ,{
-      versao: 9,
-      titulo: "Sininho de avisos 🔔",
-      texto: "Agora tem um sininho aqui em cima: ele avisa quando o Matheus responde seu post, publica no feed, define uma meta pra você ou atualiza seu treino. O Matheus também passa a postar no feed pra motivar a turma."
-    }
-    ,{
-      versao: 12,
-      titulo: "Novo jeito de postar o treino 📸",
-      texto: "Ao terminar o treino e dar a PSE, você escolhe: postar com foto, só avisar que treinou (com o nome do treino) ou não postar. Recorde de carga continua indo pro feed. Na PSE, toque num número pra ver o que ele significa. Na tela Hoje, o treino agora abre em VISUALIZAR TREINO e dali você inicia. Quer trocar sua foto? Toque no seu círculo no topo da tela. No Histórico agora tem um calendário com os dias que você treinou, e cada exercício ganhou o \"Ver como fazer\"."
-    }
-    ,{
-      versao: 11,
-      titulo: "Agora você faz parte da turma 🤝",
-      texto: "Nova aba Turma na Comunidade: meta coletiva (todo treino seu conta), desafios de 7 a 14 dias com selo, aluno da semana, encontros presenciais com confirmação de presença e celebrações (boas-vindas, 10, 25, 50 treinos...). Dá pra reagir aos posts com 💪 🔥 👏. E agora os avisos podem chegar no celular: ative em Perfil › Avisos no celular."
-    }
-    ,{
-      versao: 13,
-      titulo: "Seu relógio ficou mais esperto ⌚",
-      texto: "Importou uma corrida? Agora toque em \"Ver detalhes\" no Histórico para ver o pace de cada km, a frequência cardíaca e a altimetria. Quem usa o Intervals.icu pode ligar a sincronização e o app busca as atividades sozinho ao abrir. Ah: bateu um recorde ou uma meta? Vem confete 🎉. Em Perfil tem o \"tour do app\" quando quiser rever."
-    }
-    ,{
-      versao: 14,
-      titulo: "Treino sem sinal na academia 📴",
-      texto: "Abriu o app com internet pelo menos uma vez? Então ele abre mesmo sem sinal, com o seu treino salvo no aparelho. O que você registrar fica guardado e é enviado sozinho quando a internet voltar. Sem sinal, vídeos e a aba Comunidade não carregam."
-    },
-    {
-      versao: 15,
-      titulo: "Tema claro e séries por músculo 🌗",
-      texto: "Em Perfil > Aparência você escolhe o app escuro, claro ou automático (segue o seu celular). E no Histórico apareceu o card \"Séries por músculo\": a barra mostra o que você já fez na semana e a linha o que o seu plano pede."
-    },
-    {
-      versao: 16,
-      titulo: "Reavaliação do mês 📋",
-      texto: "Depois de cerca de um mês no mesmo treino, vai aparecer aqui na tela inicial um cartão de Reavaliação com perguntas rápidas (o que melhorou, dores, o que você quer melhorar). Suas respostas ajudam o Matheus a montar o próximo treino do jeito certo para você."
-    },
-    {
-      versao: 17,
-      titulo: "Técnicas com a carga de cada queda ⚡",
-      texto: "Nos exercícios com técnica, o treino agora mostra o esquema direitinho. No drop set, cada série tem um campo para a carga de cada queda (ex.: 40 → 30 → 20 kg). Na pirâmide, cada série mostra as repetições (S1 · 12). Toque em 'Como fazer' para ver o passo a passo."
-    },
-    {
-      versao: 18,
-      titulo: "Lembretes para te ajudar a treinar 🔔",
-      texto: "Com os avisos ligados no celular, o app agora te lembra de treinar: no seu dia de treino, quando faltar pouco para a meta da semana, quando o seu 🔥 do mês estiver por um fio e se você ficar uns dias sem aparecer. Você também recebe parabéns ao bater a meta. É no máximo um aviso por dia. Ative em 'Avisos no celular'."
-    }
-  ];
   function saNovidadesNaoVistas(s) {
     var vistas = s.novidadesVistas || 0;
     return SA_NOVIDADES.filter(function (n) { return n.versao > vistas; });

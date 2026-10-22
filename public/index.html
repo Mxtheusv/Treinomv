@@ -2796,6 +2796,10 @@ function startApp() {
       });
       s.primeiroAcessoEm = earliestActivity;
     }
+    // Cadastro que nunca entrou no app (ex.: criado a partir do formulário): não recebe a lista antiga de novidades.
+    if (s.novidadesVistas === undefined && !s.primeiroAcessoEm) {
+      s.novidadesVistas = SA_NOVIDADES.reduce(function (m, n) { return Math.max(m, n.versao); }, 0);
+    }
     if (s.plans) return s;
     var plan = {
       id: uid("p"),
@@ -3072,7 +3076,9 @@ function startApp() {
     // an athlete. The trainer turns it on per-student with "+ Velocidade"
     // when it's actually relevant.
     var plan = { id: uid("p"), label: "Plano 1", createdAt: Date.now(), archived: false, microciclo: "Microciclo 1", startDate: null, endDate: null, treinos: copy.treinos, complementar: copy.complementar, complementarHidden: true, rotationIdx: 0 };
-    return { nome: nome, plans: [plan], activePlanId: plan.id, checkins: [], feedback: [], notas: "", sessoes: [], humor: {}, sessaoEmAndamento: null, criadoEm: Date.now(), primeiroAcessoEm: null };
+    // Aluno novo nunca usou as funções antigas: começa com as novidades já "vistas" (só aparecem as futuras).
+    var ultimaNovidade = SA_NOVIDADES.reduce(function (m, n) { return Math.max(m, n.versao); }, 0);
+    return { nome: nome, plans: [plan], activePlanId: plan.id, checkins: [], feedback: [], notas: "", sessoes: [], humor: {}, sessaoEmAndamento: null, criadoEm: Date.now(), primeiroAcessoEm: null, novidadesVistas: ultimaNovidade };
   }
 
   function findTemplateByGoal(goal) {
@@ -11520,11 +11526,14 @@ function startApp() {
     im.onerror = function () { fim(null); };
     im.src = "/icons/icon-192.png";
   }
-  function saDesenhaCartao(cv, ses, foto, nomeAluno) {
+  function saDesenhaCartao(cv, ses, foto, nomeAluno, overlay) {
     var W = 1080, H = 1350, ctx = cv.getContext("2d");
     cv.width = W; cv.height = H;
     var fonteTitulo = "800 {T}px 'Saira Condensed', 'Arial Narrow', Arial, sans-serif";
-    if (foto) {
+    // overlay = versão transparente: só os dados e a marca, para colar em cima da foto (como no Strava/Garmin)
+    if (overlay) {
+      // fundo transparente (o canvas já começa limpo)
+    } else if (foto) {
       var k = Math.max(W / foto.width, H / foto.height), fw = foto.width * k, fh = foto.height * k;
       ctx.drawImage(foto, (W - fw) / 2, (H - fh) / 2, fw, fh);
     } else {
@@ -11537,7 +11546,8 @@ function startApp() {
     // degradê escuro embaixo: o texto aparece em qualquer foto
     var sombra = ctx.createLinearGradient(0, H * 0.4, 0, H);
     sombra.addColorStop(0, "rgba(0,0,0,0)"); sombra.addColorStop(0.5, "rgba(0,0,0,.7)"); sombra.addColorStop(1, "rgba(0,0,0,.92)");
-    ctx.fillStyle = sombra; ctx.fillRect(0, 0, W, H);
+    if (!overlay) { ctx.fillStyle = sombra; ctx.fillRect(0, 0, W, H); }
+    else { ctx.shadowColor = "rgba(0,0,0,.6)"; ctx.shadowBlur = 20; ctx.shadowOffsetY = 3; }
     // topo: nome do aluno (só ele), nome do treino e data
     ctx.fillStyle = "#ffc247"; ctx.font = fonteTitulo.replace("{T}", 60);
     ctx.fillText(String(nomeAluno || "").toUpperCase(), 70, 150);
@@ -11581,6 +11591,8 @@ function startApp() {
     ctx.fillText("Matheus Venâncio · CREF 038618-G/SC", 178, H - 100);
     ctx.fillStyle = "#ffc247"; ctx.font = fonteTitulo.replace("{T}", 34);
     ctx.fillText("TREINO ONLINE", 178, H - 52);
+    // a marca d'água não leva sombra
+    ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
     var versao = cv._versaoCartao = (cv._versaoCartao || 0) + 1;
     saCartaoLogo(function (logo, marca) {
       // só desenha se esta ainda for a última versão do cartão (evita marca d'água dupla)
@@ -11599,16 +11611,40 @@ function startApp() {
     ov.innerHTML = '<div class="sa-modal" style="max-width:420px;width:94%;max-height:94vh;overflow:auto">' +
       '<div class="sa-card-title sa-display" style="margin-bottom:10px">Cartão do treino</div>' +
       '<canvas id="saCartaoCv" style="width:100%;height:auto;border-radius:14px;display:block"></canvas>' +
+      '<div id="saCartaoDica" class="sa-novidade-text" style="font-size:12.5px;margin-top:10px"></div>' +
       '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">' +
-      '<label class="sa-cta-ghost" style="flex:1;text-align:center;cursor:pointer">📷 Foto<input type="file" accept="image/*" id="saCartaoFoto" style="display:none"></label>' +
+      '<label id="saCartaoFotoLbl" class="sa-cta-ghost" style="flex:1;text-align:center;cursor:pointer">📷 Foto<input type="file" accept="image/*" id="saCartaoFoto" style="display:none"></label>' +
+      '<button type="button" class="sa-cta-ghost" id="saCartaoModo" style="flex:1">Sem fundo (para colar na foto)</button>' +
+      '</div>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">' +
+      '<button type="button" class="sa-cta-ghost" id="saCartaoCopiar" style="flex:1">Copiar</button>' +
       '<button type="button" class="sa-cta" id="saCartaoBaixar" style="flex:1">Baixar</button>' +
       '<button type="button" class="sa-cta-ghost" id="saCartaoCompartilhar" style="flex:1">Compartilhar</button>' +
       '</div><button type="button" class="sa-cta-ghost" id="saCartaoFechar" style="width:100%;margin-top:10px">Fechar</button></div>';
     document.body.appendChild(ov);
-    var cv = document.getElementById("saCartaoCv"), foto = null;
+    var cv = document.getElementById("saCartaoCv"), foto = null, semFundo = false;
     var primeiroNome = String(s.nome || "").split(/\s+/)[0] || "";
-    var desenha = function () { saDesenhaCartao(cv, ses, foto, primeiroNome); };
+    var nomeArq = function () { return "cartao-treino" + (semFundo ? "-sem-fundo" : "") + "-" + (ses.date || "") + ".png"; };
+    var desenha = function () {
+      saDesenhaCartao(cv, ses, semFundo ? null : foto, primeiroNome, semFundo);
+      document.getElementById("saCartaoFotoLbl").style.display = semFundo ? "none" : "";
+      document.getElementById("saCartaoDica").textContent = semFundo
+        ? "Sem fundo: copie esta imagem e cole por cima da sua foto no Instagram, Stories ou no seu editor."
+        : "";
+      document.getElementById("saCartaoModo").textContent = semFundo ? "Voltar para com fundo" : "Sem fundo (para colar na foto)";
+    };
     desenha();
+    document.getElementById("saCartaoModo").onclick = function () { semFundo = !semFundo; desenha(); };
+    document.getElementById("saCartaoCopiar").onclick = function () {
+      var escrever = null;
+      try {
+        if (navigator.clipboard && window.ClipboardItem) {
+          escrever = navigator.clipboard.write([new ClipboardItem({ "image/png": new Promise(function (ok) { cv.toBlob(ok, "image/png"); }) })]);
+        }
+      } catch (e) { escrever = null; }
+      if (!escrever) { showToast("Este aparelho não copia imagem. Use Baixar e cole de lá.", true); return; }
+      escrever.then(function () { showToast("Imagem copiada. Cole na sua foto."); }).catch(function () { showToast("Não deu para copiar aqui. Use Baixar.", true); });
+    };
     document.getElementById("saCartaoFoto").onchange = function (e) {
       var f = e.target.files && e.target.files[0]; if (!f) return;
       var img = new Image();
@@ -11617,7 +11653,7 @@ function startApp() {
     };
     document.getElementById("saCartaoBaixar").onclick = function () {
       cv.toBlob(function (b) {
-        var a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "cartao-treino-" + (ses.date || "") + ".png";
+        var a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = nomeArq();
         document.body.appendChild(a); a.click();
         setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
       }, "image/png");

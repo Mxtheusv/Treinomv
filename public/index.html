@@ -1410,6 +1410,7 @@
   .sa-brand-row { display: flex; flex-direction: column; gap: 2px; padding: 9px 0; border-bottom: 1px solid var(--sa-border-soft); line-height: 1.45; }
   .sa-brand-row strong { color: var(--sa-text); font-size: 13px; }
   .sa-brand-row em { font-style: normal; color: var(--sa-accent-text); font-weight: 600; }
+  .sa-hist-acoes { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; margin-top: 2px; }
   .sa-hist-del { background: transparent; border: 0; color: var(--sa-text-faint); font-size: 11.5px; text-decoration: underline; padding: 6px 0 0; cursor: pointer; font-family: inherit; }
   .sa-hist-src { display: inline-block; font-size: 10px; letter-spacing: .6px; font-weight: 700; color: var(--sa-text-muted); border: 1px solid var(--sa-border); border-radius: 6px; padding: 1px 6px; margin-left: 6px; vertical-align: 2px; }
   .sa-pse-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
@@ -11352,7 +11353,7 @@ function startApp() {
       return { ts: ses.ts || 0, html: '<div class="sa-hist-item">' +
         '<div class="sa-hist-date"><span class="num">' + dm.day + '</span><span class="mon">' + String(dm.mon).toUpperCase() + '</span></div>' +
         '<div class="sa-hist-body"><div class="sa-hist-title">' + escapeHtml(String(ses.nome || "Treino").toUpperCase()) + '</div>' +
-        '<div class="sa-hist-meta">' + saFormatDuration(ses.duracaoSeg) + (ses.kind === "corrida" ? (ses.distanciaM ? ' · ' + wearFmtDist(ses.distanciaM) : ' · corrida') : ' · ' + (ses.seriesTotal || 0) + ' séries') + '</div>' + obsHtml + (ses.id ? '<button type="button" class="sa-hist-del" data-cartao-ses="' + escapeAttr(ses.id) + '">📸 Cartão</button>' : '') + ((ses.id && ses.kind !== "corrida") ? '<button type="button" class="sa-hist-del" data-del-ses="' + escapeAttr(ses.id) + '">remover</button>' : '') + '</div>' +
+        '<div class="sa-hist-meta">' + saFormatDuration(ses.duracaoSeg) + (ses.kind === "corrida" ? (ses.distanciaM ? ' · ' + wearFmtDist(ses.distanciaM) : ' · corrida') : ' · ' + (ses.seriesTotal || 0) + ' séries') + '</div>' + obsHtml + '<div class="sa-hist-acoes">' + (ses.id ? '<button type="button" class="sa-hist-del" data-cartao-ses="' + escapeAttr(ses.id) + '">📸 Cartão</button>' : '') + ((ses.id && ses.kind !== "corrida") ? '<button type="button" class="sa-hist-del" data-del-ses="' + escapeAttr(ses.id) + '">remover</button>' : '') + '</div></div>' +
         pseHtml + '</div>' };
     });
     importadas.forEach(function (a) {
@@ -11604,20 +11605,20 @@ function startApp() {
       ctx.fillText(par[1].l.toUpperCase(), par[0] + 4, 1170);
     });
     // marca d'água: nome do personal no rodapé + logo (a logo grande e clarinha ao fundo)
-    ctx.fillStyle = "#ffffff"; ctx.font = "700 38px Arial, sans-serif";
-    ctx.fillText("Matheus Venâncio · CREF 038618-G/SC", 178, H - 100);
-    ctx.fillStyle = "#ffc247"; ctx.font = fonteTitulo.replace("{T}", 34);
-    ctx.fillText("TREINO ONLINE", 178, H - 52);
+    // rodapé minimalista: só o nome do personal (sem selo, sem CREF)
+    ctx.fillStyle = "#ffffff"; ctx.font = "700 40px Arial, sans-serif";
+    ctx.fillText("Matheus Venâncio", 70, H - 80);
     // a marca d'água não leva sombra
     ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
     var versao = cv._versaoCartao = (cv._versaoCartao || 0) + 1;
     saCartaoLogo(function (logo, marca) {
       // só desenha se esta ainda for a última versão do cartão (evita marca d'água dupla)
       if (!logo || cv._versaoCartao !== versao) return;
+      // logo pequena no canto superior direito (não atrapalha o título)
       ctx.save();
-      ctx.globalAlpha = 0.2; ctx.drawImage(marca || logo, W * 0.5, H * 0.2, 500, 500);
+      ctx.globalAlpha = 0.9; ctx.drawImage(logo, W - 70 - 120, 60, 120, 120);
       ctx.restore();
-      ctx.drawImage(logo, 70, H - 150, 96, 96);
+
     });
   }
   function saAbrirCartao(s, sesId) {

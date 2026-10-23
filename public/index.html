@@ -11173,11 +11173,11 @@ function startApp() {
         s.sessaoEmAndamento = null;
         state.saTab = "hoje";
         var recsNova = saFeedPreparaTreino(s, novaSessao);
-        saFeedSequencia(s);
-        // No atendimento presencial o treino vai pro feed em nome do aluno, sem pergunta.
+        // No atendimento presencial o treino vai pro feed em nome do aluno, sem pergunta (num post só, com recordes e fogo do mês).
         if (state.atendimento) {
+          var pacAt = saFeedPacote(s, novaSessao, recsNova, false);
           var nomeFeed = String(novaSessao.nome || "Treino").slice(0, 60);
-          saFeedAuto(s, "treino", nomeFeed + " · " + Math.max(1, Math.round(durationSec / 60)) + " min", { treino: nomeFeed });
+          saFeedAuto(s, "treino", nomeFeed + " · " + Math.max(1, Math.round(durationSec / 60)) + " min" + (pacAt.marco ? " · " + pacAt.marco : ""), pacAt.extra);
         }
         var metasNovas = cmMetasAtualiza(s).novas;
         saveNow(metasNovas.length ? "Treino concluído! 💪 Meta batida 🏆" : "Treino concluído! 💪", true);
@@ -11761,12 +11761,28 @@ function startApp() {
     if (!state.trainerPreview && recs.length) setTimeout(saConfete, 400);
     return recs;
   }
-  function saFeedExtras(s, nova, recs) {
-    var treino = String(nova.nome || "Treino").slice(0, 60);
-    recs.slice(0, 2).forEach(function (r) {
-      saFeedAuto(s, "recorde", feedNomeEx(r.nome) + " — " + feedFmtNum(r.v) + " kg",
-        { treino: treino, pr: { ex: feedNomeEx(r.nome), antes: feedFmtNum(r.antes) + " kg", agora: feedFmtNum(r.v) + " kg" } });
-    });
+  // Um post por treino: o treino, os recordes de carga e o fogo do mês saem juntos num post só.
+  // O servidor aceita um post "treino" por dia, então é ele que carrega tudo.
+  function saFeedPacote(s, nova, recs, anonimo) {
+    var out = { recs: recs || [], extra: {}, marco: "" };
+    var dias = saDiasNoMes(s);
+    if (FEED_MARCOS.indexOf(dias) !== -1) out.marco = dias + " dias treinados em " + saMesNome() + " 🔥";
+    if (out.recs.length) {
+      var r0 = out.recs[0];
+      out.extra.pr = { ex: feedNomeEx(r0.nome), antes: feedFmtNum(r0.antes) + " kg", agora: feedFmtNum(r0.v) + " kg" };
+      if (out.recs.length > 1) out.extra.cargas = out.recs.slice(1, 5).map(function (r) {
+        return { ex: feedNomeEx(r.nome), v: feedFmtNum(r.v) + " kg (antes " + feedFmtNum(r.antes) + " kg)" };
+      });
+    }
+    if (!anonimo) out.extra.treino = String(nova.nome || "Treino").slice(0, 60);
+    return out;
+  }
+  // Só quando o treino já tinha post no dia (o servidor pula um segundo "treino"): os recordes vão num post à parte.
+  function saFeedRecordesFallback(s, pac) {
+    if (!pac.recs.length) return Promise.resolve();
+    var r0 = pac.recs[0];
+    var texto = feedNomeEx(r0.nome) + " — " + feedFmtNum(r0.v) + " kg" + (pac.recs.length > 1 ? " e mais " + (pac.recs.length - 1) : "");
+    return feedPostar(s, "recorde", texto, "", pac.extra).catch(function () {});
   }
   // A sequência (fogo do mês) aparece pra turma toda sempre, independente da escolha de postar.
   function saFeedSequencia(s) {
@@ -11785,19 +11801,22 @@ function startApp() {
     function publica(modo, legenda) {
       if (SA_POST.busy) return;
       SA_POST.busy = true; desenha();
+      var pac = saFeedPacote(s, nova, recs, modo === "dia");
       var passo = SA_POST.blob ? fotoEnviar(SA_POST.blob, state.slug) : Promise.resolve("");
       passo.then(function (foto) {
-        var texto = modo === "dia" ? "Mais um treino feito 💪" : (legenda ? legenda + " · " + linha : linha);
-        var extra = modo === "dia" ? {} : { treino: nome };
-        return feedPostar(s, "treino", texto, foto, extra).then(function (res) {
+        var base = modo === "dia" ? "Mais um treino feito 💪" : (legenda ? legenda + " · " + linha : linha);
+        var texto = base + (pac.marco ? " · " + pac.marco : "");
+        return feedPostar(s, "treino", texto, foto, pac.extra).then(function (res) {
           if (!res.ok) throw new Error("x");
           return res.json();
         }).then(function (b) {
-          if (b && b.skipped === "ja_postado" && foto) return feedPostar(s, "livre", legenda || linha, foto, { treino: nome }).then(function (r2) { if (!r2.ok) throw new Error("x"); return { ok: true }; });
+          if (b && b.skipped === "ja_postado") {
+            if (foto) return feedPostar(s, "livre", legenda || linha, foto, { treino: nome }).then(function (r2) { if (!r2.ok) throw new Error("x"); return saFeedRecordesFallback(s, pac).then(function () { return { ok: true }; }); });
+            return saFeedRecordesFallback(s, pac).then(function () { return b; });
+          }
           return b;
         });
       }).then(function (b) {
-        saFeedExtras(s, nova, recs);
         SA_COM.at = 0; fecha();
         showToast(b && b.skipped === "ja_postado" ? "O treino de hoje já está no feed" : "Publicado para a turma 🙌");
       }).catch(function () { SA_POST.busy = false; desenha(); showToast("Não consegui publicar agora", true); });
@@ -11824,7 +11843,7 @@ function startApp() {
       var t = e.target; while (t && t !== ov && !(t.getAttribute && t.getAttribute("data-post"))) t = t.parentNode;
       if (!t || t === ov) return;
       var a = t.getAttribute("data-post");
-      if (a === "nao") { fecha(); return; }
+      if (a === "nao") { fecha(); saFeedSequencia(s); return; } // o fogo do mês aparece mesmo sem postar o treino
       if (a === "nome" || a === "dia") { publica(a, ""); return; }
       if (a === "voltar") { if (SA_POST.url) URL.revokeObjectURL(SA_POST.url); SA_POST.url = ""; SA_POST.blob = null; desenha(); return; }
       if (a === "foto-ok") { var inp = document.getElementById("saPostLegenda"); publica("nome", inp ? inp.value.trim() : ""); return; }

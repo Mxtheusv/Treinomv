@@ -186,6 +186,16 @@
     .hero-cta .btn { width: 100%; }
     .top .btn { display: none; }
   }
+  /* Depoimento autorizado (foto e texto autorizados por escrito) */
+  .depo-destaque { margin: 0; display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: 32px; align-items: start; }
+  .depo-destaque img { width: 100%; height: auto; border-radius: 20px; display: block; }
+  .depo-destaque blockquote { margin: 0 0 24px; }
+  .depo-destaque blockquote p { font-family: var(--display); font-weight: 900; font-style: italic; text-transform: uppercase; font-size: clamp(26px, 3.2vw, 34px); line-height: 1.12; color: var(--ink); text-wrap: balance; }
+  .depo-fala { font-size: 17px; color: var(--soft); margin: 0 0 16px; }
+  .depo-quem { color: var(--ink); margin-top: 20px; }
+  .depo-quem b { font-weight: 700; }
+  .depo-aviso { font-size: 14px; color: var(--faint); margin-top: 24px; }
+  @media (max-width: 760px) { .depo-destaque { grid-template-columns: 1fr; } .depo-destaque img { max-width: 420px; } }
   @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .btn, .sticky { transition: none; } }
 </style>
 </head>
@@ -304,6 +314,24 @@
         <figcaption>Certificado CHPC Level 2 · Athletic Lab Coaching Academy</figcaption>
       </figure>
       </div>
+    </div>
+  </section>
+
+  <section id="depoimentos" aria-labelledby="dep-titulo">
+    <div class="wrap">
+      <div class="eyebrow">Depoimento</div>
+      <h2 id="dep-titulo" style="margin:12px 0 32px">O que os alunos contam</h2>
+      <figure class="depo-destaque">
+        <img src="/lp/jussara-evolucao.jpg" width="720" height="1280" loading="lazy" alt="Quatro fotos de Jussara, aluna, em momentos diferentes da jornada de treino">
+        <div>
+          <blockquote>
+            <p>“Hoje posso dizer que sou outra pessoa! Recuperei minha autonomia, minha força, minha energia e minha disposição.”</p>
+          </blockquote>
+          <p class="depo-fala">“Depois de eliminar 66 kg, posso afirmar que cada etapa dessa jornada valeu a pena. Os resultados vão muito além da balança: são mais saúde, força, autonomia e qualidade de vida.”</p>
+          <p class="depo-quem"><b>Jussara</b>, aluna. No começo, o objetivo era sair do sedentarismo e recuperar a mobilidade e a autonomia.</p>
+          <p class="depo-aviso">Resultado individual. Cada pessoa tem um ritmo e um resultado diferentes.</p>
+        </div>
+      </figure>
     </div>
   </section>
 

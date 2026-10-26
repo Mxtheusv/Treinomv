@@ -627,6 +627,34 @@ function diasHabituais(datas: Set<string>, hoje: string): Set<number> {
   for (const k of Object.keys(cont)) if (cont[Number(k)] >= 3) out.add(Number(k));
   return out;
 }
+// Check-in automático no servidor: o treino que ficou parado SESSAO_CHECKIN_MIN minutos sem concluir
+// marca o check-in do dia dele, mesmo que o aluno nunca mais abra o app. Mesma regra do app
+// (saRegistraCheckinSessao em index.html); como o check-in é único por dia, rodar de novo não duplica.
+const SESSAO_CHECKIN_MIN = 30;
+export async function rodaCheckinAuto(deps: Deps, now: number): Promise<{ marcados: number; alunos: string[] }> {
+  const out = { marcados: 0, alunos: [] as string[] };
+  try {
+    const st = await loadState(deps);
+    const students: Record<string, any> = st.data?.students || {};
+    let mudou = false;
+    for (const slug of Object.keys(students)) {
+      const rec = students[slug];
+      const sess = rec && rec.sessaoEmAndamento;
+      if (!sess || !sess.ultimaMudanca) continue;
+      if (now - Number(sess.ultimaMudanca) < SESSAO_CHECKIN_MIN * 60_000) continue;
+      const dia = typeof sess.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(sess.date) ? sess.date : diaBR(Number(sess.ultimaMudanca));
+      if (!Array.isArray(rec.checkins)) rec.checkins = [];
+      if (rec.checkins.indexOf(dia) !== -1) continue;
+      rec.checkins.push(dia);
+      rec.checkins.sort();
+      out.marcados++;
+      out.alunos.push(slug);
+      mudou = true;
+    }
+    if (mudou) await deps.kv.set(STATE_STORE, STATE_KEY, { ...st, version: (st.version || 0) + 1, data: st.data });
+  } catch (e) {}
+  return out;
+}
 export async function rodaLembretes(deps: Deps, now: number): Promise<{ enviados: number; alunos: string[]; personal?: string[] }> {
   const out = { enviados: 0, alunos: [] as string[], personal: [] as string[] };
   try {

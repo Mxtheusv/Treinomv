@@ -9824,7 +9824,11 @@ function startApp() {
   // ---------- Treino (execução) ----------
   function saGetActiveSession(s) {
     var sess = s.sessaoEmAndamento;
-    if (sess && sess.date !== todayISO()) { s.sessaoEmAndamento = null; sess = null; }
+    if (sess && sess.date !== todayISO()) {
+      // Treino de outro dia que ficou sem concluir: antes de descartar, conta o check-in daquele dia.
+      if (saCheckinAtivo() && saRegistraCheckinSessao(s, sess)) scheduleSave();
+      s.sessaoEmAndamento = null; sess = null;
+    }
     return sess;
   }
   // treinoId is explicit now -- the student picks which treino to do (from
@@ -15991,24 +15995,41 @@ function startApp() {
   })();
 
   var saveTimer = null;
-  // Check-in automático: o aluno mexeu no treino de hoje (marcou série ou mudou carga), não concluiu,
-  // e já se passaram SA_CHECKIN_MIN minutos sem nova mudança -> o dia conta como treinado.
+  // Check-in automático: o aluno mexeu no treino (marcou série ou mudou carga), não concluiu,
+  // e já se passaram SA_CHECKIN_MIN minutos sem nova mudança -> o dia do treino conta como treinado.
+  // Vale também para treino de outro dia, que só é descoberto quando o aluno abre o app depois
+  // (aí a sessão de outro dia seria descartada, então o check-in é registrado antes disso).
   var SA_CHECKIN_MIN = 30;
+  // Registra o check-in do dia da sessão, se ela já estiver parada há tempo suficiente. Devolve true se marcou.
+  function saRegistraCheckinSessao(s, sess) {
+    try {
+      if (!s || !sess || !sess.ultimaMudanca) return false;
+      if (Date.now() - sess.ultimaMudanca < SA_CHECKIN_MIN * 60000) return false;
+      var dia = sess.date || isoFromDate(new Date(sess.ultimaMudanca));
+      if (!dia) return false;
+      if (!s.checkins) s.checkins = [];
+      if (s.checkins.indexOf(dia) !== -1) return false;
+      s.checkins.push(dia);
+      s.checkins.sort();
+      return true;
+    } catch (e) { return false; }
+  }
+  function saCheckinAtivo() {
+    return !!(state.slug && isStudentView() && !state.atendimento && !state.trainerPreview);
+  }
   function saCheckinPorInatividade() {
     try {
-      if (!state.slug || !isStudentView() || state.atendimento || state.trainerPreview) return;
+      if (!saCheckinAtivo()) return;
       var s = student();
-      var sess = s && s.sessaoEmAndamento;
-      if (!sess || !sess.ultimaMudanca) return;
-      if (isoFromDate(new Date(sess.ultimaMudanca)) !== todayISO()) return; // só conta o que foi feito hoje
-      if (hasCheckedInToday(s)) return;
-      if (Date.now() - sess.ultimaMudanca < SA_CHECKIN_MIN * 60000) return;
-      addCheckinToday(s);
-      scheduleSave();
+      if (saRegistraCheckinSessao(s, s && s.sessaoEmAndamento)) scheduleSave();
     } catch (e) {}
   }
   setInterval(saCheckinPorInatividade, 60000);
   window.addEventListener("focus", saCheckinPorInatividade);
+  window.addEventListener("pageshow", saCheckinPorInatividade);
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "visible") saCheckinPorInatividade();
+  });
 
   function scheduleSave(rerenderAfter) {
     undoCapture();
@@ -16672,6 +16693,8 @@ function startApp() {
       }
     }
   }
+  // Ao abrir o app: se ficou um treino sem concluir (inclusive de outro dia), conta o check-in dele.
+  saCheckinPorInatividade();
 }
 
 (function () {

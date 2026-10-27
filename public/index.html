@@ -866,6 +866,15 @@
     color: var(--ink); background: var(--surface); outline: none; font-family: inherit; text-align: center;
   }
   .inactive-controls input:focus { border-color: var(--blue); }
+  .tr-chamar-todos { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
+  .sa-chamada {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 6px; background: var(--sa-panel);
+    border: 1px solid var(--sa-border-soft); border-left: 4px solid var(--sa-accent); border-radius: 14px;
+    padding: 12px 14px; margin: 0 0 14px;
+  }
+  .sa-chamada-t { font-weight: 800; font-size: 15px; color: var(--sa-text); }
+  .sa-chamada-c { font-size: 13.5px; color: var(--sa-text-muted); line-height: 1.45; }
+  .sa-chamada-ok { margin-top: 4px; }
 
   #notasText {
     width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 14px;
@@ -6085,6 +6094,7 @@ function startApp() {
     var stalePrint = document.getElementById("printArea");
     if (stalePrint) stalePrint.innerHTML = ""; // never let a previous student's PDF content sit in the DOM here
     if (trTabAtual() !== "alunos") { renderTrainerTab(); return; }
+    if (!CHAM.loaded) chamadasCarrega();
     var slugs = Object.keys(state.data.students).sort(function (a, b) {
       return (state.data.students[a].nome || "").localeCompare(state.data.students[b].nome || "");
     });
@@ -6102,6 +6112,8 @@ function startApp() {
         return (diasSemCheckin(b.s) || 0) - (diasSemCheckin(a.s) || 0);
       });
 
+    var chamaveis = allStudents.filter(function (x) { return !trSemAcesso(x.s) && trSumido(x.s); }).map(function (x) { return x.slug; });
+    CHAM.sumidos = chamaveis;
     var alertHtml = precisaAtencao.length ?
       '<div class="tr-alert-panel"><div class="tr-alert-title"><span class="sa-dot"></span>PRECISA DE VOCÊ HOJE</div>' +
       '<div class="tr-alert-chips">' + precisaAtencao.slice(0, 8).map(function (x) {
@@ -6110,6 +6122,7 @@ function startApp() {
           '<span><span class="tr-alert-chip-name">' + escapeHtml(x.s.nome) + '</span><br>' +
           '<span class="tr-alert-chip-sub">' + escapeHtml(trStatusLabel(x.s)) + '</span></span></button>';
       }).join("") + '</div>' +
+      (chamaveis.length ? '<div class="tr-chamar-todos"><button type="button" class="sa-cta" style="width:auto;margin-top:0" id="btnChamarTodos">🔔 Chamar os ' + chamaveis.length + ' sumidos</button><span class="tr-roster-meta">Cada aluno recebe uma frase diferente da última vez.</span></div>' : '') +
       '<div class="tr-alert-settings">Avisar quando passar de <input type="number" id="inactiveThresholdInput" min="1" max="60" value="' + escapeAttr(trLimiarDias()) + '"> dias sem check-in</div>' +
       '</div>' : "";
 
@@ -6158,6 +6171,7 @@ function startApp() {
         '<div class="tr-rr-mid">' +
         '<div class="tr-roster-checkin' + (statusKey === "sumido" ? " warn" : "") + '">último check-in<strong>' + (statusKey === "semacesso" ? "Nunca entrou" : (lastCheckin || "—")) + '</strong></div>' +
         '<div class="tr-roster-actions">' +
+        (statusKey === "sumido" ? chamarBotaoHtml(slug) : "") +
         '<button type="button" class="sa-cta tr-atender" style="width:auto;margin-top:0;padding:10px 12px" data-atender="' + escapeAttr(slug) + '">▶ Atender</button>' +
         '<button type="button" class="sa-cta-ghost" style="margin-top:0;padding:10px 10px" data-open="' + escapeAttr(slug) + '">Abrir treino</button>' +
         '<button type="button" class="sa-cta-ghost tr-resumo-btn" style="margin-top:0;padding:10px 10px" data-resumo="' + escapeAttr(slug) + '" aria-expanded="' + (aberto ? "true" : "false") + '">' + (aberto ? "Fechar ▴" : "Resumo ▾") + '</button>' +
@@ -6237,6 +6251,7 @@ function startApp() {
 
     wireLeadsSection();
     trWireRosterExtras();
+    trWireChamadas();
 
     var novoAlunoModal = document.getElementById("novoAlunoModal");
     document.getElementById("btnNovoAluno").addEventListener("click", function () {
@@ -12197,6 +12212,79 @@ function startApp() {
   // ---------- Avisos no celular (push) ----------
   // O sininho vira notificação de verdade: o aparelho se inscreve (service worker + chave do servidor) e o
   // servidor manda o aviso mesmo com o app fechado. No iPhone só funciona com o app na tela inicial (iOS 16.4+).
+  // ---------- chamadas: "🔔 Chamar" para o aluno sumido (ele recebe no celular e vê um cartão ao abrir o app) ----------
+  // O servidor escolhe a frase (varia a cada chamada) e guarda a última chamada de cada aluno; aqui só mostramos o estado.
+  var CHAM = { ts: {}, sumidos: [], loaded: false, loading: false, busy: false, aluno: null, alunoLoading: false, alunoChecked: false };
+  var CHAM_JANELA_MS = 20 * 3600000;
+  function chamadaRecente(slug) { var t = CHAM.ts[slug]; return !!t && Date.now() - t < CHAM_JANELA_MS; }
+  function chamarBotaoHtml(slug) {
+    var recente = chamadaRecente(slug);
+    var h = Math.round((Date.now() - (CHAM.ts[slug] || 0)) / 3600000);
+    return '<button type="button" class="sa-cta-ghost" style="margin-top:0;padding:10px 12px"' + (recente ? " disabled" : "") + ' data-chamar="' + escapeAttr(slug) + '">' +
+      (recente ? "✓ Chamado há " + (h < 1 ? "menos de 1h" : h + "h") : "🔔 Chamar") + '</button>';
+  }
+  function chamadasCarrega() {
+    if (CHAM.loading) return;
+    CHAM.loading = true;
+    fetch("/api/push", { headers: feedHeaders(), cache: "no-store" })
+      .then(function (res) { if (res.status === 401) { authExpired(); throw new Error("401"); } if (!res.ok) throw new Error("http_" + res.status); return res.json(); })
+      .then(function (k) {
+        CHAM.loading = false; CHAM.loaded = true; CHAM.ts = k.chamadas || {};
+        if (trTabAtual() === "alunos") setTimeout(renderRoster, 0);
+      })
+      .catch(function () { CHAM.loading = false; });
+  }
+  function chamarAlunos(slugs) {
+    if (CHAM.busy || !slugs || !slugs.length) return;
+    CHAM.busy = true;
+    pushPost({ action: "chamar", slugs: slugs }).then(function (r) {
+      CHAM.busy = false;
+      Object.keys(r.ts || {}).forEach(function (k) { CHAM.ts[k] = r.ts[k]; });
+      var n = r.chamados || 0;
+      var msg = n
+        ? "Chamei " + n + (n === 1 ? " aluno" : " alunos") +
+          (r.comPush ? " · " + r.comPush + " recebe" + (r.comPush === 1 ? "" : "m") + " no celular" : "") +
+          (r.pulados ? " · " + r.pulados + " já chamado" + (r.pulados === 1 ? "" : "s") + " nas últimas 20h" : "")
+        : "Esses alunos já foram chamados nas últimas 20 horas";
+      showToast(msg, !n);
+      if (trTabAtual() === "alunos") setTimeout(renderRoster, 0);
+    }).catch(function () { CHAM.busy = false; showToast("Não consegui chamar agora. Tente de novo.", true); });
+  }
+  function trWireChamadas() {
+    Array.prototype.forEach.call(document.querySelectorAll("[data-chamar]"), function (b) {
+      b.addEventListener("click", function (e) { e.stopPropagation(); chamarAlunos([b.getAttribute("data-chamar")]); });
+    });
+    var todos = document.getElementById("btnChamarTodos");
+    if (todos) todos.addEventListener("click", function (e) { e.stopPropagation(); chamarAlunos(CHAM.sumidos); });
+  }
+  // Cartão "📣" no app do aluno: aparece uma vez por chamada, até ele tocar em Entendi (guardado neste aparelho).
+  function chamadaVistaTs() { try { return Number(localStorage.getItem("chamada_vista_" + state.slug)) || 0; } catch (e) { return 0; } }
+  function chamadaMarcaVista(ts) { try { localStorage.setItem("chamada_vista_" + state.slug, String(ts)); } catch (e) {} }
+  function chamadaBannerHtml() {
+    var c = CHAM.aluno;
+    if (!c || !c.ts || state.trainerPreview || isTrainerRole() || c.ts <= chamadaVistaTs()) return "";
+    return '<div class="sa-chamada" role="status"><div class="sa-chamada-t">📣 ' + escapeHtml(c.t) + '</div>' +
+      '<div class="sa-chamada-c">' + escapeHtml(c.c) + '</div>' +
+      '<button type="button" class="sa-cta-ghost sa-chamada-ok" data-chamada-ok="1">Entendi</button></div>';
+  }
+  function chamadaMostra(slot) {
+    if (!slot) return;
+    slot.innerHTML = chamadaBannerHtml();
+    var b = slot.querySelector("[data-chamada-ok]");
+    if (b) b.addEventListener("click", function () { chamadaMarcaVista(CHAM.aluno.ts); slot.innerHTML = ""; });
+  }
+  function chamadaAlunoCarrega() {
+    if (CHAM.alunoLoading || CHAM.alunoChecked || !state.slug || isTrainerRole()) return;
+    CHAM.alunoLoading = true;
+    fetch("/api/push?slug=" + encodeURIComponent(state.slug), { headers: feedHeaders(), cache: "no-store" })
+      .then(function (res) { if (!res.ok) throw new Error("http_" + res.status); return res.json(); })
+      .then(function (k) {
+        CHAM.alunoLoading = false; CHAM.alunoChecked = true; CHAM.aluno = k.chamada || null;
+        chamadaMostra(document.querySelector(".sa-chamada-slot"));
+      })
+      .catch(function () { CHAM.alunoLoading = false; });
+  }
+
   var PUSH = { estado: "", busy: false, sync: false };
   function pushSuportado() { return "serviceWorker" in navigator && "PushManager" in window && "Notification" in window; }
   function pushEhIos() { return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1); }
@@ -13605,10 +13693,12 @@ function startApp() {
       '<button type="button" id="btnAtendPlano">✏️ Editar plano</button>' +
       '</div></div>' : '';
 
-    document.getElementById("main").innerHTML = '<div class="student-app">' + previewBannerHtml + atendBannerHtml + headerHtml + bodyHtml + navHtml + '</div>';
+    document.getElementById("main").innerHTML = '<div class="student-app">' + previewBannerHtml + atendBannerHtml + headerHtml + '<div class="sa-chamada-slot">' + chamadaBannerHtml() + '</div>' + bodyHtml + navHtml + '</div>';
 
     attachStudentAppHandlers(s, plan);
     saWireBell(s);
+    chamadaMostra(document.querySelector(".sa-chamada-slot"));
+    chamadaAlunoCarrega();
   }
 
   // ---------- sininho de avisos do aluno ----------

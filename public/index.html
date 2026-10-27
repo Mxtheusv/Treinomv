@@ -15410,7 +15410,10 @@ function startApp() {
     var archived = isViewingArchived(s);
     var locked = isLocked();
     var sLocked = structLocked();
-    var onDataTab = state.activeTab !== "checkin" && state.activeTab !== "feedback" && state.activeTab !== "notas" && state.activeTab !== "corrida" && state.activeTab !== "volume";
+    // O nome do microciclo pode ser corrigido também nos planos arquivados (é só um nome);
+    // continua travado para o aluno e em links somente leitura.
+    var microLocked = state.readOnly || isStudentView();
+    var onDataTab =state.activeTab !== "checkin" && state.activeTab !== "feedback" && state.activeTab !== "notas" && state.activeTab !== "corrida" && state.activeTab !== "volume";
 
     document.getElementById("headerControls").innerHTML =
       (state.cameFromRoster ? '<a href="#" id="backToRoster" class="link-btn">← Meus alunos</a>' : '') +
@@ -15422,7 +15425,7 @@ function startApp() {
       '<div class="plan-field">' +
       '<label for="planSelect">Plano</label>' +
       '<select id="planSelect">' + planOptionsHtml(s, plan) + '</select>' +
-      '<input id="microInput" class="micro" placeholder="Microciclo 1" value="' + escapeAttr(plan.microciclo) + '" ' + (sLocked ? "disabled" : "") + '>' +
+      '<input id="microInput" class="micro" placeholder="Microciclo 1" value="' + escapeAttr(plan.microciclo) + '" ' + (microLocked ? "disabled" : "") + '>' +
       (sLocked ? '' : '<button type="button" class="btn-secondary" id="btnNewPlan">+ Novo plano</button>') +
       (sLocked ? '' : '<button type="button" class="btn-secondary" id="btnSaveTemplate" title="Salva os treinos deste plano como modelo reutilizável">💾 Salvar como modelo</button>') +
       '</div>' +
@@ -15503,7 +15506,16 @@ function startApp() {
     var alunoInput = document.getElementById("alunoInput");
     var microInput = document.getElementById("microInput");
     if (alunoInput) alunoInput.oninput = function (e) { s.nome = e.target.value; scheduleSave(); };
-    if (microInput) microInput.oninput = function (e) { plan.microciclo = e.target.value; scheduleSave(); };
+    if (microInput) microInput.oninput = function (e) {
+      plan.microciclo = e.target.value;
+      // O nome do plano no menu acompanha a digitação (inclusive planos arquivados).
+      var opt = document.querySelector('#planSelect option[value="' + plan.id + '"]');
+      if (opt) {
+        var atual = plan.id === s.activePlanId;
+        opt.textContent = (atual ? "Atual — " : "Arquivado — ") + (plan.microciclo || plan.label || "Plano") + (atual ? "" : " (" + formatPlanDate(plan.createdAt) + ")");
+      }
+      scheduleSave();
+    };
     var btnSave = document.getElementById("btnSave");
     if (btnSave) btnSave.onclick = function () { saveNow("Salvo"); };
     var btnPrint = document.getElementById("btnPrint");

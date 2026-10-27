@@ -5740,14 +5740,38 @@ function startApp() {
     attachTemplateHandlers(tpl);
   }
 
+  // Renomear treino: o nome salva a cada tecla, a aba do treino acompanha na hora,
+  // o botão ✎ Renomear leva o cursor para o nome, e um nome apagado volta para "Treino".
+  function atualizaAbaTreino(treinoId, nome) {
+    var texto = nome && nome.trim() ? nome : "Treino";
+    Array.prototype.forEach.call(document.querySelectorAll('[data-tab="' + treinoId + '"], [data-ttab="' + treinoId + '"]'), function (b) { b.textContent = texto; });
+  }
+  function ligaRenomearTreino(panel, treino, salvar) {
+    var titulo = panel.querySelector('[data-field="treino-nome"]');
+    if (!titulo) return;
+    var botao = panel.querySelector("[data-rename-treino]");
+    titulo.oninput = function (e) {
+      treino.nome = e.target.value;
+      atualizaAbaTreino(treino.id, treino.nome);
+      salvar();
+    };
+    titulo.onblur = function () {
+      if (treino.nome && treino.nome.trim()) return;
+      treino.nome = "Treino";
+      titulo.value = "Treino";
+      atualizaAbaTreino(treino.id, "Treino");
+      salvar();
+    };
+    if (botao) botao.onclick = function () { titulo.focus(); titulo.select(); };
+  }
+
   function attachTemplateHandlers(tpl) {
     var panel = document.querySelector(".panel[data-treino]");
     if (panel) {
       var treinoId = panel.getAttribute("data-treino");
       var treino = getTreino(tpl, treinoId);
 
-      var titulo = panel.querySelector('[data-field="treino-nome"]');
-      if (titulo) titulo.oninput = function (e) { treino.nome = e.target.value; scheduleTemplateSave(); };
+      ligaRenomearTreino(panel, treino, function () { scheduleTemplateSave(); });
       var delTreino = panel.querySelector("[data-del-treino]");
       var doDelTreino = function () {
         tpl.treinos = tpl.treinos.filter(function (t) { return t.id !== treinoId; });
@@ -8131,8 +8155,9 @@ function startApp() {
 
     return '<div class="panel" data-treino="' + treino.id + '">' +
       '<div class="panel-head">' +
-      '<input class="titulo-input" data-field="treino-nome" value="' + escapeAttr(treino.nome) + '" ' + (sLocked ? "disabled" : "") + '>' +
+      '<input class="titulo-input" data-field="treino-nome" title="Nome do treino" value="' + escapeAttr(treino.nome) + '" ' + (sLocked ? "disabled" : "") + '>' +
       (sLocked ? '' : '<div class="panel-head-actions">' +
+        '<button type="button" class="btn-secondary" data-rename-treino="1" title="Renomear este treino">✎ Renomear</button>' +
         (canMoveTreinoLeft ? '<button type="button" class="btn-secondary" data-move-treino="-1" title="Mover este treino para trás">◀ Mover</button>' : '') +
         (canMoveTreinoRight ? '<button type="button" class="btn-secondary" data-move-treino="1" title="Mover este treino para frente">Mover ▶</button>' : '') +
         '<button type="button" class="btn-secondary" data-dup-treino="1" title="Copia este treino inteiro (sem as cargas) como um treino novo">⧉ Duplicar treino</button>' +
@@ -15551,8 +15576,7 @@ function startApp() {
       var treinoId = panel.getAttribute("data-treino");
       var treino = getTreino(plan, treinoId);
 
-      var titulo = panel.querySelector('[data-field="treino-nome"]');
-      if (titulo) titulo.oninput = function (e) { treino.nome = e.target.value; scheduleSave(); };
+      ligaRenomearTreino(panel, treino, function () { scheduleSave(); });
       var delTreino = panel.querySelector("[data-del-treino]");
       var doDelTreino = function () {
         plan.treinos = plan.treinos.filter(function (t) { return t.id !== treinoId; });

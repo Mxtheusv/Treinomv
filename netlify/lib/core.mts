@@ -591,7 +591,7 @@ async function pushRoute(req: Request, url: URL, deps: Deps, now: number): Promi
   }
   if (action === "chamar") {
     if (!w.trainer) return reply(403, { error: "sem_permissao" });
-    return reply(200, { ok: true, ...(await chamaAlunos(deps, now, body.slugs)) });
+    return reply(200, { ok: true, ...(await chamaAlunos(deps, now, body.slugs, { push: body.push !== false, forca: body.forca === true })) });
   }
   return reply(400, { error: "acao_invalida" });
 }
@@ -638,8 +638,12 @@ function chamadaTexto(m: Modelo, nome: string, dias: number): Modelo {
   return { t: limpaTexto(sub(m.t), 80), c: limpaTexto(sub(m.c), 160) };
 }
 // Dispara as chamadas. Devolve quantas foram feitas, quantas já tinham sido feitas nas últimas horas e o horário de cada uma.
-export async function chamaAlunos(deps: Deps, now: number, slugs: unknown): Promise<{ chamados: number; comPush: number; pulados: number; ts: Record<string, number> }> {
-  const out = { chamados: 0, comPush: 0, pulados: 0, ts: {} as Record<string, number> };
+// opts.push: manda o aviso no celular (padrão). opts.forca: ignora a janela de 20 h (usado pelo botão do WhatsApp, que é ação deliberada do personal).
+// Devolve também msgs: o texto de cada chamada, para o personal mandar pelo WhatsApp.
+export async function chamaAlunos(deps: Deps, now: number, slugs: unknown, opts: { push?: boolean; forca?: boolean } = {}): Promise<{ chamados: number; comPush: number; pulados: number; ts: Record<string, number>; msgs: Record<string, string> }> {
+  const out = { chamados: 0, comPush: 0, pulados: 0, ts: {} as Record<string, number>, msgs: {} as Record<string, string> };
+  const comPush = opts.push !== false;
+  const forca = opts.forca === true;
   try {
     const lista = [...new Set((Array.isArray(slugs) ? slugs : []).filter((x) => typeof x === "string" && x.length > 0 && x.length <= 80))].slice(0, 60) as string[];
     const st = await loadState(deps);
@@ -650,7 +654,7 @@ export async function chamaAlunos(deps: Deps, now: number, slugs: unknown): Prom
       const rec = students[slug];
       if (!rec) continue;
       const prev = reg[slug];
-      if (prev && now - Number(prev.ts) < CHAMADA_INTERVALO_H * 3600_000) { out.pulados++; continue; }
+      if (!forca && prev && now - Number(prev.ts) < CHAMADA_INTERVALO_H * 3600_000) { out.pulados++; continue; }
       const ord = [...datasAtivas(rec)].sort();
       const ultimo = ord.length ? ord[ord.length - 1] : "";
       const base = ultimo || (Number(rec.primeiroAcessoEm) ? diaBR(Number(rec.primeiroAcessoEm)) : hoje);
@@ -660,10 +664,11 @@ export async function chamaAlunos(deps: Deps, now: number, slugs: unknown): Prom
       const primeiro = String(rec.nome || "").trim().split(/\s+/)[0] || "aluno";
       const msg = chamadaTexto(modelos[ix], primeiro, dias);
       let n = 0;
-      try { n = await PUSH.enviar(deps.kv, AUTH_STORE, [slug], { title: msg.t, body: msg.c, tag: "chamada" }, now, deps.fetch); } catch (e) { n = 0; }
+      if (comPush) { try { n = await PUSH.enviar(deps.kv, AUTH_STORE, [slug], { title: msg.t, body: msg.c, tag: "chamada" }, now, deps.fetch); } catch (e) { n = 0; } }
       reg[slug] = { ts: now, t: msg.t, c: msg.c, ix };
       out.chamados++;
       out.ts[slug] = now;
+      out.msgs[slug] = msg.t + "\n" + msg.c;
       if (n) out.comPush++;
     }
     for (const k of Object.keys(reg)) if (!students[k]) delete reg[k];

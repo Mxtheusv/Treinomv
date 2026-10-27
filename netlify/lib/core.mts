@@ -550,7 +550,11 @@ async function pushRoute(req: Request, url: URL, deps: Deps, now: number): Promi
     const w = await who(req, deps, now, url.searchParams.get("slug"));
     if (w.err) return w.err;
     const v = await PUSH.vapid(deps.kv, AUTH_STORE);
-    return reply(200, { publicKey: v.pub });
+    const out: Record<string, unknown> = { publicKey: v.pub };
+    const cham = await chamadasLer(deps);
+    if (w.trainer) out.chamadas = Object.fromEntries(Object.keys(cham).map((k) => [k, cham[k].ts]));
+    if (w.slug && cham[w.slug]) out.chamada = { ts: cham[w.slug].ts, t: cham[w.slug].t, c: cham[w.slug].c };
+    return reply(200, out);
   }
   if (req.method !== "POST") return reply(405, { error: "method" });
   const body = await readJson(req);
@@ -585,7 +589,87 @@ async function pushRoute(req: Request, url: URL, deps: Deps, now: number): Promi
     const n = await PUSH.enviar(deps.kv, AUTH_STORE, [dono], { title: "Treino Online", body: "Tudo certo! Os avisos vão chegar aqui. 💪", tag: "teste" }, now, deps.fetch);
     return reply(200, { ok: true, enviados: n });
   }
+  if (action === "chamar") {
+    if (!w.trainer) return reply(403, { error: "sem_permissao" });
+    return reply(200, { ok: true, ...(await chamaAlunos(deps, now, body.slugs)) });
+  }
   return reply(400, { error: "acao_invalida" });
+}
+
+
+// ---------- chamadas: o personal chama o aluno para treinar (botão "🔔 Chamar" no painel de alunos) ----------
+// Cada chamada vira um aviso no celular (se o aluno ligou os avisos) e fica guardada aqui: ao abrir o app, o aluno vê a
+// mesma mensagem num cartão "📣" até tocar em Entendi. A frase muda a cada chamada: há 5 a 6 variações por faixa de
+// dias parado, e o mesmo aluno nunca recebe a mesma frase duas vezes seguidas. Um aluno só é chamado de novo depois de
+// CHAMADA_INTERVALO_H horas, para não virar spam.
+const CHAMADA_KEY = "chamadas";
+const CHAMADA_INTERVALO_H = 20;
+type Modelo = { t: string; c: string };
+// {nome} = primeiro nome do aluno; {dias} = dias sem treinar.
+const CHAMADA_LEVE: Modelo[] = [ // 3 a 6 dias
+  { t: "{nome}, sentimos sua falta", c: "Faz {dias} dias sem treinar. Bora retomar hoje? 💪" },
+  { t: "Seu treino está te esperando, {nome}", c: "Já deixei tudo pronto. Um treino curto hoje já faz diferença." },
+  { t: "Bora voltar, {nome}?", c: "Faz {dias} dias desde o último treino. Qualquer treino conta." },
+  { t: "Oi, {nome}! 👋", c: "Passando pra te chamar pra treinar. Qual horário dá pra você hoje?" },
+  { t: "{nome}, cadê você?", c: "Faz {dias} dias sem aparecer. Vamos marcar o retorno?" },
+  { t: "Constância, {nome}", c: "O que mais faz diferença é voltar com frequência. Bora de novo hoje? 💪" },
+];
+const CHAMADA_FIRME: Modelo[] = [ // 7 a 13 dias
+  { t: "{nome}, faz uma semana", c: "Já são {dias} dias sem treinar. Volta hoje, mesmo que seja leve. 💪" },
+  { t: "Estamos te esperando, {nome}", c: "{dias} dias sem check-in. Se a rotina mudou, me chama no WhatsApp que a gente ajusta o treino." },
+  { t: "Vamos retomar, {nome}?", c: "Faz {dias} dias parado. Um treino hoje já quebra o gelo." },
+  { t: "{nome}, não desiste agora", c: "Dar uma travada acontece. Bora voltar juntos esta semana? 💪" },
+  { t: "Sentimos sua falta na academia", c: "Faz {dias} dias sem treinar. Se algo está pegando, me chama no WhatsApp." },
+  { t: "Bora, {nome}!", c: "Seu treino está pronto e te esperando há {dias} dias. Vamos?" },
+];
+const CHAMADA_LONGA: Modelo[] = [ // 14 dias ou mais
+  { t: "{nome}, tudo bem por aí?", c: "Faz {dias} dias sem treinar. Se estiver difícil, fala comigo no WhatsApp. A gente acha um jeito." },
+  { t: "Saudade, {nome}", c: "{dias} dias longe do treino. Qualquer treino leve hoje já é um começo. 💪" },
+  { t: "{nome}, vamos recomeçar?", c: "Você já mostrou que consegue. Bora reacender isso com um treino leve hoje?" },
+  { t: "Passando pra te chamar, {nome}", c: "Faz {dias} dias sem check-in. Quer que eu monte um treino mais curto pra voltar?" },
+  { t: "Você faz falta, {nome}", c: "Faz {dias} dias sem treinar. Volta hoje que a gente ajusta o resto juntos." },
+];
+function hashSlug(s: string): number { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return h; }
+async function chamadasLer(deps: Deps): Promise<Record<string, { ts: number; t: string; c: string; ix: number }>> {
+  try { const v = await deps.kv.get(AUTH_STORE, CHAMADA_KEY); return v && typeof v === "object" ? v : {}; } catch (e) { return {}; }
+}
+function chamadaTexto(m: Modelo, nome: string, dias: number): Modelo {
+  const sub = (s: string) => s.split("{nome}").join(nome).split("{dias}").join(String(dias));
+  return { t: limpaTexto(sub(m.t), 80), c: limpaTexto(sub(m.c), 160) };
+}
+// Dispara as chamadas. Devolve quantas foram feitas, quantas já tinham sido feitas nas últimas horas e o horário de cada uma.
+export async function chamaAlunos(deps: Deps, now: number, slugs: unknown): Promise<{ chamados: number; comPush: number; pulados: number; ts: Record<string, number> }> {
+  const out = { chamados: 0, comPush: 0, pulados: 0, ts: {} as Record<string, number> };
+  try {
+    const lista = [...new Set((Array.isArray(slugs) ? slugs : []).filter((x) => typeof x === "string" && x.length > 0 && x.length <= 80))].slice(0, 60) as string[];
+    const st = await loadState(deps);
+    const students: Record<string, any> = st.data?.students || {};
+    const reg = await chamadasLer(deps);
+    const hoje = diaBR(now);
+    for (const slug of lista) {
+      const rec = students[slug];
+      if (!rec) continue;
+      const prev = reg[slug];
+      if (prev && now - Number(prev.ts) < CHAMADA_INTERVALO_H * 3600_000) { out.pulados++; continue; }
+      const ord = [...datasAtivas(rec)].sort();
+      const ultimo = ord.length ? ord[ord.length - 1] : "";
+      const base = ultimo || (Number(rec.primeiroAcessoEm) ? diaBR(Number(rec.primeiroAcessoEm)) : hoje);
+      const dias = Math.max(0, diasEntre(base, hoje));
+      const modelos = dias >= 14 ? CHAMADA_LONGA : dias >= 7 ? CHAMADA_FIRME : CHAMADA_LEVE;
+      const ix = (prev && Number.isInteger(prev.ix) ? prev.ix + 1 : hashSlug(slug)) % modelos.length;
+      const primeiro = String(rec.nome || "").trim().split(/\s+/)[0] || "aluno";
+      const msg = chamadaTexto(modelos[ix], primeiro, dias);
+      let n = 0;
+      try { n = await PUSH.enviar(deps.kv, AUTH_STORE, [slug], { title: msg.t, body: msg.c, tag: "chamada" }, now, deps.fetch); } catch (e) { n = 0; }
+      reg[slug] = { ts: now, t: msg.t, c: msg.c, ix };
+      out.chamados++;
+      out.ts[slug] = now;
+      if (n) out.comPush++;
+    }
+    for (const k of Object.keys(reg)) if (!students[k]) delete reg[k];
+    if (out.chamados) await deps.kv.set(AUTH_STORE, CHAMADA_KEY, reg);
+  } catch (e) { /* nunca derruba o app: o personal tenta de novo */ }
+  return out;
 }
 
 

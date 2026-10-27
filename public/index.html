@@ -3953,7 +3953,8 @@ function startApp() {
         box.innerHTML = matches.map(function (item) {
           return '<div class="ex-suggestion-item" data-suggest-nome="' + escapeAttr(item.nome) + '">' +
             '<span class="ex-suggestion-name">' + escapeHtml(item.nome) + '</span>' +
-            ((item.video || "").trim() ? '<span class="ex-suggestion-vid" title="Tem vídeo gravado">✓ vídeo</span>' : '') +
+            ((item.video || "").trim() ? '<span class="ex-suggestion-vid" title="Tem vídeo gravado">✓ vídeo</span>'
+              : (gifPadrao(item.nome) ? '<span class="ex-suggestion-vid" title="Tem animação de referência (GIF)">✓ GIF</span>' : '')) +
             (item.grupoMuscular ? '<span class="ex-suggestion-tag">' + escapeHtml(item.grupoMuscular) + '</span>' : '') +
             '</div>';
         }).join("") + (meta.total > matches.length
@@ -7258,6 +7259,7 @@ function startApp() {
     if (extra.load !== null && extra.load !== undefined) tags.push('<span class="vary-tag">Última carga ' + fmtKgNum(extra.load) + ' kg</span>');
     if (extra.inPlan) tags.push('<span class="vary-tag vary-tag-warn">Já está neste plano</span>');
     if ((c.video || "").trim()) tags.push('<span class="vary-tag vary-tag-vid">✓ vídeo</span>');
+    else if (gifPadrao(c.nome)) tags.push('<span class="vary-tag vary-tag-vid">✓ GIF</span>');
     else tags.push('<span class="vary-tag vary-tag-mute">sem vídeo</span>');
     if (c.equipamento) tags.push('<span class="vary-tag">' + escapeHtml(c.equipamento) + '</span>');
     return '<button type="button" class="vary-item" data-vary-pick="' + escapeAttr(c.nome) + '">' +

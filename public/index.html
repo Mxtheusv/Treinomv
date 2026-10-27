@@ -6171,7 +6171,7 @@ function startApp() {
         '<div class="tr-rr-mid">' +
         '<div class="tr-roster-checkin' + (statusKey === "sumido" ? " warn" : "") + '">último check-in<strong>' + (statusKey === "semacesso" ? "Nunca entrou" : (lastCheckin || "—")) + '</strong></div>' +
         '<div class="tr-roster-actions">' +
-        (statusKey === "sumido" ? chamarBotaoHtml(slug) : "") +
+        (statusKey === "sumido" ? chamarBotaoHtml(slug) + whatsBotaoHtml(slug) : "") +
         '<button type="button" class="sa-cta tr-atender" style="width:auto;margin-top:0;padding:10px 12px" data-atender="' + escapeAttr(slug) + '">▶ Atender</button>' +
         '<button type="button" class="sa-cta-ghost" style="margin-top:0;padding:10px 10px" data-open="' + escapeAttr(slug) + '">Abrir treino</button>' +
         '<button type="button" class="sa-cta-ghost tr-resumo-btn" style="margin-top:0;padding:10px 10px" data-resumo="' + escapeAttr(slug) + '" aria-expanded="' + (aberto ? "true" : "false") + '">' + (aberto ? "Fechar ▴" : "Resumo ▾") + '</button>' +
@@ -12223,6 +12223,25 @@ function startApp() {
     return '<button type="button" class="sa-cta-ghost" style="margin-top:0;padding:10px 12px"' + (recente ? " disabled" : "") + ' data-chamar="' + escapeAttr(slug) + '">' +
       (recente ? "✓ Chamado há " + (h < 1 ? "menos de 1h" : h + "h") : "🔔 Chamar") + '</button>';
   }
+  function whatsBotaoHtml(slug) {
+    return '<button type="button" class="sa-cta-ghost" style="margin-top:0;padding:10px 12px" data-whats="' + escapeAttr(slug) + '">📲 WhatsApp</button>';
+  }
+  // Chamada pelo WhatsApp: abre o WhatsApp com a frase da vez já escrita. Você escolhe o aluno e envia.
+  // Sem aviso no celular (o WhatsApp é o canal), mas a chamada fica registrada e o cartão 📣 também aparece no app.
+  function chamarPorWhats(slug) {
+    if (CHAM.busy) return;
+    CHAM.busy = true;
+    var win = window.open("", "_blank");
+    pushPost({ action: "chamar", slugs: [slug], push: false, forca: true }).then(function (r) {
+      CHAM.busy = false;
+      Object.keys(r.ts || {}).forEach(function (k) { CHAM.ts[k] = r.ts[k]; });
+      var texto = r.msgs && r.msgs[slug];
+      if (!texto) { if (win) win.close(); showToast("Não consegui montar a mensagem agora.", true); return; }
+      var url = "https://wa.me/?text=" + encodeURIComponent(texto);
+      if (win) win.location.href = url; else location.href = url;
+      if (trTabAtual() === "alunos") setTimeout(renderRoster, 0);
+    }).catch(function () { CHAM.busy = false; if (win) win.close(); showToast("Não consegui chamar agora. Tente de novo.", true); });
+  }
   function chamadasCarrega() {
     if (CHAM.loading) return;
     CHAM.loading = true;
@@ -12253,6 +12272,9 @@ function startApp() {
   function trWireChamadas() {
     Array.prototype.forEach.call(document.querySelectorAll("[data-chamar]"), function (b) {
       b.addEventListener("click", function (e) { e.stopPropagation(); chamarAlunos([b.getAttribute("data-chamar")]); });
+    });
+    Array.prototype.forEach.call(document.querySelectorAll("[data-whats]"), function (b) {
+      b.addEventListener("click", function (e) { e.stopPropagation(); chamarPorWhats(b.getAttribute("data-whats")); });
     });
     var todos = document.getElementById("btnChamarTodos");
     if (todos) todos.addEventListener("click", function (e) { e.stopPropagation(); chamarAlunos(CHAM.sumidos); });

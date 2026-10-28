@@ -11660,10 +11660,43 @@ function startApp() {
     im.onerror = function () { fim(null); };
     im.src = "/icons/icon-192.png";
   }
-  function saDesenhaCartao(cv, ses, foto, nomeAluno, overlay) {
+  // Grupos musculares da sessão, pela mesma conta do "Séries por músculo" (do que mais teve série pro que menos).
+  function saCartaoMusculos(ses) {
+    if (ses.kind === "corrida") return [];
+    var o = volNovo();
+    if (ses.seriesPorEx) ses.seriesPorEx.forEach(function (x) { volSoma(o, x.exercicio, x.n); });
+    else {
+      var cont = {};
+      (ses.cargasLog || []).forEach(function (c) { cont[c.exercicio] = (cont[c.exercicio] || 0) + 1; });
+      Object.keys(cont).forEach(function (k) { volSoma(o, k, cont[k]); });
+    }
+    return VOL_ORDEM.filter(function (g) { return o.por[g] > 0; }).sort(function (a, b) { return o.por[b] - o.por[a]; });
+  }
+  // Três layouts: cada treino abre em um deles (pelo id da sessão) e o aluno pode trocar com "Outro layout".
+  var SA_CARTAO_LAYOUTS = 3;
+  function saCartaoVarianteInicial(ses) {
+    var id = String(ses.id || ses.date || ""), h = 0;
+    for (var i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+    return h % SA_CARTAO_LAYOUTS;
+  }
+  // Logo em uma cor só (escura), mantendo o desenho e a transparência.
+  var SA_LOGO_ESC = null;
+  function saLogoTinta(src, rgb) {
+    try {
+      var c = document.createElement("canvas");
+      c.width = src.width; c.height = src.height;
+      var x = c.getContext("2d"); x.drawImage(src, 0, 0);
+      var d = x.getImageData(0, 0, c.width, c.height), p = d.data;
+      for (var i = 0; i < p.length; i += 4) { if (p[i + 3] > 0) { p[i] = rgb[0]; p[i + 1] = rgb[1]; p[i + 2] = rgb[2]; } }
+      x.putImageData(d, 0, 0);
+      return c;
+    } catch (e) { return null; }
+  }
+  function saDesenhaCartao(cv, ses, foto, nomeAluno, overlay, variante) {
     var W = 1080, H = 1350, ctx = cv.getContext("2d");
     cv.width = W; cv.height = H;
     var fonteTitulo = "800 {T}px 'Saira Condensed', 'Arial Narrow', Arial, sans-serif";
+    variante = variante || 0;
     // overlay = versão transparente: só os dados e a marca, para colar em cima da foto (como no Strava/Garmin)
     if (overlay) {
       // fundo transparente (o canvas já começa limpo)
@@ -11682,62 +11715,95 @@ function startApp() {
     sombra.addColorStop(0, "rgba(0,0,0,0)"); sombra.addColorStop(0.5, "rgba(0,0,0,.7)"); sombra.addColorStop(1, "rgba(0,0,0,.92)");
     if (!overlay) { ctx.fillStyle = sombra; ctx.fillRect(0, 0, W, H); }
     else { ctx.shadowColor = "rgba(0,0,0,.6)"; ctx.shadowBlur = 20; ctx.shadowOffsetY = 3; }
-    // topo: nome do aluno (só ele), nome do treino e data
-    ctx.fillStyle = "#ffc247"; ctx.font = fonteTitulo.replace("{T}", 60);
-    ctx.fillText(String(nomeAluno || "").toUpperCase(), 70, 150);
+
     var nome = ses.nome || "Treino";
-    ctx.fillStyle = "#ffffff"; ctx.font = fonteTitulo.replace("{T}", 104);
-    var linhas = saCartaoLinhas(ctx, nome, W - 140);
-    linhas.forEach(function (ln, i) { ctx.fillText(ln, 70, 270 + i * 110); });
-    var yData = 270 + (linhas.length - 1) * 110 + 70;
-    ctx.fillStyle = "#e6ecff"; ctx.font = "600 40px Arial, sans-serif";
-    ctx.fillText(formatDateBR(ses.date) || "", 70, yData);
-    // estatísticas (estilo Strava): valor grande + rótulo embaixo
-    var stats;
-    if (ses.kind === "corrida") {
+    var corrida = ses.kind === "corrida";
+    // números: tempo e carga (se não houver carga, séries no lugar); corrida mostra km, tempo e min/km
+    var stats = [];
+    if (corrida) {
       var km = ses.distanciaM ? ses.distanciaM / 1000 : 0;
       var ritmo = km && ses.duracaoSeg ? Math.round(ses.duracaoSeg / km) : 0;
-      stats = [
-        { v: km ? km.toFixed(2).replace(".", ",") : "—", l: "km" },
-        { v: saCartaoDuracao(ses.duracaoSeg), l: "duração" },
-        { v: ritmo ? saCartaoDuracao(ritmo).replace(/^0:/, "") : "—", l: "min/km" }
-      ];
+      if (km) stats.push({ v: km.toFixed(2).replace(".", ","), l: "km" });
+      if (ses.duracaoSeg) stats.push({ v: saCartaoDuracao(ses.duracaoSeg), l: "tempo" });
+      if (ritmo) stats.push({ v: saCartaoDuracao(ritmo).replace(/^0:/, ""), l: "min/km" });
     } else {
-      stats = [
-        { v: ses.volumeKg ? Math.round(ses.volumeKg).toLocaleString("pt-BR") : "—", l: "kg de volume" },
-        { v: saCartaoDuracao(ses.duracaoSeg), l: "duração" },
-        { v: String(ses.seriesLogadas || ses.seriesTotal || 0), l: "séries" }
-      ];
+      if (ses.duracaoSeg) stats.push({ v: saCartaoDuracao(ses.duracaoSeg), l: "tempo" });
+      if (ses.volumeKg) stats.push({ v: Math.round(ses.volumeKg).toLocaleString("pt-BR"), l: "carga (kg)" });
+      else {
+        var series = ses.seriesLogadas || ses.seriesTotal || 0;
+        if (series) stats.push({ v: String(series), l: "séries" });
+      }
     }
-    // valor principal grande; os outros dois numa linha abaixo
-    ctx.fillStyle = "#ffffff"; ctx.font = fonteTitulo.replace("{T}", 230);
-    ctx.fillText(stats[0].v, 70, 960);
-    ctx.fillStyle = "#c9d3ea"; ctx.font = "700 34px Arial, sans-serif";
-    ctx.fillText(stats[0].l.toUpperCase(), 74, 1010);
-    [[70, stats[1]], [560, stats[2]]].forEach(function (par) {
-      ctx.fillStyle = "#ffffff"; ctx.font = fonteTitulo.replace("{T}", 120);
-      ctx.fillText(par[1].v, par[0], 1120);
-      ctx.fillStyle = "#c9d3ea"; ctx.font = "700 32px Arial, sans-serif";
-      ctx.fillText(par[1].l.toUpperCase(), par[0] + 4, 1170);
-    });
-    // marca d'água: nome do personal no rodapé + logo (a logo grande e clarinha ao fundo)
-    // rodapé minimalista: só o nome do personal (sem selo, sem CREF)
-    ctx.fillStyle = "#ffffff"; ctx.font = "700 40px Arial, sans-serif";
-    ctx.fillText("Matheus Venâncio", 70, H - 80);
-    // a marca d'água não leva sombra
+    stats = stats.slice(0, corrida ? 3 : 2);
+    var musculos = saCartaoMusculos(ses).slice(0, 4);
+    var linhaMus = musculos.join(" · ").toUpperCase();
+    var desenhaStats = function (y, valPx, lblPx, x0) {
+      stats.forEach(function (st, i) {
+        var x = x0 + i * 330;
+        ctx.fillStyle = "#ffffff"; ctx.font = fonteTitulo.replace("{T}", valPx);
+        ctx.fillText(st.v, x, y);
+        ctx.fillStyle = "#c9d3ea"; ctx.font = "700 " + lblPx + "px Arial, sans-serif";
+        ctx.fillText(st.l.toUpperCase(), x + 4, y + lblPx + 16);
+      });
+    };
+    // a fonte diminui até caber na largura (Arial é mais larga que a Saira, então não pode estourar a borda)
+    var fonteQueCabe = function (txt, px, maxW) {
+      var t = px; ctx.font = "700 " + t + "px Arial, sans-serif";
+      while (t > 22 && ctx.measureText(txt).width > maxW) { t -= 2; ctx.font = "700 " + t + "px Arial, sans-serif"; }
+      return t;
+    };
+    var desenhaLinhaMus = function (y, px) {
+      if (!linhaMus) return;
+      ctx.fillStyle = "#ffc247"; ctx.font = "700 " + fonteQueCabe(linhaMus, px, W - 140) + "px Arial, sans-serif";
+      ctx.fillText(linhaMus, 70, y);
+    };
+    var desenhaColunaMus = function (x, y0, px, passo) {
+      if (!musculos.length) return;
+      ctx.fillStyle = "#ffc247";
+      var maior = musculos.map(function (gr) { return gr.toUpperCase(); }).reduce(function (a, b) { return a.length >= b.length ? a : b; });
+      ctx.font = "700 " + fonteQueCabe(maior, px, W - 70 - x) + "px Arial, sans-serif";
+      musculos.forEach(function (gr, i) { ctx.fillText(gr.toUpperCase(), x, y0 + i * passo); });
+    };
+    if (overlay) {
+      // versão para colar na foto: só data, treino, músculos e números (sem nome do personal)
+      ctx.fillStyle = "#e6ecff"; ctx.font = "600 44px Arial, sans-serif";
+      ctx.fillText(formatDateBR(ses.date) || "", 70, 130);
+      ctx.fillStyle = "#ffffff"; ctx.font = fonteTitulo.replace("{T}", 64);
+      var yNome = variante === 0 ? H - 360 : H - 400;
+      saCartaoLinhas(ctx, nome, W - 140).forEach(function (ln, i) { ctx.fillText(ln, 70, yNome + i * 66); });
+      if (variante === 0) { desenhaLinhaMus(H - 236, 36); desenhaStats(H - 120, 112, 30, 70); }
+      else if (variante === 1) { desenhaStats(H - 190, 112, 30, 70); desenhaLinhaMus(H - 80, 36); }
+      else { desenhaStats(H - 150, 112, 30, 70); desenhaColunaMus(760, H - 260, 34, 50); }
+    } else {
+      // topo: nome do aluno (só ele), nome do treino e data
+      ctx.fillStyle = "#ffc247"; ctx.font = fonteTitulo.replace("{T}", 60);
+      ctx.fillText(String(nomeAluno || "").toUpperCase(), 70, 150);
+      ctx.fillStyle = "#ffffff"; ctx.font = fonteTitulo.replace("{T}", 104);
+      var linhas = saCartaoLinhas(ctx, nome, W - 140);
+      linhas.forEach(function (ln, i) { ctx.fillText(ln, 70, 270 + i * 110); });
+      var yData = 270 + (linhas.length - 1) * 110 + 70;
+      ctx.fillStyle = "#e6ecff"; ctx.font = "600 40px Arial, sans-serif";
+      ctx.fillText(formatDateBR(ses.date) || "", 70, yData);
+      if (variante === 0) { desenhaStats(1000, 120, 30, 70); desenhaLinhaMus(1120, 38); }
+      else if (variante === 1) { desenhaLinhaMus(1000, 38); desenhaStats(1110, 120, 30, 70); }
+      else { desenhaStats(1000, 120, 30, 70); desenhaColunaMus(760, 1000, 38, 56); }
+    }
+    // sem nome do personal no cartão. Logo: no cartão com fundo, a versão de sempre; na versão para colar, escura.
     ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
     var versao = cv._versaoCartao = (cv._versaoCartao || 0) + 1;
     saCartaoLogo(function (logo, marca) {
       // só desenha se esta ainda for a última versão do cartão (evita marca d'água dupla)
-      if (!logo || cv._versaoCartao !== versao) return;
+      if (cv._versaoCartao !== versao) return;
+      var img = logo;
+      if (overlay && marca) { if (!SA_LOGO_ESC) SA_LOGO_ESC = saLogoTinta(marca, [11, 16, 32]); img = SA_LOGO_ESC || logo; }
+      if (!img) return;
       // logo pequena no canto superior direito (não atrapalha o título)
       ctx.save();
-      ctx.globalAlpha = 0.9; ctx.drawImage(logo, W - 70 - 120, 60, 120, 120);
+      ctx.globalAlpha = 0.9; ctx.drawImage(img, W - 70 - 120, 60, 120, 120);
       ctx.restore();
-
     });
   }
-  function saAbrirCartao(s, sesId) {
+  function saAbrirCartao(s, sesId, comoColar) {
     var ses = (s.sessoes || []).filter(function (x) { return x.id === sesId; })[0];
     if (!ses) return;
     var velho = document.getElementById("saCartaoOv"); if (velho) velho.remove();
@@ -11749,6 +11815,7 @@ function startApp() {
       '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">' +
       '<label id="saCartaoFotoLbl" class="sa-cta-ghost" style="flex:1;text-align:center;cursor:pointer">📷 Foto<input type="file" accept="image/*" id="saCartaoFoto" style="display:none"></label>' +
       '<button type="button" class="sa-cta-ghost" id="saCartaoModo" style="flex:1">Sem fundo (para colar na foto)</button>' +
+      '<button type="button" class="sa-cta-ghost" id="saCartaoVar" style="flex:1">🔀 Outro layout</button>' +
       '</div>' +
       '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">' +
       '<button type="button" class="sa-cta-ghost" id="saCartaoCopiar" style="flex:1">Copiar</button>' +
@@ -11756,11 +11823,11 @@ function startApp() {
       '<button type="button" class="sa-cta-ghost" id="saCartaoCompartilhar" style="flex:1">Compartilhar</button>' +
       '</div><button type="button" class="sa-cta-ghost" id="saCartaoFechar" style="width:100%;margin-top:10px">Fechar</button></div>';
     document.body.appendChild(ov);
-    var cv = document.getElementById("saCartaoCv"), foto = null, semFundo = false;
+    var cv = document.getElementById("saCartaoCv"), foto = null, semFundo = !!comoColar, variante = saCartaoVarianteInicial(ses);
     var primeiroNome = String(s.nome || "").split(/\s+/)[0] || "";
     var nomeArq = function () { return "cartao-treino" + (semFundo ? "-sem-fundo" : "") + "-" + (ses.date || "") + ".png"; };
     var desenha = function () {
-      saDesenhaCartao(cv, ses, semFundo ? null : foto, primeiroNome, semFundo);
+      saDesenhaCartao(cv, ses, semFundo ? null : foto, primeiroNome, semFundo, variante);
       document.getElementById("saCartaoFotoLbl").style.display = semFundo ? "none" : "";
       document.getElementById("saCartaoDica").textContent = semFundo
         ? "Sem fundo: copie esta imagem e cole por cima da sua foto no Instagram, Stories ou no seu editor."
@@ -11769,6 +11836,7 @@ function startApp() {
     };
     desenha();
     document.getElementById("saCartaoModo").onclick = function () { semFundo = !semFundo; desenha(); };
+    document.getElementById("saCartaoVar").onclick = function () { variante = (variante + 1) % SA_CARTAO_LAYOUTS; desenha(); };
     document.getElementById("saCartaoCopiar").onclick = function () {
       var escrever = null;
       try {
@@ -11904,6 +11972,7 @@ function startApp() {
           '<label class="sa-cta" for="saPostFoto">📷 Postar com foto</label><input type="file" id="saPostFoto" accept="image/*" hidden>' +
           '<button type="button" class="sa-cta-ghost" data-post="nome"' + (SA_POST.busy ? " disabled" : "") + '>💪 Treinei: <b>' + escapeHtml(nome) + '</b></button>' +
           '<button type="button" class="sa-cta-ghost" data-post="dia"' + (SA_POST.busy ? " disabled" : "") + '>✅ Só avisar que treinei hoje</button>' +
+          '<button type="button" class="sa-cta-ghost" data-post="cartao">📸 Cartão para o Stories</button>' +
           '<button type="button" class="sa-post-skip" data-post="nao">Agora não</button></div>';
       }
     }
@@ -11911,6 +11980,7 @@ function startApp() {
       var t = e.target; while (t && t !== ov && !(t.getAttribute && t.getAttribute("data-post"))) t = t.parentNode;
       if (!t || t === ov) return;
       var a = t.getAttribute("data-post");
+      if (a === "cartao") { saAbrirCartao(s, nova.id, true); return; }
       if (a === "nao") { fecha(); saFeedSequencia(s); return; } // o fogo do mês aparece mesmo sem postar o treino
       if (a === "nome" || a === "dia") { publica(a, ""); return; }
       if (a === "voltar") { if (SA_POST.url) URL.revokeObjectURL(SA_POST.url); SA_POST.url = ""; SA_POST.blob = null; desenha(); return; }

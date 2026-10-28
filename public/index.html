@@ -11672,8 +11672,8 @@ function startApp() {
     }
     return VOL_ORDEM.filter(function (g) { return o.por[g] > 0; }).sort(function (a, b) { return o.por[b] - o.por[a]; });
   }
-  // Três layouts: cada treino abre em um deles (pelo id da sessão) e o aluno pode trocar com "Outro layout".
-  var SA_CARTAO_LAYOUTS = 3;
+  // Dois layouts: só muda se os músculos ficam acima ou abaixo dos números. Cada treino abre em um, e o aluno pode trocar.
+  var SA_CARTAO_LAYOUTS = 2;
   function saCartaoVarianteInicial(ses) {
     var id = String(ses.id || ses.date || ""), h = 0;
     for (var i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
@@ -11735,45 +11735,42 @@ function startApp() {
       }
     }
     stats = stats.slice(0, corrida ? 3 : 2);
-    var musculos = saCartaoMusculos(ses).slice(0, 4);
-    var linhaMus = musculos.join(" · ").toUpperCase();
-    var desenhaStats = function (y, valPx, lblPx, x0) {
-      stats.forEach(function (st, i) {
-        var x = x0 + i * 330;
-        ctx.fillStyle = "#ffffff"; ctx.font = fonteTitulo.replace("{T}", valPx);
-        ctx.fillText(st.v, x, y);
-        ctx.fillStyle = "#c9d3ea"; ctx.font = "700 " + lblPx + "px Arial, sans-serif";
-        ctx.fillText(st.l.toUpperCase(), x + 4, y + lblPx + 16);
-      });
-    };
+    // músculos: no máximo três, o resto vira "+N"
+    var musculos = saCartaoMusculos(ses);
+    var linhaMus = (musculos.slice(0, 3).join(" · ") + (musculos.length > 3 ? " +" + (musculos.length - 3) : "")).toUpperCase();
     // a fonte diminui até caber na largura (Arial é mais larga que a Saira, então não pode estourar a borda)
     var fonteQueCabe = function (txt, px, maxW) {
       var t = px; ctx.font = "700 " + t + "px Arial, sans-serif";
       while (t > 22 && ctx.measureText(txt).width > maxW) { t -= 2; ctx.font = "700 " + t + "px Arial, sans-serif"; }
       return t;
     };
-    var desenhaLinhaMus = function (y, px) {
+    var desenhaNumeros = function (y, valPx, lblPx) {
+      stats.forEach(function (st, i) {
+        var x = 70 + i * 320;
+        ctx.fillStyle = "#ffffff"; ctx.font = fonteTitulo.replace("{T}", valPx);
+        ctx.fillText(st.v, x, y);
+        ctx.fillStyle = "rgba(201,211,234,.9)"; ctx.font = "700 " + lblPx + "px Arial, sans-serif";
+        ctx.fillText(st.l.toUpperCase(), x + 4, y + lblPx + 14);
+      });
+    };
+    var desenhaMusculos = function (y) {
       if (!linhaMus) return;
-      ctx.fillStyle = "#ffc247"; ctx.font = "700 " + fonteQueCabe(linhaMus, px, W - 140) + "px Arial, sans-serif";
+      ctx.fillStyle = "rgba(230,236,255,.85)";
+      ctx.font = "700 " + fonteQueCabe(linhaMus, 30, W - 140) + "px Arial, sans-serif";
       ctx.fillText(linhaMus, 70, y);
     };
-    var desenhaColunaMus = function (x, y0, px, passo) {
-      if (!musculos.length) return;
-      ctx.fillStyle = "#ffc247";
-      var maior = musculos.map(function (gr) { return gr.toUpperCase(); }).reduce(function (a, b) { return a.length >= b.length ? a : b; });
-      ctx.font = "700 " + fonteQueCabe(maior, px, W - 70 - x) + "px Arial, sans-serif";
-      musculos.forEach(function (gr, i) { ctx.fillText(gr.toUpperCase(), x, y0 + i * passo); });
-    };
     if (overlay) {
-      // versão para colar na foto: só data, treino, músculos e números (sem nome do personal)
+      // versão para colar na foto: data no topo e, embaixo, só o nome do treino, os números e os músculos
       ctx.fillStyle = "#e6ecff"; ctx.font = "600 44px Arial, sans-serif";
       ctx.fillText(formatDateBR(ses.date) || "", 70, 130);
-      ctx.fillStyle = "#ffffff"; ctx.font = fonteTitulo.replace("{T}", 64);
-      var yNome = variante === 0 ? H - 360 : H - 400;
-      saCartaoLinhas(ctx, nome, W - 140).forEach(function (ln, i) { ctx.fillText(ln, 70, yNome + i * 66); });
-      if (variante === 0) { desenhaLinhaMus(H - 236, 36); desenhaStats(H - 120, 112, 30, 70); }
-      else if (variante === 1) { desenhaStats(H - 190, 112, 30, 70); desenhaLinhaMus(H - 80, 36); }
-      else { desenhaStats(H - 150, 112, 30, 70); desenhaColunaMus(760, H - 260, 34, 50); }
+      // variante 0: músculos entre o nome e os números; variante 1: músculos embaixo dos números
+      var nomeFim = variante === 0 ? H - 306 : H - 330;
+      var yNum = variante === 0 ? H - 120 : H - 190;
+      ctx.fillStyle = "#ffffff"; ctx.font = fonteTitulo.replace("{T}", 60);
+      var linhasNome = saCartaoLinhas(ctx, nome, W - 140);
+      linhasNome.forEach(function (ln, i) { ctx.fillText(ln, 70, nomeFim - (linhasNome.length - 1 - i) * 60); });
+      if (variante === 0) { desenhaMusculos(H - 236); desenhaNumeros(yNum, 100, 26); }
+      else { desenhaNumeros(yNum, 100, 26); desenhaMusculos(H - 100); }
     } else {
       // topo: nome do aluno (só ele), nome do treino e data
       ctx.fillStyle = "#ffc247"; ctx.font = fonteTitulo.replace("{T}", 60);
@@ -11784,11 +11781,11 @@ function startApp() {
       var yData = 270 + (linhas.length - 1) * 110 + 70;
       ctx.fillStyle = "#e6ecff"; ctx.font = "600 40px Arial, sans-serif";
       ctx.fillText(formatDateBR(ses.date) || "", 70, yData);
-      if (variante === 0) { desenhaStats(1000, 120, 30, 70); desenhaLinhaMus(1120, 38); }
-      else if (variante === 1) { desenhaLinhaMus(1000, 38); desenhaStats(1110, 120, 30, 70); }
-      else { desenhaStats(1000, 120, 30, 70); desenhaColunaMus(760, 1000, 38, 56); }
+      // parte de baixo, a mesma do cartão para colar
+      if (variante === 0) { desenhaMusculos(1140); desenhaNumeros(1250, 104, 26); }
+      else { desenhaNumeros(1130, 104, 26); desenhaMusculos(1250); }
     }
-    // sem nome do personal no cartão. Logo: no cartão com fundo, a versão de sempre; na versão para colar, escura.
+    // logo: no cartão com fundo, a versão de sempre; na versão para colar, escura. Sem nome do personal.
     ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
     var versao = cv._versaoCartao = (cv._versaoCartao || 0) + 1;
     saCartaoLogo(function (logo, marca) {

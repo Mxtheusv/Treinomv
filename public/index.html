@@ -11707,7 +11707,7 @@ function startApp() {
       glow.addColorStop(0, "rgba(255,194,71,.38)"); glow.addColorStop(1, "rgba(255,194,71,0)");
       ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
     }
-    if (estilo === 0) {
+    if (estilo === 0 || estilo === 3) {
       // degradê escuro embaixo: o texto aparece em qualquer foto
       var sombra = ctx.createLinearGradient(0, H * 0.4, 0, H);
       sombra.addColorStop(0, "rgba(0,0,0,0)"); sombra.addColorStop(0.5, "rgba(0,0,0,.7)"); sombra.addColorStop(1, "rgba(0,0,0,.92)");
@@ -11744,10 +11744,10 @@ function startApp() {
       while (t > 22 && ctx.measureText(txt).width > maxW) { t -= 2; ctx.font = "700 " + t + "px Arial, sans-serif"; }
       return t;
     };
-    var desenhaNumeros = function (y, valPx, lblPx) {
+    var desenhaNumeros = function (y, valPx, lblPx, fonteV) {
       stats.forEach(function (st, i) {
         var x = 70 + i * 320;
-        ctx.fillStyle = "#ffffff"; ctx.font = fonteTitulo.replace("{T}", valPx);
+        ctx.fillStyle = "#ffffff"; ctx.font = (fonteV || fonteTitulo).replace("{T}", valPx);
         ctx.fillText(st.v, x, y);
         ctx.fillStyle = "rgba(201,211,234,.9)"; ctx.font = "700 " + lblPx + "px Arial, sans-serif";
         ctx.fillText(st.l.toUpperCase(), x + 4, y + lblPx + 14);
@@ -11764,10 +11764,10 @@ function startApp() {
         ctx.fillStyle = "rgba(11,16,32,.75)"; ctx.font = "700 30px Arial, sans-serif"; ctx.fillText(st.l.toUpperCase(), x + 4, 1098);
       });
     };
-    var desenhaMusculos = function (y) {
+    var desenhaMusculos = function (y, px) {
       if (!linhaMus) return;
       ctx.fillStyle = ehDourado ? "rgba(11,16,32,.85)" : "rgba(230,236,255,.85)";
-      ctx.font = "700 " + fonteQueCabe(linhaMus, 30, W - 140) + "px Arial, sans-serif";
+      ctx.font = "700 " + fonteQueCabe(linhaMus, px || 30, W - 140) + "px Arial, sans-serif";
       ctx.fillText(linhaMus, 70, y);
     };
     if (ehSemFundo) {
@@ -11790,6 +11790,18 @@ function startApp() {
       ctx.fillText(formatDateBR(ses.date) || "", 70, 330 + (linhasD.length - 1) * 120 + 66);
       desenhaDestaque();
       desenhaMusculos(1230);
+    } else if (estilo === 3) {
+      // só embaixo: nada em cima (sem nome, data ou logo) e letra mais leve, para caber sobre a foto do aluno
+      var fonteLeve = "600 {T}px 'Saira Condensed', 'Arial Narrow', Arial, sans-serif";
+      ctx.font = fonteLeve.replace("{T}", 64);
+      var linhasB = saCartaoLinhas(ctx, nome, W - 140);
+      ctx.fillStyle = "#ffffff";
+      linhasB.forEach(function (ln, i) { ctx.fillText(ln, 70, (H - 330) - (linhasB.length - 1 - i) * 72); });
+      var yDataB = (H - 330) - (linhasB.length - 1) * 72 - 96; // respiro entre a data e o título
+      ctx.fillStyle = "#e6ecff"; ctx.font = "600 32px Arial, sans-serif";
+      ctx.fillText(formatDateBR(ses.date) || "", 70, yDataB);
+      desenhaMusculos(H - 100, 24);
+      desenhaNumeros(H - 190, 72, 22, fonteLeve);
     } else {
       // escuro (com fundo): nome do aluno, título, data, e embaixo músculos e números
       ctx.fillStyle = "#ffc247"; ctx.font = fonteTitulo.replace("{T}", 60);
@@ -11811,7 +11823,7 @@ function startApp() {
     var versao = cv._versaoCartao = (cv._versaoCartao || 0) + 1;
     saCartaoLogo(function (logo, marca) {
       // só desenha se esta ainda for a última versão do cartão (evita marca d'água dupla)
-      if (cv._versaoCartao !== versao) return;
+      if (cv._versaoCartao !== versao || estilo === 3) return; // só embaixo: sem logo em cima
       var img = logo;
       if (estilo !== 0 && marca) { if (!SA_LOGO_ESC) SA_LOGO_ESC = saLogoTinta(marca, [11, 16, 32]); img = SA_LOGO_ESC || logo; }
       if (!img) return;
@@ -11834,6 +11846,7 @@ function startApp() {
       '<button type="button" class="sa-cta" data-estilo="0" style="flex:1">Escuro</button>' +
       '<button type="button" class="sa-cta-ghost" id="saCartaoModo" data-estilo="1" style="flex:1">Sem fundo</button>' +
       '<button type="button" class="sa-cta-ghost" data-estilo="2" style="flex:1">Dourado</button>' +
+      '<button type="button" class="sa-cta-ghost" data-estilo="3" style="flex:1">Só embaixo</button>' +
       '</div>' +
       '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">' +
       '<label id="saCartaoFotoLbl" class="sa-cta-ghost" style="flex:1;text-align:center;cursor:pointer">📷 Foto de fundo<input type="file" accept="image/*" id="saCartaoFoto" style="display:none"></label>' +
@@ -11846,10 +11859,12 @@ function startApp() {
     document.body.appendChild(ov);
     var cv = document.getElementById("saCartaoCv"), foto = null, estilo = comoColar ? 1 : 0;
     var primeiroNome = String(s.nome || "").split(/\s+/)[0] || "";
-    var nomeArq = function () { return "cartao-treino-" + (estilo === 1 ? "sem-fundo-" : (estilo === 2 ? "dourado-" : "")) + (ses.date || "") + ".png"; };
+    var prefixoEstilo = ["", "sem-fundo-", "dourado-", "so-embaixo-"];
+    var nomeArq = function () { return "cartao-treino-" + prefixoEstilo[estilo] + (ses.date || "") + ".png"; };
     var desenha = function () {
-      saDesenhaCartao(cv, ses, estilo === 0 ? foto : null, primeiroNome, estilo);
-      document.getElementById("saCartaoFotoLbl").style.display = estilo === 0 ? "" : "none";
+      var comFoto = estilo === 0 || estilo === 3;
+      saDesenhaCartao(cv, ses, comFoto ? foto : null, primeiroNome, estilo);
+      document.getElementById("saCartaoFotoLbl").style.display = comFoto ? "" : "none";
       document.getElementById("saCartaoDica").textContent = estilo === 1
         ? "Sem fundo: copie esta imagem e cole por cima da sua foto no Instagram, Stories ou no seu editor."
         : "";
@@ -12018,7 +12033,7 @@ function startApp() {
         ov.innerHTML = '<div class="sa-modal sa-post-modal"><h3 class="sa-display">TREINO CONCLUÍDO! 💪</h3>' +
           '<p class="sa-modal-sub">' + (podeFeed ? "Mostre o treino de hoje no Stories ou avise a turma." : "Mostre o treino de hoje no Stories. Quem vê também fica com vontade de treinar.") + '</p>' +
           '<div class="sa-post-cartao" id="saPostCartao" style="width:240px;max-width:72%;margin:0 auto 14px"></div>' +
-          '<div class="sa-post-estilos" style="display:flex;gap:6px;margin:-4px 0 12px">' + ["Escuro", "Sem fundo", "Dourado"].map(function (nomeE, n) { return '<button type="button" class="' + (n === estiloPost ? "sa-cta" : "sa-cta-ghost") + '" data-estilo-post="' + n + '" style="flex:1;padding:8px 4px;font-size:13px">' + nomeE + '</button>'; }).join("") + '</div>' +
+          '<div class="sa-post-estilos" style="display:flex;flex-wrap:wrap;gap:6px;margin:-4px 0 12px">' + ["Escuro", "Sem fundo", "Dourado", "Só embaixo"].map(function (nomeE, n) { return '<button type="button" class="' + (n === estiloPost ? "sa-cta" : "sa-cta-ghost") + '" data-estilo-post="' + n + '" style="flex:1;padding:8px 4px;font-size:13px">' + nomeE + '</button>'; }).join("") + '</div>' +
           '<button type="button" class="sa-cta" data-post="stories">📤 Compartilhar no Stories</button>' +
           (podeFeed ? pr +
           '<label class="sa-cta-ghost" for="saPostFoto">📷 Postar com foto</label><input type="file" id="saPostFoto" accept="image/*" hidden>' +

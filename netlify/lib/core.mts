@@ -321,7 +321,23 @@ async function avisosDeCadastro(deps: Deps, now: number, antes: Record<string, a
       const idsAntes = new Set((Array.isArray(a.metas) ? a.metas : []).map((m: any) => m && m.id));
       const nova = (Array.isArray(d.metas) ? d.metas : []).filter((m: any) => m && m.porPersonal && !idsAntes.has(m.id));
       if (nova.length) await avisa(deps, now, [slug], "Nova meta: " + limpaTexto(nova[0].nome, 60), nova.length > 1 ? "e mais " + (nova.length - 1) + (nova.length === 2 ? " meta" : " metas") + ". Veja na aba Comunidade." : "Acompanhe o progresso na aba Comunidade.", "meta");
-      if ((Number(d.treinoAtualizadoEm) || 0) > (Number(a.treinoAtualizadoEm) || 0)) await avisa(deps, now, [slug], "Seu treino foi atualizado", "Dê uma olhada nas mudanças.", "treino");
+      // Treino novo: plano novo (ex.: modelo enviado) ou treino novo dentro do plano ativo. Tem prioridade sobre o aviso
+      // genérico de treino atualizado, para o aluno não receber dois avisos pelo mesmo salvamento.
+      const planosAntes = new Set((Array.isArray(a.plans) ? a.plans : []).map((p: any) => p && p.id));
+      const planosNovos = (Array.isArray(d.plans) ? d.plans : []).filter((p: any) => p && !p.archived && !planosAntes.has(p.id));
+      const treinosNovos: string[] = [];
+      for (const p of Array.isArray(d.plans) ? d.plans : []) {
+        if (!p || p.archived || !planosAntes.has(p.id)) continue;
+        const antesIds = new Set((Array.isArray((a.plans || []).find((x: any) => x && x.id === p.id)?.treinos) ? a.plans.find((x: any) => x && x.id === p.id).treinos : []).map((t: any) => t && t.id));
+        for (const t of Array.isArray(p.treinos) ? p.treinos : []) if (t && !antesIds.has(t.id)) treinosNovos.push(limpaTexto(t.nome || "Treino", 40));
+      }
+      if (planosNovos.length) {
+        const p = planosNovos[0];
+        const n = Array.isArray(p.treinos) ? p.treinos.length : 0;
+        await avisa(deps, now, [slug], "Você tem treino novo", limpaTexto((p.microciclo || p.label || "Novo plano") + " · " + n + (n === 1 ? " treino" : " treinos") + ". Bora treinar! 💪", 160), "treino-novo");
+      } else if (treinosNovos.length) {
+        await avisa(deps, now, [slug], "Você tem treino novo", "Novo treino: " + treinosNovos.slice(0, 2).join(" e ") + (treinosNovos.length > 2 ? " e mais " + (treinosNovos.length - 2) : "") + ". Bora! 💪", "treino-novo");
+      } else if ((Number(d.treinoAtualizadoEm) || 0) > (Number(a.treinoAtualizadoEm) || 0)) await avisa(deps, now, [slug], "Seu treino foi atualizado", "Dê uma olhada nas mudanças.", "treino");
     }
   } catch (e) { /* nunca derruba o salvamento */ }
 }
@@ -920,7 +936,94 @@ async function getComunidade(req: Request, url: URL, deps: Deps, now: number): P
   const meu = rows.find((r) => r.me);
   if (meu && !top.includes(meu)) top.push(meu);
   const eu = w.rec ? resumoAluno(w.rec, now) : null;
-  return reply(200, { hoje: diaBR(now), semana: semanaBR(now), ranking: top, total: rows.length, eu: eu ? { diasMes: eu.diasMes, dias: eu.dias, emojis: eu.emojis, participando: !w.rec.rankOff && !w.rec.feedOff } : null });
+  const janela = janelaRankingMes(now);
+  const rankingMes = janela ? { ...rankingMesDe(students, janela.mes, w.slug || null, !!w.trainer), fechado: janela.fechado, diasParaFechar: janela.diasParaFechar } : null;
+  return reply(200, { hoje: diaBR(now), semana: semanaBR(now), ranking: top, total: rows.length, eu: eu ? { diasMes: eu.diasMes, dias: eu.dias, emojis: eu.emojis, participando: !w.rec.rankOff && !w.rec.feedOff } : null, rankingMes });
+}
+
+// ---------- ranking do mês (aba Turma) ----------
+// Aparece do dia 24 ao último dia do mês (mês em andamento, "fecha em X dias") e nos dias 1 a 7 do mês seguinte (mês que fechou).
+const MESES_PT = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
+export function janelaRankingMes(now: number): { mes: string; fechado: boolean; diasParaFechar: number } | null {
+  const hoje = diaBR(now);
+  const dia = Number(hoje.slice(8, 10));
+  const mes = hoje.slice(0, 7);
+  if (dia >= 24) return { mes, fechado: false, diasParaFechar: diasNoMes(hoje) - dia };
+  if (dia <= 7) {
+    const y = Number(mes.slice(0, 4)), m = Number(mes.slice(5, 7));
+    const anterior = m === 1 ? (y - 1) + "-12" : y + "-" + String(m - 1).padStart(2, "0");
+    return { mes: anterior, fechado: true, diasParaFechar: 0 };
+  }
+  return null;
+}
+// Números de um aluno no mês. Evolução é só porcentagem (sem kg), igual à regra de privacidade da comunidade.
+function metricasMes(rec: any, mes: string): { dias: number; sequencia: number; evolucao: number | null; semanasMeta: number } {
+  const datas = [...datasAtivas(rec)].filter((d) => d.slice(0, 7) === mes).sort();
+  let seq = 0, atual = 0, prev = "";
+  for (const d of datas) { atual = prev && diasEntre(prev, d) === 1 ? atual + 1 : 1; if (atual > seq) seq = atual; prev = d; }
+  // Evolução: para cada exercício com registro em 2 dias ou mais no mês, compara a maior carga do primeiro dia com a do último (em %).
+  const porEx = new Map<string, { d: string; v: number }[]>();
+  for (const ss of Array.isArray(rec?.sessoes) ? rec.sessoes : []) {
+    if (!ss || typeof ss.date !== "string" || ss.date.slice(0, 7) !== mes || !Array.isArray(ss.cargasLog)) continue;
+    for (const c of ss.cargasLog) {
+      const v = parseFloat(String(c?.valor ?? "").replace(",", "."));
+      if (!c || !c.exercicio || !(v > 0) || v > 1000) continue;
+      const k = String(c.exercicio).trim().toUpperCase();
+      if (!porEx.has(k)) porEx.set(k, []);
+      porEx.get(k)!.push({ d: ss.date, v });
+    }
+  }
+  const pcts: number[] = [];
+  for (const arr of porEx.values()) {
+    const dias = [...new Set(arr.map((x) => x.d))].sort();
+    if (dias.length < 2) continue;
+    const ini = Math.max(...arr.filter((x) => x.d === dias[0]).map((x) => x.v));
+    const fim = Math.max(...arr.filter((x) => x.d === dias[dias.length - 1]).map((x) => x.v));
+    pcts.push(Math.min(100, ((fim - ini) / ini) * 100));
+  }
+  const evolucao = pcts.length ? Math.round((pcts.reduce((a, b) => a + b, 0) / pcts.length) * 10) / 10 : null;
+  // Constância: semanas (segunda a domingo) em que o aluno bateu a meta semanal.
+  const meta = metaSemanal(rec);
+  const porSemana = new Map<string, number>();
+  for (const d of datas) {
+    const dt = new Date(d + "T00:00:00Z");
+    dt.setUTCDate(dt.getUTCDate() - ((dt.getUTCDay() + 6) % 7));
+    const seg = dt.toISOString().slice(0, 10);
+    porSemana.set(seg, (porSemana.get(seg) || 0) + 1);
+  }
+  let semanasMeta = 0;
+  for (const n of porSemana.values()) if (n >= meta) semanasMeta++;
+  return { dias: datas.length, sequencia: seq, evolucao, semanasMeta };
+}
+function rankingMesDe(students: Record<string, any>, mes: string, meuSlug: string | null, trainer: boolean) {
+  const linhas: any[] = [];
+  for (const slug of Object.keys(students)) {
+    const rec = students[slug];
+    if (!rec || rec.feedOff || rec.rankOff) continue;
+    const m = metricasMes(rec, mes);
+    if (!m.dias) continue;
+    linhas.push({ slug, nome: nomeCurto(rec.nome), avatar: fotoDe(rec), me: slug === meuSlug, ...m });
+  }
+  const categoria = (key: string, label: string, emoji: string, unidade: string, valorDe: (l: any) => number | null, desempate: (a: any, b: any) => number, filtro: (l: any) => boolean) => {
+    const ord = linhas.filter((l) => valorDe(l) != null && filtro(l))
+      .sort((a, b) => (valorDe(b)! - valorDe(a)!) || desempate(b, a) || a.nome.localeCompare(b.nome));
+    const idxMeu = ord.findIndex((l) => l.me);
+    const pt = (l: any, pos: number) => ({ pos, nome: l.nome, avatar: l.avatar, valor: valorDe(l), me: l.me, ...(trainer ? { slug: l.slug } : {}) });
+    return {
+      key, label, emoji, unidade,
+      top: ord.slice(0, 3).map((l, i) => pt(l, i + 1)),
+      minha: idxMeu >= 3 ? pt(ord[idxMeu], idxMeu + 1) : null,
+      total: ord.length
+    };
+  };
+  const cats = [
+    categoria("treinou", "Mais treinou", "🏋️", "dias", (l) => l.dias, (a, b) => a.sequencia - b.sequencia, () => true),
+    categoria("disciplina", "Mais disciplinado", "🔥", "dias seguidos", (l) => l.sequencia, (a, b) => a.dias - b.dias, (l) => l.sequencia >= 2),
+    categoria("evolucao", "Mais evoluiu", "📈", "% de carga", (l) => l.evolucao, (a, b) => a.dias - b.dias, (l) => l.evolucao != null && l.evolucao > 0),
+    categoria("constancia", "Mais constante", "🎯", "semanas com meta", (l) => l.semanasMeta, (a, b) => a.dias - b.dias, (l) => l.semanasMeta >= 1),
+  ];
+  const [a, m] = mes.split("-").map(Number);
+  return { mes, label: MESES_PT[(m || 1) - 1] + " de " + a, total: linhas.length, categorias: cats };
 }
 
 async function loadFeed(deps: Deps): Promise<{ posts: any[]; personalFoto?: string }> {

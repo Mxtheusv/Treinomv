@@ -1961,6 +1961,19 @@
   .cm-selo-d { font-size: 12px; color: var(--sa-x-t3-8e9cbe); margin-top: 1px; }
   .cm-selo-e { font-weight: 700; font-size: 11.5px; text-align: right; flex: none; }
   .cm-rank { display: flex; flex-direction: column; gap: 8px; }
+  .rm-card { background: var(--sa-panel); border: 1px solid var(--sa-accent); border-radius: 16px; padding: 14px; margin: 0 0 16px; display: flex; flex-direction: column; gap: 12px; }
+  .rm-t { font-size: 20px; font-style: italic; color: var(--sa-accent); text-transform: uppercase; letter-spacing: .02em; }
+  .rm-s { font-size: 12.5px; color: var(--sa-text-muted); margin-top: -8px; }
+  .rm-cat { display: flex; flex-direction: column; gap: 6px; padding-top: 10px; border-top: 1px solid var(--sa-border-soft); }
+  .rm-cat-t { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-size: 13px; font-weight: 800; color: var(--sa-text); }
+  .rm-cat-t span + span { font-weight: 600; font-size: 11.5px; color: var(--sa-text-muted); }
+  .rm-row { display: flex; align-items: center; gap: 10px; font-size: 13.5px; color: var(--sa-text); padding: 4px 6px; border-radius: 8px; }
+  .rm-row.me { background: rgba(255, 194, 71, .12); }
+  .rm-pos { width: 30px; font-weight: 900; color: var(--sa-accent); }
+  .rm-nome { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rm-val { font-weight: 800; font-variant-numeric: tabular-nums; }
+  .rm-sep { font-size: 12px; color: var(--sa-text-muted); padding-left: 6px; }
+  .rm-vazio { font-size: 12.5px; color: var(--sa-text-muted); margin: 0; }
   .cm-rk { display: flex; align-items: center; gap: 12px; border-radius: 15px; background: var(--sa-panel); border: 1px solid var(--sa-border-soft); padding: 12px 14px; }
   .cm-rk.me { background: rgba(var(--sa-blb-rgb),.16); border-color: rgba(var(--sa-bla-rgb),.5); }
   .cm-rk-pos { width: 28px; font-family: "Saira Condensed", sans-serif; font-weight: 800; font-style: italic; font-size: 22px; line-height: 1; color: var(--sa-text-muted); text-align: center; flex: none; }
@@ -12026,7 +12039,7 @@ function startApp() {
       });
     }
     Promise.all([pega("/api/feed" + q), pega("/api/comunidade" + q)])
-      .then(function (r) { SA_COM.posts = r[0].posts || []; SA_COM.rank = r[1].ranking || []; SA_COM.eu = r[1].eu || null; SA_COM.at = Date.now(); SA_AV.posts = SA_COM.posts; SA_AV.at = SA_COM.at; })
+      .then(function (r) { SA_COM.posts = r[0].posts || []; SA_COM.rank = r[1].ranking || []; SA_COM.rankMes = r[1].rankingMes || null; SA_COM.eu = r[1].eu || null; SA_COM.at = Date.now(); SA_AV.posts = SA_COM.posts; SA_AV.at = SA_COM.at; })
       .catch(function () { SA_COM.err = true; })
       .then(function () { SA_COM.loading = false; cmRefresh(s); saBellRefresh(s); });
   }
@@ -12057,6 +12070,31 @@ function startApp() {
   function cmDestaquesHtml(des) {
     return '<div class="cm-dest">' + des.map(function (d) {
       return '<div class="cm-dest-i" style="background:' + d.bg + ';border-color:' + d.bd + '"><div class="cm-dest-e">' + d.e + '</div><div class="cm-dest-n">' + escapeHtml(d.nome) + '</div><div class="cm-dest-x">' + escapeHtml(d.txt) + '</div></div>'; }).join("") + '</div>';
+  }
+  // ---------- ranking do mês: aparece nos últimos dias do mês e nos 7 primeiros do seguinte (o servidor decide quando) ----------
+  // Evolução é só porcentagem de carga (sem kg), igual ao resto da comunidade.
+  function rankingMesHtml(rm) {
+    if (!rm) return "";
+    var titulo = (rm.fechado ? "🏆 Campeões de " : "🏆 Ranking de ") + rm.label;
+    var sub = rm.fechado ? "Mês encerrado. Parabéns a todos!" : (rm.diasParaFechar === 0 ? "Último dia do mês!" : "Fecha em " + rm.diasParaFechar + (rm.diasParaFechar === 1 ? " dia" : " dias"));
+    if (!rm.total) return '<div class="rm-card"><div class="rm-t sa-display">' + escapeHtml(titulo) + '</div><p class="rm-vazio">Ainda sem treinos registrados neste mês.</p></div>';
+    // Valor curto na linha (o nome completo da unidade fica no cabeçalho da categoria), com singular e plural certos.
+    var UNID_RM = { treinou: ["dia", "dias"], disciplina: ["dia seguido", "dias seguidos"], constancia: ["semana", "semanas"] };
+    function valorDe(c, t) {
+      if (c.key === "evolucao") return "+" + t.valor + "%";
+      var u = UNID_RM[c.key] || ["", ""];
+      return t.valor + " " + (t.valor === 1 ? u[0] : u[1]);
+    }
+    function linha(c, t) {
+      return '<div class="rm-row' + (t.me ? " me" : "") + '"><span class="rm-pos">' + t.pos + 'º</span><span class="rm-nome">' + escapeHtml(t.nome) + (t.me ? " (você)" : "") + '</span><span class="rm-val">' + escapeHtml(valorDe(c, t)) + '</span></div>';
+    }
+    var cats = rm.categorias.map(function (c) {
+      var rows = c.top.map(function (t) { return linha(c, t); }).join("");
+      if (c.minha) rows += '<div class="rm-sep">…</div>' + linha(c, c.minha);
+      return '<div class="rm-cat"><div class="rm-cat-t"><span>' + c.emoji + ' ' + escapeHtml(c.label) + '</span><span>' + escapeHtml(c.unidade) + '</span></div>' +
+        (rows || '<p class="rm-vazio">Sem dados ainda neste critério.</p>') + '</div>';
+    }).join("");
+    return '<div class="rm-card"><div class="rm-t sa-display">' + escapeHtml(titulo) + '</div><div class="rm-s">' + escapeHtml(sub) + '</div>' + cats + '</div>';
   }
   function cmRankRows(rank) {
     return '<div class="cm-rank">' + rank.map(function (r, i) {
@@ -12224,7 +12262,7 @@ function startApp() {
       (recente ? "✓ Chamado há " + (h < 1 ? "menos de 1h" : h + "h") : "🔔 Chamar") + '</button>';
   }
   function whatsBotaoHtml(slug) {
-    return '<button type="button" class="sa-cta-ghost" style="margin-top:0;padding:10px 12px" data-whats="' + escapeAttr(slug) + '">📲 WhatsApp</button>';
+    return '<button type="button" class="sa-cta-ghost" style="margin-top:0;padding:10px 12px" data-whats="' + escapeAttr(slug) + '">📲 Chamar no WhatsApp</button>';
   }
   // Chamada pelo WhatsApp: abre o WhatsApp com a frase da vez já escrita. Você escolhe o aluno e envia.
   // Sem aviso no celular (o WhatsApp é o canal), mas a chamada fica registrada e o cartão 📣 também aparece no app.
@@ -12581,6 +12619,7 @@ function startApp() {
     var h = '<div class="cm-head"><div><div class="cm-title">COMUNIDADE</div><div class="cm-sub">TURMA DO MATHEUS VENÂNCIO</div></div>' + cmChipFogo(r) + '</div>' +
       '<div class="cm-tabs">' + CM_SUBS.map(function (t) { return '<button type="button" class="' + (SA_COM.sub === t[0] ? "on" : "") + '" data-cm="sub" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join("") + '</div>' +
       '<div class="cm-body">';
+    h += rankingMesHtml(SA_COM.rankMes);
     if (SA_COM.sub === "turma") h += cmTurmaHtml(s);
     else if (SA_COM.sub === "metas") h += cmMetasHtml(s);
     else if (SA_COM.sub === "conq") h += cmConqHtml(s);
@@ -13110,7 +13149,7 @@ function startApp() {
       });
     }
     Promise.all([pega("/api/feed"), pega("/api/comunidade")])
-      .then(function (r) { TRC.posts = r[0].posts || []; TRC.foto = r[0].personalFoto || ""; TRC.rank = r[1].ranking || []; TRC.at = Date.now(); })
+      .then(function (r) { TRC.posts = r[0].posts || []; TRC.foto = r[0].personalFoto || ""; TRC.rank = r[1].ranking || []; TRC.rankMes = r[1].rankingMes || null; TRC.at = Date.now(); })
       .catch(function () { TRC.err = true; })
       .then(function () { TRC.loading = false; if (trTabAtual() === "feed" && !(document.activeElement && document.activeElement.id === "trpTexto")) trcRefresh(); trBadgeRefresh(); });
   }
@@ -13222,6 +13261,7 @@ function startApp() {
     var fora = trAlunos().filter(function (x) { return x.s.feedOff; }).length, semRank = trAlunos().filter(function (x) { return x.s.rankOff && !x.s.feedOff; }).length;
     var h = '<div class="cm-tabs" style="grid-template-columns:repeat(2,1fr)">' + subs.map(function (t) { return '<button type="button" class="' + (TRC.sub === t[0] ? "on" : "") + '" data-trx="csub" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join("") + '</div>';
     h += '<div class="cm-top"><span class="tr-roster-meta">' + (fora ? fora + ' aluno(s) fora do feed' : 'Todos aparecem no feed') + (semRank ? ' · ' + semRank + ' fora do ranking' : '') + '</span><button type="button" class="fd-refresh" data-trx="crefresh">↻ Atualizar</button></div>';
+    h += rankingMesHtml(TRC.rankMes);
     if (TRC.err && !TRC.posts) return h + '<p class="cm-vazio">Não consegui carregar a comunidade agora.</p>';
     if (!TRC.posts) return h + '<p class="cm-vazio">Carregando…</p>';
     if (TRC.sub === "rank") {

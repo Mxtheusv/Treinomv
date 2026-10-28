@@ -2109,7 +2109,10 @@
   .tr-rr-mid .tr-more-wrap { margin-left: auto; }
   .tr-rr-mid .tr-roster-actions > .sa-cta, .tr-rr-mid .tr-roster-actions > .sa-cta-ghost { font-size: 12.5px; padding-left: 8px !important; padding-right: 8px !important; white-space: nowrap; }
   .tr-rr-mid .tr-roster-actions > .sa-cta, .tr-rr-mid .tr-roster-actions > .sa-cta-ghost { flex: 1 1 auto; }
-  @media (min-width: 720px) { .tr-rr-mid { flex-direction: row; align-items: center; justify-content: space-between; } .tr-rr-mid .tr-roster-actions { width: auto; flex-wrap: nowrap; } .tr-rr-mid .tr-roster-checkin { text-align: right; order: 2; } }
+  /* Desktop: o painel do personal usa a tela (antes ficava na coluna de celular, 480px), e as ações quebram para a linha de baixo
+     dentro do cartão, em vez de vazarem para fora dele. */
+  @media (min-width: 720px) { .tr-rr-mid { flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 14px; } .tr-rr-mid .tr-roster-actions { width: auto; flex: 1 1 auto; flex-wrap: wrap; justify-content: flex-end; min-width: 0; } .tr-rr-mid .tr-roster-checkin { text-align: right; order: 2; } }
+  @media (min-width: 900px) { .student-app.tr-roster { max-width: 1040px; } }
   .tr-wk { flex-shrink: 0; text-align: right; }
   .tr-wk span { display: block; font-size: 9px; letter-spacing: .5px; font-weight: 700; color: var(--sa-text-muted); margin-bottom: 5px; }
   .tr-wk-bars { display: flex; gap: 4px; justify-content: flex-end; }

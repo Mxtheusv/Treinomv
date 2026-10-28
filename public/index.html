@@ -11785,6 +11785,9 @@ function startApp() {
       if (variante === 0) { desenhaMusculos(1140); desenhaNumeros(1250, 104, 26); }
       else { desenhaNumeros(1130, 104, 26); desenhaMusculos(1250); }
     }
+    // @ do Instagram, pequeno e embaixo: quem vê o cartão sabe de quem é o treino
+    ctx.fillStyle = "rgba(230,236,255,.8)"; ctx.font = "700 30px Arial, sans-serif";
+    ctx.textAlign = "right"; ctx.fillText("@matheusvenancio.pf", W - 70, H - 50); ctx.textAlign = "left";
     // logo: no cartão com fundo, a versão de sempre; na versão para colar, escura. Sem nome do personal.
     ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
     var versao = cv._versaoCartao = (cv._versaoCartao || 0) + 1;
@@ -11923,13 +11926,33 @@ function startApp() {
     if (FEED_MARCOS.indexOf(dias) !== -1) saFeedAuto(s, "sequencia", dias + " dias treinados em " + saMesNome() + " 🔥");
   }
   function saFeedPerguntaPostar(s, nova, recs) {
-    if (!saFeedPodePostar(s) || state.atendimento) return; // no atendimento o personal está na conta do aluno: sem pergunta
+    if (state.atendimento) return; // no atendimento o personal está na conta do aluno: sem pergunta
+    var podeFeed = saFeedPodePostar(s);
     var velho = document.getElementById("saPostOv"); if (velho) velho.remove();
     SA_POST.blob = null; SA_POST.url = ""; SA_POST.busy = false;
     var ov = document.createElement("div"); ov.className = "sa-modal-overlay"; ov.id = "saPostOv";
     document.body.appendChild(ov);
     var nome = String(nova.nome || "Treino").slice(0, 60), min = Math.max(1, Math.round((nova.duracaoSeg || 0) / 60));
     var linha = nome + (nova.duracaoSeg ? " · " + min + " min" : "");
+    // cartão para o Stories: aparece na tela do treino concluído, como o cartão de sempre (com nome do aluno no topo)
+    var cartaoCv = document.createElement("canvas");
+    cartaoCv.style.cssText = "width:100%;height:auto;display:block;border-radius:12px";
+    saDesenhaCartao(cartaoCv, nova, null, String(s.nome || "").split(/\s+/)[0] || "", false, saCartaoVarianteInicial(nova));
+    var nomeArqCartao = "treino-" + (nova.date || "") + ".png";
+    function compartilhaCartao() {
+      cartaoCv.toBlob(function (b) {
+        if (!b) return;
+        var arq = new File([b], nomeArqCartao, { type: "image/png" });
+        var baixar = function () {
+          var a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = nomeArqCartao;
+          document.body.appendChild(a); a.click();
+          setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+        };
+        if (navigator.canShare && navigator.canShare({ files: [arq] })) {
+          navigator.share({ files: [arq], title: "Meu treino", text: nova.nome || "" }).catch(function (er) { if (er && er.name !== "AbortError") baixar(); });
+        } else baixar();
+      }, "image/png");
+    }
     function fecha() { if (SA_POST.url) URL.revokeObjectURL(SA_POST.url); SA_POST.url = ""; SA_POST.blob = null; if (ov.parentNode) ov.parentNode.removeChild(ov); }
     function publica(modo, legenda) {
       if (SA_POST.busy) return;
@@ -11964,20 +11987,23 @@ function startApp() {
           '<label class="sa-cta-ghost sa-post-troca" for="saPostFoto">Escolher outra foto</label><input type="file" id="saPostFoto" accept="image/*" hidden>' +
           '<button type="button" class="sa-post-skip" data-post="voltar">← Voltar</button></div>';
       } else {
-        ov.innerHTML = '<div class="sa-modal sa-post-modal"><h3 class="sa-display">AVISAR A TURMA? 🙌</h3>' +
-          '<p class="sa-modal-sub">Treino concluído! Escolha como aparecer no feed.</p>' + pr +
-          '<label class="sa-cta" for="saPostFoto">📷 Postar com foto</label><input type="file" id="saPostFoto" accept="image/*" hidden>' +
+        ov.innerHTML = '<div class="sa-modal sa-post-modal"><h3 class="sa-display">TREINO CONCLUÍDO! 💪</h3>' +
+          '<p class="sa-modal-sub">' + (podeFeed ? "Mostre o treino de hoje no Stories ou avise a turma." : "Mostre o treino de hoje no Stories. Quem vê também fica com vontade de treinar.") + '</p>' +
+          '<div class="sa-post-cartao" id="saPostCartao" style="width:240px;max-width:72%;margin:0 auto 14px"></div>' +
+          '<button type="button" class="sa-cta" data-post="stories">📤 Compartilhar no Stories</button>' +
+          (podeFeed ? pr +
+          '<label class="sa-cta-ghost" for="saPostFoto">📷 Postar com foto</label><input type="file" id="saPostFoto" accept="image/*" hidden>' +
           '<button type="button" class="sa-cta-ghost" data-post="nome"' + (SA_POST.busy ? " disabled" : "") + '>💪 Treinei: <b>' + escapeHtml(nome) + '</b></button>' +
-          '<button type="button" class="sa-cta-ghost" data-post="dia"' + (SA_POST.busy ? " disabled" : "") + '>✅ Só avisar que treinei hoje</button>' +
-          '<button type="button" class="sa-cta-ghost" data-post="cartao">📸 Cartão para o Stories</button>' +
+          '<button type="button" class="sa-cta-ghost" data-post="dia"' + (SA_POST.busy ? " disabled" : "") + '>✅ Só avisar que treinei hoje</button>' : "") +
           '<button type="button" class="sa-post-skip" data-post="nao">Agora não</button></div>';
+        var caixaCartao = document.getElementById("saPostCartao"); if (caixaCartao) caixaCartao.appendChild(cartaoCv);
       }
     }
     ov.addEventListener("click", function (e) {
       var t = e.target; while (t && t !== ov && !(t.getAttribute && t.getAttribute("data-post"))) t = t.parentNode;
       if (!t || t === ov) return;
       var a = t.getAttribute("data-post");
-      if (a === "cartao") { saAbrirCartao(s, nova.id, true); return; }
+      if (a === "stories") { compartilhaCartao(); return; }
       if (a === "nao") { fecha(); saFeedSequencia(s); return; } // o fogo do mês aparece mesmo sem postar o treino
       if (a === "nome" || a === "dia") { publica(a, ""); return; }
       if (a === "voltar") { if (SA_POST.url) URL.revokeObjectURL(SA_POST.url); SA_POST.url = ""; SA_POST.blob = null; desenha(); return; }

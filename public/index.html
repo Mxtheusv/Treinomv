@@ -11686,7 +11686,26 @@ function startApp() {
     } catch (e) { return null; }
   }
   // Três estilos de cartão: 0 = escuro (com foto ou degradê), 1 = sem fundo (para colar na foto), 2 = dourado (destaque).
-  function saDesenhaCartao(cv, ses, foto, nomeAluno, estilo) {
+  // opções do cartão que o aluno liga e desliga; ficam salvas neste aparelho (o @ do Instagram fica sempre)
+  var SA_CARTAO_OPC_CHAVE = "treinoOnlineCartaoOpcoes";
+  function saCartaoOpcoes() {
+    var op = { data: true, tempo: true, carga: true, musculos: true };
+    try {
+      var g = JSON.parse(localStorage.getItem(SA_CARTAO_OPC_CHAVE) || "null");
+      if (g && typeof g === "object") Object.keys(op).forEach(function (k) { if (typeof g[k] === "boolean") op[k] = g[k]; });
+    } catch (e) {}
+    return op;
+  }
+  function saCartaoOpcoesSalvar(op) { try { localStorage.setItem(SA_CARTAO_OPC_CHAVE, JSON.stringify(op)); } catch (e) {} }
+  function saCartaoChipsOpcoes(corrida) {
+    var op = saCartaoOpcoes();
+    var itens = [["data", "Data"], ["tempo", "Tempo"], ["carga", corrida ? "Distância" : "Carga"]];
+    if (!corrida) itens.push(["musculos", "Músculos"]);
+    return itens.map(function (it) {
+      return '<button type="button" class="' + (op[it[0]] ? "sa-cta" : "sa-cta-ghost") + '" data-opc="' + it[0] + '" aria-pressed="' + (op[it[0]] ? "true" : "false") + '" style="flex:1;padding:7px 4px;font-size:12.5px">' + it[1] + '</button>';
+    }).join("");
+  }
+  function saDesenhaCartao(cv, ses, foto, nomeAluno, estilo, opts) {
     estilo = estilo || 0;
     var W = 1080, H = 1350, ctx = cv.getContext("2d");
     cv.width = W; cv.height = H;
@@ -11719,19 +11738,22 @@ function startApp() {
     var nome = ses.nome || "Treino";
     var corrida = ses.kind === "corrida";
     // números: tempo e carga (se não houver carga, séries no lugar); corrida mostra km, tempo e min/km
+    var op = opts || saCartaoOpcoes();
     var stats = [];
     if (corrida) {
       var km = ses.distanciaM ? ses.distanciaM / 1000 : 0;
       var ritmo = km && ses.duracaoSeg ? Math.round(ses.duracaoSeg / km) : 0;
-      if (km) stats.push({ v: km.toFixed(2).replace(".", ","), l: "km" });
-      if (ses.duracaoSeg) stats.push({ v: saCartaoDuracao(ses.duracaoSeg), l: "tempo" });
-      if (ritmo) stats.push({ v: saCartaoDuracao(ritmo).replace(/^0:/, ""), l: "min/km" });
+      if (km && op.carga) stats.push({ v: km.toFixed(2).replace(".", ","), l: "km" });
+      if (ses.duracaoSeg && op.tempo) stats.push({ v: saCartaoDuracao(ses.duracaoSeg), l: "tempo" });
+      if (ritmo && op.carga) stats.push({ v: saCartaoDuracao(ritmo).replace(/^0:/, ""), l: "min/km" });
     } else {
-      if (ses.duracaoSeg) stats.push({ v: saCartaoDuracao(ses.duracaoSeg), l: "tempo" });
-      if (ses.volumeKg) stats.push({ v: Math.round(ses.volumeKg).toLocaleString("pt-BR"), l: "carga (kg)" });
-      else {
-        var series = ses.seriesLogadas || ses.seriesTotal || 0;
-        if (series) stats.push({ v: String(series), l: "séries" });
+      if (ses.duracaoSeg && op.tempo) stats.push({ v: saCartaoDuracao(ses.duracaoSeg), l: "tempo" });
+      if (op.carga) {
+        if (ses.volumeKg) stats.push({ v: Math.round(ses.volumeKg).toLocaleString("pt-BR"), l: "carga (kg)" });
+        else {
+          var series = ses.seriesLogadas || ses.seriesTotal || 0;
+          if (series) stats.push({ v: String(series), l: "séries" });
+        }
       }
     }
     stats = stats.slice(0, corrida ? 3 : 2);
@@ -11765,7 +11787,7 @@ function startApp() {
       });
     };
     var desenhaMusculos = function (y, px) {
-      if (!linhaMus) return;
+      if (!linhaMus || !op.musculos) return;
       ctx.fillStyle = ehDourado ? "rgba(11,16,32,.85)" : "rgba(230,236,255,.85)";
       ctx.font = "700 " + fonteQueCabe(linhaMus, px || 30, W - 140) + "px Arial, sans-serif";
       ctx.fillText(linhaMus, 70, y);
@@ -11773,7 +11795,7 @@ function startApp() {
     if (ehSemFundo) {
       // versão para colar na foto: data no topo e, embaixo, nome do treino, números e músculos
       ctx.fillStyle = "#e6ecff"; ctx.font = "600 44px Arial, sans-serif";
-      ctx.fillText(formatDateBR(ses.date) || "", 70, 130);
+      if (op.data) ctx.fillText(formatDateBR(ses.date) || "", 70, 130);
       ctx.fillStyle = "#ffffff"; ctx.font = fonteTitulo.replace("{T}", 60);
       var linhasNome = saCartaoLinhas(ctx, nome, W - 140);
       linhasNome.forEach(function (ln, i) { ctx.fillText(ln, 70, (H - 330) - (linhasNome.length - 1 - i) * 60); });
@@ -11787,7 +11809,7 @@ function startApp() {
       var linhasD = saCartaoLinhas(ctx, nome, W - 140);
       linhasD.forEach(function (ln, i) { ctx.fillText(ln, 70, 330 + i * 120); });
       ctx.fillStyle = "rgba(11,16,32,.75)"; ctx.font = "600 40px Arial, sans-serif";
-      ctx.fillText(formatDateBR(ses.date) || "", 70, 330 + (linhasD.length - 1) * 120 + 66);
+      if (op.data) ctx.fillText(formatDateBR(ses.date) || "", 70, 330 + (linhasD.length - 1) * 120 + 66);
       desenhaDestaque();
       desenhaMusculos(1230);
     } else if (estilo === 3) {
@@ -11799,7 +11821,7 @@ function startApp() {
       linhasB.forEach(function (ln, i) { ctx.fillText(ln, 70, (H - 330) - (linhasB.length - 1 - i) * 72); });
       var yDataB = (H - 330) - (linhasB.length - 1) * 72 - 96; // respiro entre a data e o título
       ctx.fillStyle = "#e6ecff"; ctx.font = "600 32px Arial, sans-serif";
-      ctx.fillText(formatDateBR(ses.date) || "", 70, yDataB);
+      if (op.data) ctx.fillText(formatDateBR(ses.date) || "", 70, yDataB);
       desenhaMusculos(H - 100, 24);
       desenhaNumeros(H - 190, 72, 22, fonteLeve);
     } else {
@@ -11811,7 +11833,7 @@ function startApp() {
       linhas.forEach(function (ln, i) { ctx.fillText(ln, 70, 270 + i * 110); });
       var yData = 270 + (linhas.length - 1) * 110 + 70;
       ctx.fillStyle = "#e6ecff"; ctx.font = "600 40px Arial, sans-serif";
-      ctx.fillText(formatDateBR(ses.date) || "", 70, yData);
+      if (op.data) ctx.fillText(formatDateBR(ses.date) || "", 70, yData);
       desenhaMusculos(1140);
       desenhaNumeros(1250, 104, 26);
     }
@@ -11843,11 +11865,12 @@ function startApp() {
       '<canvas id="saCartaoCv" style="width:100%;height:auto;border-radius:14px;display:block"></canvas>' +
       '<div id="saCartaoDica" class="sa-novidade-text" style="font-size:12.5px;margin-top:10px"></div>' +
       '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">' +
-      '<button type="button" class="sa-cta" data-estilo="0" style="flex:1">Escuro</button>' +
-      '<button type="button" class="sa-cta-ghost" id="saCartaoModo" data-estilo="1" style="flex:1">Sem fundo</button>' +
-      '<button type="button" class="sa-cta-ghost" data-estilo="2" style="flex:1">Dourado</button>' +
-      '<button type="button" class="sa-cta-ghost" data-estilo="3" style="flex:1">Só embaixo</button>' +
+      '<button type="button" class="sa-cta" data-estilo="0" style="flex:1;white-space:nowrap;font-size:13px;padding:8px 2px">Escuro</button>' +
+      '<button type="button" class="sa-cta-ghost" id="saCartaoModo" data-estilo="1" style="flex:1;white-space:nowrap;font-size:13px;padding:8px 2px">Sem fundo</button>' +
+      '<button type="button" class="sa-cta-ghost" data-estilo="2" style="flex:1;white-space:nowrap;font-size:13px;padding:8px 2px">Dourado</button>' +
+      '<button type="button" class="sa-cta-ghost" data-estilo="3" style="flex:1;white-space:nowrap;font-size:13px;padding:8px 2px">Só embaixo</button>' +
       '</div>' +
+      '<div id="saCartaoOpcoes" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">' + saCartaoChipsOpcoes(ses.kind === "corrida") + '</div>' +
       '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">' +
       '<label id="saCartaoFotoLbl" class="sa-cta-ghost" style="flex:1;text-align:center;cursor:pointer">📷 Foto de fundo<input type="file" accept="image/*" id="saCartaoFoto" style="display:none"></label>' +
       '</div>' +
@@ -11876,6 +11899,12 @@ function startApp() {
     };
     Array.prototype.forEach.call(ov.querySelectorAll("[data-estilo]"), function (b) {
       b.onclick = function () { estilo = Number(b.getAttribute("data-estilo")); desenha(); };
+    });
+    ov.addEventListener("click", function (e) {
+      var b = e.target.closest && e.target.closest("[data-opc]"); if (!b) return;
+      var op = saCartaoOpcoes(), k = b.getAttribute("data-opc"); op[k] = !op[k]; saCartaoOpcoesSalvar(op);
+      document.getElementById("saCartaoOpcoes").innerHTML = saCartaoChipsOpcoes(ses.kind === "corrida");
+      desenha();
     });
     desenha();
     document.getElementById("saCartaoCopiar").onclick = function () {
@@ -12034,6 +12063,7 @@ function startApp() {
           '<p class="sa-modal-sub">' + (podeFeed ? "Mostre o treino de hoje no Stories ou avise a turma." : "Mostre o treino de hoje no Stories. Quem vê também fica com vontade de treinar.") + '</p>' +
           '<div class="sa-post-cartao" id="saPostCartao" style="width:240px;max-width:72%;margin:0 auto 14px"></div>' +
           '<div class="sa-post-estilos" style="display:flex;flex-wrap:wrap;gap:6px;margin:-4px 0 12px">' + ["Escuro", "Sem fundo", "Dourado", "Só embaixo"].map(function (nomeE, n) { return '<button type="button" class="' + (n === estiloPost ? "sa-cta" : "sa-cta-ghost") + '" data-estilo-post="' + n + '" style="flex:1;padding:8px 4px;font-size:13px">' + nomeE + '</button>'; }).join("") + '</div>' +
+          '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:-4px 0 12px">' + saCartaoChipsOpcoes(nova.kind === "corrida") + '</div>' +
           '<button type="button" class="sa-cta" data-post="stories">📤 Compartilhar no Stories</button>' +
           (podeFeed ? pr +
           '<label class="sa-cta-ghost" for="saPostFoto">📷 Postar com foto</label><input type="file" id="saPostFoto" accept="image/*" hidden>' +
@@ -12043,6 +12073,11 @@ function startApp() {
         var caixaCartao = document.getElementById("saPostCartao"); if (caixaCartao) caixaCartao.appendChild(cartaoCv);
       }
     }
+    ov.addEventListener("click", function (e) {
+      var b = e.target.closest && e.target.closest("[data-opc]"); if (!b) return;
+      var op = saCartaoOpcoes(), k = b.getAttribute("data-opc"); op[k] = !op[k]; saCartaoOpcoesSalvar(op);
+      desenhaCartaoPost(); desenha();
+    });
     ov.addEventListener("click", function (e) {
       var chip = e.target.closest && e.target.closest("[data-estilo-post]"); if (!chip) return;
       estiloPost = Number(chip.getAttribute("data-estilo-post")); desenhaCartaoPost(); desenha();

@@ -11705,6 +11705,39 @@ function startApp() {
       return '<button type="button" class="' + (op[it[0]] ? "sa-cta" : "sa-cta-ghost") + '" data-opc="' + it[0] + '" aria-pressed="' + (op[it[0]] ? "true" : "false") + '" style="flex:1;padding:7px 4px;font-size:12.5px">' + it[1] + '</button>';
     }).join("");
   }
+  // PNG do cartão feito na hora (sem toBlob): o celular só abre o compartilhar dentro do próprio toque
+  function saCartaoPng(cv) {
+    var bin = atob(cv.toDataURL("image/png").split(",")[1]), bytes = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return new Blob([bytes], { type: "image/png" });
+  }
+  function saCartaoBaixarPng(blob, nomeArq) {
+    var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = nomeArq;
+    document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  }
+  // abre o compartilhar do aparelho (Instagram, WhatsApp...); se não der, baixa a imagem e avisa
+  function saCartaoEnviar(cv, nomeArq, texto) {
+    var blob = saCartaoPng(cv), arq = new File([blob], nomeArq, { type: "image/png" });
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [arq] })) {
+      navigator.share({ files: [arq], title: "Meu treino", text: texto || "" }).catch(function (er) {
+        if (er && er.name === "AbortError") return;
+        saCartaoBaixarPng(blob, nomeArq);
+        showToast("Não abriu o compartilhar aqui. A imagem foi baixada: envie pelo Instagram.", true);
+      });
+      return;
+    }
+    saCartaoBaixarPng(blob, nomeArq);
+    showToast("Este aparelho não compartilha direto. A imagem foi baixada: envie pelo Instagram.");
+  }
+  function saCartaoCopiarPng(cv) {
+    var escrever = null;
+    try {
+      if (navigator.clipboard && window.ClipboardItem) escrever = navigator.clipboard.write([new ClipboardItem({ "image/png": saCartaoPng(cv) })]);
+    } catch (e) { escrever = null; }
+    if (!escrever) { showToast("Este aparelho não copia imagem. Use Baixar e cole de lá.", true); return; }
+    escrever.then(function () { showToast("Imagem copiada. Cole na sua foto."); }).catch(function () { showToast("Não deu para copiar aqui. Use Baixar.", true); });
+  }
   function saDesenhaCartao(cv, ses, foto, nomeAluno, estilo, opts) {
     estilo = estilo || 0;
     var W = 1080, H = 1350, ctx = cv.getContext("2d");
@@ -11907,36 +11940,15 @@ function startApp() {
       desenha();
     });
     desenha();
-    document.getElementById("saCartaoCopiar").onclick = function () {
-      var escrever = null;
-      try {
-        if (navigator.clipboard && window.ClipboardItem) {
-          escrever = navigator.clipboard.write([new ClipboardItem({ "image/png": new Promise(function (ok) { cv.toBlob(ok, "image/png"); }) })]);
-        }
-      } catch (e) { escrever = null; }
-      if (!escrever) { showToast("Este aparelho não copia imagem. Use Baixar e cole de lá.", true); return; }
-      escrever.then(function () { showToast("Imagem copiada. Cole na sua foto."); }).catch(function () { showToast("Não deu para copiar aqui. Use Baixar.", true); });
-    };
+    document.getElementById("saCartaoCopiar").onclick = function () { saCartaoCopiarPng(cv); };
     document.getElementById("saCartaoFoto").onchange = function (e) {
       var f = e.target.files && e.target.files[0]; if (!f) return;
       var img = new Image();
       img.onload = function () { foto = img; desenha(); };
       img.src = URL.createObjectURL(f);
     };
-    document.getElementById("saCartaoBaixar").onclick = function () {
-      cv.toBlob(function (b) {
-        var a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = nomeArq();
-        document.body.appendChild(a); a.click();
-        setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
-      }, "image/png");
-    };
-    document.getElementById("saCartaoCompartilhar").onclick = function () {
-      cv.toBlob(function (b) {
-        var arq = new File([b], "treino.png", { type: "image/png" });
-        if (navigator.canShare && navigator.canShare({ files: [arq] })) navigator.share({ files: [arq], title: "Meu treino", text: ses.nome || "" }).catch(function () {});
-        else showToast("Este aparelho não compartilha direto. Use Baixar e envie pelo Instagram.", true);
-      }, "image/png");
-    };
+    document.getElementById("saCartaoBaixar").onclick = function () { saCartaoBaixarPng(saCartaoPng(cv), nomeArq()); };
+    document.getElementById("saCartaoCompartilhar").onclick = function () { saCartaoEnviar(cv, nomeArq(), ses.nome || ""); };
     document.getElementById("saCartaoFechar").onclick = function () { ov.remove(); };
   }
 
@@ -12011,20 +12023,7 @@ function startApp() {
     var desenhaCartaoPost = function () { saDesenhaCartao(cartaoCv, nova, null, nomePost, estiloPost); };
     desenhaCartaoPost();
     var nomeArqCartao = "treino-" + (nova.date || "") + ".png";
-    function compartilhaCartao() {
-      cartaoCv.toBlob(function (b) {
-        if (!b) return;
-        var arq = new File([b], nomeArqCartao, { type: "image/png" });
-        var baixar = function () {
-          var a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = nomeArqCartao;
-          document.body.appendChild(a); a.click();
-          setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
-        };
-        if (navigator.canShare && navigator.canShare({ files: [arq] })) {
-          navigator.share({ files: [arq], title: "Meu treino", text: nova.nome || "" }).catch(function (er) { if (er && er.name !== "AbortError") baixar(); });
-        } else baixar();
-      }, "image/png");
-    }
+    function compartilhaCartao() { saCartaoEnviar(cartaoCv, nomeArqCartao, nova.nome || ""); }
     function fecha() { if (SA_POST.url) URL.revokeObjectURL(SA_POST.url); SA_POST.url = ""; SA_POST.blob = null; if (ov.parentNode) ov.parentNode.removeChild(ov); }
     function publica(modo, legenda) {
       if (SA_POST.busy) return;
@@ -12065,6 +12064,7 @@ function startApp() {
           '<div class="sa-post-estilos" style="display:flex;flex-wrap:wrap;gap:6px;margin:-4px 0 12px">' + ["Escuro", "Sem fundo", "Dourado", "Só embaixo"].map(function (nomeE, n) { return '<button type="button" class="' + (n === estiloPost ? "sa-cta" : "sa-cta-ghost") + '" data-estilo-post="' + n + '" style="flex:1;padding:8px 4px;font-size:13px">' + nomeE + '</button>'; }).join("") + '</div>' +
           '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:-4px 0 12px">' + saCartaoChipsOpcoes(nova.kind === "corrida") + '</div>' +
           '<button type="button" class="sa-cta" data-post="stories">📤 Compartilhar no Stories</button>' +
+          (estiloPost === 1 ? '<button type="button" class="sa-cta-ghost" data-post="copiar">📋 Copiar para colar na foto</button>' + '<div class="sa-novidade-text" style="font-size:12.5px;text-align:center;margin:-4px 0 12px">Sem fundo: copie e cole por cima da sua foto no Instagram ou no Stories.</div>' : '') +
           (podeFeed ? pr +
           '<label class="sa-cta-ghost" for="saPostFoto">📷 Postar com foto</label><input type="file" id="saPostFoto" accept="image/*" hidden>' +
           '<button type="button" class="sa-cta-ghost" data-post="nome"' + (SA_POST.busy ? " disabled" : "") + '>💪 Treinei: <b>' + escapeHtml(nome) + '</b></button>' +
@@ -12087,6 +12087,7 @@ function startApp() {
       if (!t || t === ov) return;
       var a = t.getAttribute("data-post");
       if (a === "stories") { compartilhaCartao(); return; }
+      if (a === "copiar") { saCartaoCopiarPng(cartaoCv); return; }
       if (a === "nao") { fecha(); saFeedSequencia(s); return; } // o fogo do mês aparece mesmo sem postar o treino
       if (a === "nome" || a === "dia") { publica(a, ""); return; }
       if (a === "voltar") { if (SA_POST.url) URL.revokeObjectURL(SA_POST.url); SA_POST.url = ""; SA_POST.blob = null; desenha(); return; }

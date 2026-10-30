@@ -395,6 +395,9 @@ async function postState(req: Request, deps: Deps, now: number): Promise<Respons
     }
     const antes = st.data.students[slug];
     mesclaSessoesAluno(antes, student);
+    // Treino "em andamento" que já está salvo nas sessões (envio atrasado ou de outra aba/aparelho): não reabre.
+    const abertoAgora = (student as any).sessaoEmAndamento;
+    if (abertoAgora && Array.isArray((student as any).sessoes) && (student as any).sessoes.some((x: any) => x && x.inicio != null && String(x.inicio) === String(abertoAgora.startedAt))) (student as any).sessaoEmAndamento = null;
     st.data.students[slug] = student;
     st.version = (st.version || 0) + 1;
     await deps.kv.set(STATE_STORE, STATE_KEY, st);

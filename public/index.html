@@ -9886,6 +9886,11 @@ function startApp() {
   }
 
   // ---------- Treino (execução) ----------
+  // Treino "em andamento" que já consta como salvo nas sessões (outra aba ou envio atrasado): não está mais aberto.
+  function saSessaoJaSalva(s) {
+    var sess = s && s.sessaoEmAndamento;
+    return !!(sess && (s.sessoes || []).some(function (x) { return x && x.inicio && x.inicio === sess.startedAt; }));
+  }
   function saGetActiveSession(s) {
     var sess = s.sessaoEmAndamento;
     if (sess && sess.date !== todayISO()) {
@@ -13894,6 +13899,7 @@ function startApp() {
     if (stalePrint) stalePrint.innerHTML = "";
 
     var s = student();
+    if (saSessaoJaSalva(s)) { s.sessaoEmAndamento = null; scheduleSave(); }
     var plan = activePlan(s);
     if (!state.saTab) state.saTab = "hoje";
     if (!s.primeiroAcessoEm) { s.primeiroAcessoEm = Date.now(); scheduleSave(); }
@@ -16743,6 +16749,7 @@ function startApp() {
     var apagados = ((freshStu && freshStu.sessoesApagadas) || []).concat(localStu.sessoesApagadas || []);
     localStu.sessoes = sesDeduplica(lista, apagados).sort(function (a, b) { return (a.ts || 0) - (b.ts || 0); });
     localStu.sessoesApagadas = apagados.filter(function (x, i) { return typeof x === "string" && apagados.indexOf(x) === i; }).slice(-200);
+    if (saSessaoJaSalva(localStu)) localStu.sessaoEmAndamento = null;
   }
   // Apaga uma sessão do Histórico. O id fica guardado no próprio aluno (sessoesApagadas), para o servidor
   // e as outras abas não trazerem a sessão de volta.
@@ -16848,7 +16855,8 @@ function startApp() {
     m.humor = Object.assign({}, server.humor || {}, pend.humor || {});
     m.atividadesLivres = Object.assign({}, server.atividadesLivres || {}, pend.atividadesLivres || {});
     m.prTotal = Math.max(server.prTotal || 0, pend.prTotal || 0);
-    if (pend.sessaoEmAndamento && !server.sessaoEmAndamento) m.sessaoEmAndamento = pend.sessaoEmAndamento;
+    var pendSalvo = !!(pend.sessaoEmAndamento && (m.sessoes || []).some(function (x) { return x && x.inicio && x.inicio === pend.sessaoEmAndamento.startedAt; }));
+    if (pend.sessaoEmAndamento && !server.sessaoEmAndamento && !pendSalvo) m.sessaoEmAndamento = pend.sessaoEmAndamento;
     if (baseIgual) m.plans = pend.plans; // o personal não mexeu no plano: mantém cargas e observações digitadas
     return m;
   }

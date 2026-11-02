@@ -8195,6 +8195,7 @@ function startApp() {
         (canMoveTreinoRight ? '<button type="button" class="btn-secondary" data-move-treino="1" title="Mover este treino para frente">Mover ▶</button>' : '') +
         '<button type="button" class="btn-secondary" data-dup-treino="1" title="Copia este treino inteiro (sem as cargas) como um treino novo">⧉ Duplicar treino</button>' +
         '<button class="btn-secondary" data-del-treino="1">Remover treino</button></div>') +
+      (sLocked && !isStudentView() && !state.readOnly ? '<div class="panel-head-actions"><button class="btn-secondary" data-del-treino="1">Remover treino</button></div>' : '') +
       '</div>' +
       planInsightsHtml() +
       bodyHtml +
@@ -15753,6 +15754,8 @@ function startApp() {
     // O nome do microciclo pode ser corrigido também nos planos arquivados (é só um nome);
     // continua travado para o aluno e em links somente leitura.
     var microLocked = state.readOnly || isStudentView();
+    // As datas do plano podem ser corrigidas também nos arquivados (como o nome); só o aluno e os links somente leitura não editam.
+    var datasLocked = state.readOnly || isStudentView();
     var onDataTab =state.activeTab !== "checkin" && state.activeTab !== "feedback" && state.activeTab !== "notas" && state.activeTab !== "corrida" && state.activeTab !== "volume";
 
     document.getElementById("headerControls").innerHTML =
@@ -15769,7 +15772,7 @@ function startApp() {
       (sLocked ? '' : '<button type="button" class="btn-secondary" id="btnNewPlan">+ Novo plano</button>') +
       (sLocked ? '' : '<button type="button" class="btn-secondary" id="btnSaveTemplate" title="Salva os treinos deste plano como modelo reutilizável">💾 Salvar como modelo</button>') +
       '</div>' +
-      (sLocked ? (plan.startDate || plan.endDate ?
+      (datasLocked ? (plan.startDate || plan.endDate ?
         '<span class="plan-validity">' + (plan.startDate ? 'Início ' + escapeHtml(formatDateBR(plan.startDate)) + ' · ' : '') + (plan.endDate ? 'Válido até ' + escapeHtml(formatDateBR(plan.endDate)) : 'Sem data de término') + '</span>' : '') :
         '<div class="plan-dates-field">' +
         '<label>Início<input type="date" id="planStartDate" value="' + escapeAttr(plan.startDate || "") + '"></label>' +
@@ -15909,8 +15912,16 @@ function startApp() {
 
     var planStartInput = document.getElementById("planStartDate");
     var planEndInput = document.getElementById("planEndDate");
-    if (planStartInput) planStartInput.onchange = function (e) { plan.startDate = e.target.value || null; saveNow("Salvo", true); };
-    if (planEndInput) planEndInput.onchange = function (e) { plan.endDate = e.target.value || null; saveNow("Salvo", true); };
+    if (planStartInput) planStartInput.onchange = function (e) {
+      var inicioNovo = e.target.value || null;
+      if (inicioNovo && plan.endDate && inicioNovo > plan.endDate) { showToast("A data de início não pode ser depois do fim", true); e.target.value = plan.startDate || ""; return; }
+      plan.startDate = inicioNovo; saveNow("Salvo", true);
+    };
+    if (planEndInput) planEndInput.onchange = function (e) {
+      var fimNovo = e.target.value || null;
+      if (fimNovo && plan.startDate && fimNovo < plan.startDate) { showToast("A data final não pode ser antes do início", true); e.target.value = plan.endDate || ""; return; }
+      plan.endDate = fimNovo; saveNow("Salvo", true);
+    };
 
     Array.prototype.forEach.call(document.querySelectorAll("[data-info]"), function (btn) {
       btn.addEventListener("click", function () { openInfo(btn.getAttribute("data-info"), btn.getAttribute("data-info-equip")); });

@@ -15786,6 +15786,7 @@ function startApp() {
       '<select id="planSelect">' + planOptionsHtml(s, plan) + '</select>' +
       '<input id="microInput" class="micro" placeholder="Microciclo 1" value="' + escapeAttr(plan.microciclo) + '" ' + (microLocked ? "disabled" : "") + '>' +
       (sLocked ? '' : '<button type="button" class="btn-secondary" id="btnNewPlan">+ Novo plano</button>') +
+      ((isStudentView() || state.readOnly) ? '' : '<button type="button" class="btn-secondary" id="btnDeletePlan" title="Apaga este plano inteiro, com confirmação">🗑 Excluir plano</button>') +
       (sLocked ? '' : '<button type="button" class="btn-secondary" id="btnSaveTemplate" title="Salva os treinos deste plano como modelo reutilizável">💾 Salvar como modelo</button>') +
       '</div>' +
       (datasLocked ? (plan.startDate || plan.endDate ?
@@ -15918,6 +15919,24 @@ function startApp() {
     };
     var btnNewPlan = document.getElementById("btnNewPlan");
     if (btnNewPlan) makeConfirmButton(btnNewPlan, "Confirmar novo plano", function () { createNewPlan(s); });
+    var btnDeletePlan = document.getElementById("btnDeletePlan");
+    if (btnDeletePlan) btnDeletePlan.onclick = function () {
+      var nomePlano = plan.microciclo || plan.label || "este plano";
+      var ehAtual = plan.id === s.activePlanId;
+      if (!confirm("Excluir o plano \"" + nomePlano + "\"" + (ehAtual ? " (o atual)" : "") + "? Os treinos deste plano somem. O histórico de treinos feitos continua salvo.")) return;
+      s.plans = s.plans.filter(function (p) { return p.id !== plan.id; });
+      if (!s.plans.length) {
+        s.plans.push({ id: uid("p"), label: "Plano 1", createdAt: Date.now(), archived: false, microciclo: "Microciclo 1", startDate: null, endDate: null, treinos: [], complementar: { nome: "VELOCIDADE, AGILIDADE E POTÊNCIA", protocolos: [], grupos: [], nota: "" }, complementarHidden: true });
+      }
+      if (ehAtual || !s.plans.some(function (p) { return p.id === s.activePlanId; })) {
+        var proximo = s.plans.slice().sort(function (a, b) { return (b.createdAt || 0) - (a.createdAt || 0); })[0];
+        s.activePlanId = proximo.id;
+        proximo.archived = false;
+      }
+      state.viewPlanId = null;
+      state.activeTab = defaultTabFor(activePlan(s));
+      saveNow("Plano excluído", true);
+    };
     var btnSaveTemplate = document.getElementById("btnSaveTemplate");
     if (btnSaveTemplate) btnSaveTemplate.onclick = function () { saveTemplateFromPlan(plan); };
     var btnBackToActive = document.getElementById("btnBackToActive");

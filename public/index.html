@@ -15786,6 +15786,7 @@ function startApp() {
       '<select id="planSelect">' + planOptionsHtml(s, plan) + '</select>' +
       '<input id="microInput" class="micro" placeholder="Microciclo 1" value="' + escapeAttr(plan.microciclo) + '" ' + (microLocked ? "disabled" : "") + '>' +
       (sLocked ? '' : '<button type="button" class="btn-secondary" id="btnNewPlan">+ Novo plano</button>') +
+      ((isStudentView() || state.readOnly || !archived) ? '' : '<button type="button" class="btn-secondary" id="btnSetActive" title="Faz este plano virar o atual (o atual vai para arquivado)">⭐ Tornar atual</button>') +
       ((isStudentView() || state.readOnly) ? '' : '<button type="button" class="btn-secondary" id="btnDeletePlan" title="Apaga este plano inteiro, com confirmação">🗑 Excluir plano</button>') +
       (sLocked ? '' : '<button type="button" class="btn-secondary" id="btnSaveTemplate" title="Salva os treinos deste plano como modelo reutilizável">💾 Salvar como modelo</button>') +
       '</div>' +
@@ -15919,6 +15920,18 @@ function startApp() {
     };
     var btnNewPlan = document.getElementById("btnNewPlan");
     if (btnNewPlan) makeConfirmButton(btnNewPlan, "Confirmar novo plano", function () { createNewPlan(s); });
+    var btnSetActive = document.getElementById("btnSetActive");
+    if (btnSetActive) btnSetActive.onclick = function () {
+      var nomeNovo = plan.microciclo || plan.label || "este plano";
+      if (!confirm("Tornar \"" + nomeNovo + "\" o plano atual? O plano atual vai para arquivado.")) return;
+      var anterior = s.plans.filter(function (p) { return p.id === s.activePlanId; })[0];
+      if (anterior && anterior.id !== plan.id) anterior.archived = true;
+      plan.archived = false;
+      s.activePlanId = plan.id;
+      state.viewPlanId = null;
+      state.activeTab = defaultTabFor(plan);
+      saveNow("Plano atual definido", true);
+    };
     var btnDeletePlan = document.getElementById("btnDeletePlan");
     if (btnDeletePlan) btnDeletePlan.onclick = function () {
       var nomePlano = plan.microciclo || plan.label || "este plano";

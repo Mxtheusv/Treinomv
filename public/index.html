@@ -6116,51 +6116,66 @@ function startApp() {
   // ---------- roster (trainer landing page, no ?aluno= in the URL) ----------
 
   // ---------- sininho do personal: feedbacks dos alunos (PSE e observações por exercício) ----------
-  var TR_BELL_KEY = "treinoOnlineTrainerBellSeen";
-  function trBellSeen() { try { return Number(localStorage.getItem(TR_BELL_KEY)) || 0; } catch (e) { return 0; } }
-  function trBellMarkSeen(ts) { try { localStorage.setItem(TR_BELL_KEY, String(ts)); } catch (e) {} }
-  function trBellItens() {
+  var TR_BELL_KEY = "treinoOnlineTrainerBellSeenV2";
+  function trBellLerSeen() { try { var v = JSON.parse(localStorage.getItem(TR_BELL_KEY) || "{}"); return (v && typeof v === "object") ? v : {}; } catch (e) { return {}; } }
+  function trBellSeen(slug) { return Number(trBellLerSeen()[slug]) || 0; }
+  function trBellMarkSeen(slug, ts) { try { var m = trBellLerSeen(); m[slug] = ts; localStorage.setItem(TR_BELL_KEY, JSON.stringify(m)); } catch (e) {} }
+  // Sem slugFiltro: feedbacks de todos os alunos (lista de alunos). Com slugFiltro: só do aluno aberto na tela.
+  function trBellItens(slugFiltro) {
     var itens = [];
     var limite = Date.now() - 60 * 86400000;
     Object.keys(state.data.students || {}).forEach(function (slug) {
+      if (slugFiltro && slug !== slugFiltro) return;
       var st = state.data.students[slug];
       if (!st) return;
       (st.feedback || []).forEach(function (f) {
         if (!f || !f.ts || f.ts < limite || !String(f.comment || "").trim()) return;
-        itens.push({ ts: f.ts, nome: st.nome || "Aluno", titulo: "Feedback do treino (PSE)", texto: String(f.comment).trim() });
+        itens.push({ slug: slug, ts: f.ts, nome: st.nome || "Aluno", titulo: "Feedback do treino (PSE)", texto: String(f.comment).trim() });
       });
       (st.sessoes || []).forEach(function (ss) {
         var quando = Number(ss && ss.ts) || 0;
         if (!ss || !quando || quando < limite) return;
         (ss.obsLog || []).forEach(function (o) {
           if (!o || !String(o.nota || "").trim()) return;
-          itens.push({ ts: quando, nome: st.nome || "Aluno", titulo: (ss.nome || "Treino") + " · " + (o.exercicio || "exercício"), texto: String(o.nota).trim() });
+          itens.push({ slug: slug, ts: quando, nome: st.nome || "Aluno", titulo: (ss.nome || "Treino") + " · " + (o.exercicio || "exercício"), texto: String(o.nota).trim() });
         });
       });
     });
     itens.sort(function (a, b) { return b.ts - a.ts; });
     return itens.slice(0, 40);
   }
-  function trBellHtml() {
+  function trBellNovos(slugFiltro) {
+    return trBellItens(slugFiltro).filter(function (x) { return x.ts > trBellSeen(x.slug); }).length;
+  }
+  function trBellHtml(slugFiltro) {
     if (!isTrainerRole() || isStudentView()) return "";
-    var novos = trBellItens().filter(function (x) { return x.ts > trBellSeen(); }).length;
-    return '<button type="button" class="btn-secondary tr-bell" id="trBell" title="Feedbacks dos alunos">🔔' + (novos ? ' <span class="tr-bell-n">' + (novos > 9 ? "9+" : novos) + '</span>' : '') + '</button>';
+    var novos = trBellNovos(slugFiltro);
+    var st = slugFiltro ? state.data.students[slugFiltro] : null;
+    var titulo = st ? "Feedbacks de " + (st.nome || "aluno") : "Feedbacks dos alunos";
+    return '<button type="button" class="btn-secondary tr-bell" id="trBell" data-slug="' + escapeAttr(slugFiltro || "") + '" title="' + escapeAttr(titulo) + '">🔔' + (novos ? ' <span class="tr-bell-n">' + (novos > 9 ? "9+" : novos) + '</span>' : '') + '</button>';
   }
   function trBellBind() {
     var b = document.getElementById("trBell");
-    if (b) b.onclick = function () { trBellOpen(); var nb = document.getElementById("trBell"); if (nb) nb.outerHTML = trBellHtml(); trBellBind(); };
+    if (b) b.onclick = function () {
+      var slug = b.getAttribute("data-slug") || "";
+      trBellOpen(slug);
+      var nb = document.getElementById("trBell");
+      if (nb) nb.outerHTML = trBellHtml(slug);
+      trBellBind();
+    };
   }
-  function trBellOpen() {
-    var itens = trBellItens();
-    var seen = trBellSeen();
+  function trBellOpen(slugFiltro) {
+    var itens = trBellItens(slugFiltro);
     var ov = document.createElement("div");
     ov.className = "tr-bell-ov"; ov.id = "trBellOv";
-    ov.innerHTML = '<div class="tr-bell-sheet" role="dialog" aria-label="Feedbacks dos alunos"><div class="tr-bell-h"><strong>Feedbacks dos alunos</strong><button type="button" id="trBellX" class="btn-secondary">Fechar</button></div>' +
+    var titulo = slugFiltro && state.data.students[slugFiltro] ? "Feedbacks de " + escapeHtml(state.data.students[slugFiltro].nome || "aluno") : "Feedbacks dos alunos";
+    ov.innerHTML = '<div class="tr-bell-sheet" role="dialog" aria-label="' + titulo + '"><div class="tr-bell-h"><strong>' + titulo + '</strong><button type="button" id="trBellX" class="btn-secondary">Fechar</button></div>' +
       (itens.length ? itens.map(function (x) {
-        return '<div class="tr-bell-item' + (x.ts > seen ? " new" : "") + '"><b>' + escapeHtml(x.nome) + '</b> · ' + escapeHtml(x.titulo) + '<p>' + escapeHtml(x.texto) + '</p><em>' + escapeHtml(feedQuando(x.ts).txt) + '</em></div>';
+        return '<div class="tr-bell-item' + (x.ts > trBellSeen(x.slug) ? " new" : "") + '">' + (slugFiltro ? "" : '<b>' + escapeHtml(x.nome) + '</b> · ') + escapeHtml(x.titulo) + '<p>' + escapeHtml(x.texto) + '</p><em>' + escapeHtml(feedQuando(x.ts).txt) + '</em></div>';
       }).join("") : '<p class="tr-bell-vazio">Nenhum feedback nos últimos 60 dias.</p>') + '</div>';
     document.body.appendChild(ov);
-    trBellMarkSeen(itens.length ? itens[0].ts : Date.now());
+    // marca como lido só o que foi mostrado, aluno a aluno
+    itens.forEach(function (x) { if (x.ts > trBellSeen(x.slug)) trBellMarkSeen(x.slug, x.ts); });
     function fecha() { if (ov.parentNode) ov.parentNode.removeChild(ov); }
     ov.addEventListener("click", function (e) { if (e.target === ov || e.target.id === "trBellX") fecha(); });
   }
@@ -15835,7 +15850,7 @@ function startApp() {
     var datasLocked = state.readOnly || isStudentView();
     var onDataTab =state.activeTab !== "checkin" && state.activeTab !== "feedback" && state.activeTab !== "notas" && state.activeTab !== "corrida" && state.activeTab !== "volume";
 
-    document.getElementById("headerControls").innerHTML = trBellHtml() +
+    document.getElementById("headerControls").innerHTML = trBellHtml(state.slug) +
       (state.cameFromRoster ? '<a href="#" id="backToRoster" class="link-btn">← Meus alunos</a>' : '') +
       (!state.cameFromRoster ? '<a href="#" id="forgetAluno" class="link-btn" title="Sair e usar outro código de acesso">Trocar aluno</a>' : '') +
       '<div class="aluno-field">' +

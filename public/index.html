@@ -3394,6 +3394,297 @@ function startApp() {
           { t: "FORÇA", ex: [["PEITO SUPINO BARRA", 4, "4-5", "3min"], ["COSTAS REMADA ABERTA BARRA", 4, "6", "2min"], ["OMBRO DESENVOLVIMENTO HALTERES SENTADO", 3, "6", "2min"], ["COSTAS PUXADA BARRA PEGADA ABERTA", 3, "6-8", "2min"]] },
           { t: "CORE", ex: [["ABDÔMEN CORE PRANCHA TOCA OMBRO", 3, "20", "45s"], ["ABDÔMEN CORE REMADOR MEDICINE BALL", 3, "12", "45s"]] }
         ] }
+      ] },
+    { nome: "Hipertrofia — Superior/Inferior 4x (Intermediário)", nivel: "Intermediário", freq: "4x/semana (A, B, C, D)",
+      desc: "Superior e inferior duas vezes por semana, com 8 a 12 repetições. Para quem já domina os básicos e quer mais volume sem técnicas avançadas.",
+      dias: [
+        { nome: "TREINO A — SUPERIOR", blocos: [
+          { t: "PEITO E COSTAS", ex: [["PEITO SUPINO INCLINADO BARRA", 4, "8-10", "2min"], ["COSTAS PUXADA POLIA/CABO PEGADA FECHADA", 3, "10-12", "90s"], ["PEITO SUPINO HALTERES", 3, "10-12", "90s"], ["COSTAS REMADA HALTERES PRANCHA", 3, "10", "75s"]] },
+          { t: "OMBRO E BRAÇOS (BI-SET)", chain: true, ex: [["OMBRO ELEVAÇÃO LATERAL COM HALTER", 3, "12-15", "60s"], ["BÍCEPS ROSCA HALTERES", 3, "12", "60s"]] }
+        ] },
+        { nome: "TREINO B — INFERIOR", blocos: [
+          { t: "QUADRÍCEPS", ex: [["COXA AGACHAMENTO HACK", 4, "8-10", "2min"], ["COXA LEG PRESS HORIZONTAL", 3, "12", "90s"], ["COXA CADEIRA EXTENSORA MÁQUINA", 3, "15", "60s"]] },
+          { t: "POSTERIOR E GLÚTEO", ex: [["POSTERIOR DE COXA TERRA BARRA", 3, "8-10", "2min"], ["POSTERIOR DE COXA FLEXÃO MÁQUINA MESA", 3, "12", "60s"], ["GLÚTEO MÁQUINA ABDUTORA", 3, "15", "45s"]] },
+          { t: "CORE", ex: [["ABDÔMEN CORE PRANCHA TOCA OMBRO", 3, "10 por lado", "45s"]] }
+        ] },
+        { nome: "TREINO C — SUPERIOR", blocos: [
+          { t: "COSTAS E OMBROS", ex: [["COSTAS PUXADA BARRA PEGADA ABERTA", 4, "8-10", "90s"], ["OMBRO DESENVOLVIMENTO HALTERES FECHADO", 3, "10", "90s"], ["COSTAS REMADA SERROTE HALTER", 3, "10", "75s", "10 repetições por lado."], ["PEITO CRUCIFIXO MÁQUINA PECK DECK", 3, "12-15", "60s"]] },
+          { t: "BRAÇOS (BI-SET)", chain: true, ex: [["TRÍCEPS TESTA CORDA POLIA", 3, "12", "60s"], ["BÍCEPS ROSCA MARTELO HALTERES", 3, "12", "60s"]] }
+        ] },
+        { nome: "TREINO D — INFERIOR (GLÚTEOS)", blocos: [
+          { t: "GLÚTEOS E POSTERIOR", ex: [["GLÚTEO ELEVAÇÃO PÉLVICA BARRA HIP THRUST", 4, "10", "90s"], ["COXA AFUNDO BÚLGARO HALTERES", 3, "10 por perna", "90s"], ["POSTERIOR DE COXA STIFF BARRA", 3, "10", "90s"], ["COXA CADEIRA ADUTORA MÁQUINA", 3, "15", "45s"]] },
+          { t: "CORE", ex: [["ABDÔMEN CORE CANIVETE ALTERNADO", 3, "10 por lado", "45s"]] }
+        ] }
+      ] },
+    { nome: "Hipertrofia — Braços e Ombros (foco)", nivel: "Intermediário", freq: "2x/semana (A e B), junto com pernas e costas",
+      desc: "Dois treinos de volume alto para ombros, tríceps e bíceps. Use como complemento ao treino principal.",
+      dias: [
+        { nome: "TREINO A — OMBROS E TRÍCEPS", blocos: [
+          { t: "OMBROS", ex: [["OMBRO DESENVOLVIMENTO MÁQUINA", 4, "10", "90s"], ["OMBRO ELEVAÇÃO LATERAL COM HALTER", 4, "12-15", "45s"], ["OMBRO DESENVOLVIMENTO HALTERES FECHADO", 3, "10", "75s"]] },
+          { t: "TRÍCEPS (BI-SET)", chain: true, ex: [["TRÍCEPS TESTA HALTERES", 3, "10-12", "60s"], ["TRÍCEPS ROSCA CORDA POLIA", 3, "12-15", "60s"]] }
+        ] },
+        { nome: "TREINO B — COSTAS E BÍCEPS", blocos: [
+          { t: "COSTAS", ex: [["COSTAS REMADA BAIXA COM BARRA", 4, "8-10", "90s"], ["COSTAS PUXADA POLIA/CABO PEGADA FECHADA", 3, "10-12", "90s"]] },
+          { t: "BÍCEPS (BI-SET)", chain: true, ex: [["BÍCEPS ROSCA BARRA W", 3, "10", "60s"], ["BÍCEPS ROSCA HALTERES BANCO INCLINADO", 3, "12", "60s"]] }
+        ] }
+      ] },
+    { nome: "Emagrecimento — Circuito de Alta Intensidade", nivel: "Intermediário", freq: "3 a 4x/semana (A, B, C)",
+      desc: "Circuitos de força com pouco descanso e cardio intervalado no fim. Gasta mais energia em menos tempo; para quem já treina há alguns meses.",
+      dias: [
+        { nome: "TREINO A — CIRCUITO SUPERIOR", blocos: [
+          { t: "CIRCUITO", chain: true, ex: [["PEITO SUPINO PESO CORPORAL FLEXÃO DE BRAÇO", 3, "10-15", "60s"], ["COSTAS REMADA HALTERES PRANCHA", 3, "12", "60s"], ["OMBRO ELEVAÇÃO LATERAL COM HALTER", 3, "15", "60s"]] }
+        ], aero: [{ tipo: "Esteira", texto: "10 min intervalado: 1 min forte e 1 min leve" }] },
+        { nome: "TREINO B — CIRCUITO INFERIOR", blocos: [
+          { t: "CIRCUITO", chain: true, ex: [["COXA AGACHAMENTO HALTERES", 3, "12", "60s"], ["POSTERIOR DE COXA KETTLEBELL SWING", 3, "15", "60s"], ["COXA SALTO JUMP BOX", 3, "8", "60s"]] }
+        ], aero: [{ tipo: "Bike", texto: "10 min intervalado: 30 s forte e 30 s leve" }] },
+        { nome: "TREINO C — CORPO TODO E CORE", blocos: [
+          { t: "CIRCUITO", chain: true, ex: [["COSTAS REMADA BAIXA COM BARRA", 3, "12", "60s"], ["PEITO SUPINO HALTERES", 3, "12", "60s"], ["GLÚTEO ELEVAÇÃO PESO CORPORAL PONTE", 3, "20", "60s"]] },
+          { t: "CORE", ex: [["ABDÔMEN CORE ROTAÇÃO MEDICINE BALL", 3, "15", "30s"], ["ABDÔMEN CORE PRANCHA", 3, "30s", "30s"]] }
+        ], aero: [{ tipo: "Esteira", texto: "10 min em ritmo moderado" }] }
+      ] },
+    { nome: "Emagrecimento — Iniciante com Caminhada", nivel: "Iniciante", freq: "3x/semana (A e B)",
+      desc: "Treinos curtos, com máquinas e peso corporal, e caminhada no fim. Para quem está voltando a treinar ou tem pouca experiência.",
+      dias: [
+        { nome: "TREINO A", blocos: [
+          { t: "INFERIORES", ex: [["COXA LEG PRESS HORIZONTAL", 3, "12", "60s"], ["GLÚTEO ELEVAÇÃO PESO CORPORAL PONTE", 3, "12", "45s"], ["COXA CADEIRA ADUTORA MÁQUINA", 3, "15", "45s"]] },
+          { t: "SUPERIORES", ex: [["PEITO SUPINO INCLINADO MÁQUINA", 3, "12", "60s"], ["COSTAS PUXADA POLIA/CABO PEGADA FECHADA", 3, "12", "60s"], ["OMBRO DESENVOLVIMENTO MÁQUINA", 3, "12", "60s"]] }
+        ], aero: [{ tipo: "Caminhada", texto: "15 min em ritmo confortável" }] },
+        { nome: "TREINO B", blocos: [
+          { t: "INFERIORES", ex: [["COXA AGACHAMENTO MÁQUINA GUIADA", 3, "12", "60s"], ["POSTERIOR DE COXA CADEIRA FLEXORA", 3, "12", "45s"], ["GLÚTEO MÁQUINA ABDUTORA", 3, "15", "45s"]] },
+          { t: "SUPERIORES E CORE", ex: [["COSTAS REMADA SENTADA MÁQUINA", 3, "12", "60s"], ["PEITO SUPINO HALTERES", 3, "12", "60s"], ["ABDÔMEN CORE PRANCHA", 3, "20s", "45s"]] }
+        ], aero: [{ tipo: "Caminhada", texto: "15 min em ritmo confortável" }] }
+      ] },
+    { nome: "Glúteo — Força e Volume", nivel: "Intermediário/Avançado", freq: "2x/semana (A e B)",
+      desc: "Foco em glúteo com cargas altas: hip thrust e afundo como base, e isolamento no fim. Para quem já domina o básico.",
+      dias: [
+        { nome: "TREINO A — GLÚTEO FORÇA", blocos: [
+          { t: "BASE", ex: [["GLÚTEO ELEVAÇÃO PÉLVICA BARRA HIP THRUST", 4, "8-10", "2min"], ["COXA AFUNDO BÚLGARO HALTERES", 3, "10 por perna", "90s"], ["POSTERIOR DE COXA TERRA BARRA", 3, "8", "2min"]] },
+          { t: "ISOLAMENTO", ex: [["GLÚTEO MÁQUINA ABDUTORA", 3, "15", "45s"], ["POSTERIOR DE COXA FLEXÃO MÁQUINA MESA", 3, "12", "60s"]] }
+        ] },
+        { nome: "TREINO B — GLÚTEO VOLUME", blocos: [
+          { t: "BASE", ex: [["COXA LEG PRESS HORIZONTAL", 4, "12", "90s"], ["COXA AGACHAMENTO HACK", 3, "10", "90s"], ["POSTERIOR DE COXA KETTLEBELL SWING", 3, "15", "60s"]] },
+          { t: "FECHAMENTO (BI-SET)", chain: true, ex: [["GLÚTEO ELEVAÇÃO PESO CORPORAL PONTE", 3, "20", "30s"], ["COXA CADEIRA ADUTORA MÁQUINA", 3, "15", "60s"]] }
+        ] }
+      ] },
+    { nome: "Glúteo — Em Casa (peso corporal e halter leve)", nivel: "Iniciante", freq: "3x/semana (A e B)",
+      desc: "Glúteo, pernas e core sem máquinas: só peso corporal e um halter leve. Dá para fazer em casa.",
+      dias: [
+        { nome: "TREINO A", blocos: [
+          { t: "INFERIORES", ex: [["GLÚTEO ELEVAÇÃO PESO CORPORAL PONTE", 3, "15", "45s"], ["COXA AGACHAMENTO PESO CORPORAL UNILATERAL PROGRESSIVO", 3, "8 por perna", "60s"]] },
+          { t: "CORE", ex: [["ABDÔMEN CORE PRANCHA", 3, "30s", "45s"]] }
+        ] },
+        { nome: "TREINO B", blocos: [
+          { t: "INFERIORES E SUPERIORES", ex: [["COXA AFUNDO HALTERES", 3, "10 por perna", "60s"], ["PEITO SUPINO PESO CORPORAL FLEXÃO DE BRAÇO", 3, "8-10", "60s"], ["ABDÔMEN CORE PRANCHA TOCA OMBRO", 3, "10 por lado", "45s"]] }
+        ] }
+      ] },
+    { nome: "Hipertrofia — Pernas Completas (2x)", nivel: "Intermediário", freq: "2x/semana (A e B), com pelo menos 1 dia de descanso entre eles",
+      desc: "Pernas em dois dias: um com ênfase em quadríceps e outro em posterior e glúteo. Para quem quer pernas grandes sem treinar o grupo todo dia.",
+      dias: [
+        { nome: "TREINO A — QUADRÍCEPS", blocos: [
+          { t: "QUADRÍCEPS", ex: [["COXA AGACHAMENTO BARRA", 4, "6-8", "2min"], ["COXA LEG PRESS INCLINADO", 4, "10-12", "90s"], ["COXA CADEIRA EXTENSORA MÁQUINA", 3, "15", "60s"]] },
+          { t: "PANTURRILHA", ex: [["PANTURRILHA EM PÉ MÁQUINA", 4, "12-15", "45s"]] }
+        ] },
+        { nome: "TREINO B — POSTERIOR E GLÚTEO", blocos: [
+          { t: "POSTERIOR", ex: [["POSTERIOR DE COXA STIFF BARRA", 4, "8-10", "2min"], ["POSTERIOR DE COXA FLEXÃO MÁQUINA MESA", 3, "12", "60s"], ["COXA AFUNDO BÚLGARO HALTERES", 3, "10 por perna", "90s"]] },
+          { t: "GLÚTEO E CORE", ex: [["GLÚTEO ELEVAÇÃO PÉLVICA BARRA HIP THRUST", 3, "10-12", "90s"], ["ABDÔMEN CORE SUPRA", 3, "15", "45s"]] }
+        ] }
+      ] },
+    { nome: "Hipertrofia — Peito e Costas Volume (2x)", nivel: "Intermediário", freq: "2x/semana (A e B)",
+      desc: "Peito e costas em dois treinos com volume alto. Use junto com um dia de pernas e um de braços e ombros.",
+      dias: [
+        { nome: "TREINO A — PEITO", blocos: [
+          { t: "PEITO", ex: [["PEITO SUPINO BARRA", 4, "8-10", "2min"], ["PEITO SUPINO INCLINADO MÁQUINA", 3, "10-12", "90s"], ["PEITO CRUCIFIXO MÁQUINA PECK DECK", 3, "12-15", "60s"]] },
+          { t: "TRÍCEPS (BI-SET)", chain: true, ex: [["TRÍCEPS TESTA HALTERES", 3, "12", "60s"], ["TRÍCEPS ROSCA CORDA POLIA", 3, "12-15", "60s"]] }
+        ] },
+        { nome: "TREINO B — COSTAS", blocos: [
+          { t: "COSTAS", ex: [["COSTAS REMADA ABERTA BARRA", 4, "8", "2min"], ["COSTAS PUXADA BARRA PEGADA ABERTA", 4, "10", "90s"], ["COSTAS REMADA SENTADA MÁQUINA", 3, "12", "75s"], ["COSTAS CRUCIFIXO INVERSO HALTERES", 3, "15", "45s"]] },
+          { t: "BÍCEPS (BI-SET)", chain: true, ex: [["BÍCEPS ROSCA BARRA W", 3, "10", "60s"], ["BÍCEPS ROSCA MARTELO HALTERES", 3, "12", "60s"]] }
+        ] }
+      ] },
+    { nome: "Hipertrofia — Full Body com Halteres (Iniciante)", nivel: "Iniciante", freq: "3x/semana (A, B, A... alternando)",
+      desc: "Corpo inteiro com halteres e máquinas simples, 3 séries de 10 a 12. Bom para aprender os movimentos sem carga pesada.",
+      dias: [
+        { nome: "TREINO A", blocos: [
+          { t: "INFERIORES", ex: [["COXA AGACHAMENTO HALTERES", 3, "12", "90s"], ["POSTERIOR DE COXA CADEIRA FLEXORA", 3, "12", "60s"]] },
+          { t: "SUPERIORES", ex: [["PEITO SUPINO HALTERES", 3, "10-12", "90s"], ["COSTAS REMADA HALTERES PRANCHA", 3, "12", "60s"], ["OMBRO ELEVAÇÃO LATERAL COM HALTER", 3, "15", "45s"]] },
+          { t: "CORE", ex: [["ABDÔMEN CORE PRANCHA", 3, "30s", "45s"]] }
+        ] },
+        { nome: "TREINO B", blocos: [
+          { t: "INFERIORES", ex: [["COXA LEG PRESS HORIZONTAL", 3, "12", "90s"], ["GLÚTEO ELEVAÇÃO PESO CORPORAL PONTE", 3, "15", "45s"]] },
+          { t: "SUPERIORES", ex: [["COSTAS PUXADA POLIA/CABO PEGADA FECHADA", 3, "12", "90s"], ["OMBRO DESENVOLVIMENTO HALTERES SENTADO", 3, "10-12", "75s"], ["BÍCEPS ROSCA HALTERES", 3, "12", "60s"], ["TRÍCEPS TESTA HALTERES", 3, "12", "60s"]] },
+          { t: "CORE", ex: [["ABDÔMEN CORE SUPRA", 3, "15", "45s"]] }
+        ] }
+      ] },
+    { nome: "Emagrecimento — Metabólico com Kettlebell (Intermediário)", nivel: "Intermediário", freq: "3x/semana (A, B, C)",
+      desc: "Circuitos com kettlebell e peso corporal, com descanso curto. Trabalha o corpo todo e mantém o coração acelerado.",
+      dias: [
+        { nome: "TREINO A — CORPO TODO", blocos: [
+          { t: "CIRCUITO", chain: true, ex: [["POSTERIOR DE COXA KETTLEBELL SWING", 4, "15", "45s"], ["PEITO SUPINO PESO CORPORAL FLEXÃO DE BRAÇO", 3, "10", "45s"], ["COXA AGACHAMENTO PESO CORPORAL UNILATERAL PROGRESSIVO", 3, "8 por perna", "60s"]] }
+        ], aero: [{ tipo: "Esteira", texto: "8 min intervalado: 40 s forte e 20 s leve" }] },
+        { nome: "TREINO B — PARTE DE CIMA E CORE", blocos: [
+          { t: "CIRCUITO", chain: true, ex: [["COSTAS REMADA HALTERES PRANCHA", 3, "12", "45s"], ["OMBRO DESENVOLVIMENTO HALTERES SENTADO", 3, "10", "45s"], ["ABDÔMEN CORE REMADOR MEDICINE BALL", 3, "12", "45s"]] }
+        ], aero: [{ tipo: "Bike", texto: "10 min intervalado: 30 s forte e 30 s leve" }] },
+        { nome: "TREINO C — PERNAS E GLÚTEO", blocos: [
+          { t: "CIRCUITO", chain: true, ex: [["COXA AFUNDO HALTERES", 3, "10 por perna", "45s"], ["GLÚTEO ELEVAÇÃO PESO CORPORAL PONTE", 3, "15", "45s"], ["COXA SALTO JUMP BOX", 3, "8", "60s"]] }
+        ], aero: [{ tipo: "Esteira", texto: "10 min em ritmo moderado" }] }
+      ] },
+    { nome: "Emagrecimento — Superior e Inferior com HIIT (Avançado)", nivel: "Avançado", freq: "4x/semana (A, B, C, D)",
+      desc: "Força em superior e inferior com cardio intervalado no fim de cada treino. Para quem já tem base de força e quer queimar mais gordura.",
+      dias: [
+        { nome: "TREINO A — SUPERIOR", blocos: [
+          { t: "FORÇA", ex: [["PEITO SUPINO INCLINADO BARRA", 4, "8", "90s"], ["COSTAS PUXADA BARRA PEGADA ABERTA", 4, "8-10", "90s"], ["OMBRO DESENVOLVIMENTO HALTERES FECHADO", 3, "10", "75s"]] }
+        ], aero: [{ tipo: "Esteira", texto: "12 min intervalado: 30 s forte e 30 s leve" }] },
+        { nome: "TREINO B — INFERIOR", blocos: [
+          { t: "FORÇA", ex: [["COXA AGACHAMENTO BARRA", 4, "8", "2min"], ["POSTERIOR DE COXA STIFF BARRA", 3, "10", "90s"], ["COXA AFUNDO BÚLGARO HALTERES", 3, "10 por perna", "75s"]] }
+        ], aero: [{ tipo: "Bike", texto: "12 min intervalado: 30 s forte e 30 s leve" }] },
+        { nome: "TREINO C — SUPERIOR (CIRCUITO)", blocos: [
+          { t: "CIRCUITO", chain: true, ex: [["COSTAS REMADA HALTERES PRANCHA", 3, "12", "45s"], ["PEITO SUPINO HALTERES", 3, "12", "45s"], ["BÍCEPS ROSCA HALTERES", 3, "12", "60s"]] }
+        ], aero: [{ tipo: "Esteira", texto: "10 min intervalado: 1 min forte e 1 min leve" }] },
+        { nome: "TREINO D — INFERIOR (CIRCUITO)", blocos: [
+          { t: "CIRCUITO", chain: true, ex: [["COXA AGACHAMENTO HALTERES", 3, "12", "45s"], ["POSTERIOR DE COXA KETTLEBELL SWING", 3, "15", "45s"], ["COXA SALTO JUMP BOX", 3, "8", "60s"]] }
+        ], aero: [{ tipo: "Bike", texto: "10 min intervalado: 30 s forte e 30 s leve" }] }
+      ] },
+    { nome: "Emagrecimento — Treino de 30 Minutos em Casa (Iniciante)", nivel: "Iniciante", freq: "3x/semana (A, B, A...)",
+      desc: "Treino curto só com peso corporal, para fazer em casa sem equipamento. Cerca de 30 minutos, com descanso de 45 a 60 segundos.",
+      dias: [
+        { nome: "TREINO A", blocos: [
+          { t: "CIRCUITO", chain: true, ex: [["PEITO SUPINO PESO CORPORAL FLEXÃO DE BRAÇO", 3, "6-8", "45s"], ["COXA AGACHAMENTO PESO CORPORAL UNILATERAL PROGRESSIVO", 3, "8 por perna", "45s"], ["GLÚTEO ELEVAÇÃO PESO CORPORAL PONTE", 3, "15", "60s"]] },
+          { t: "CORE", ex: [["ABDÔMEN CORE PRANCHA", 3, "20s", "30s"], ["ABDÔMEN CORE PRANCHA TOCA OMBRO", 3, "10 por lado", "45s"]] }
+        ], aero: [{ tipo: "Caminhada", texto: "5 min para aquecer e 5 min para esfriar" }] },
+        { nome: "TREINO B", blocos: [
+          { t: "CIRCUITO", chain: true, ex: [["COXA AGACHAMENTO PESO CORPORAL UNILATERAL PROGRESSIVO", 3, "8 por perna", "45s"], ["PEITO SUPINO PESO CORPORAL FLEXÃO DE BRAÇO", 3, "6-8", "45s"], ["GLÚTEO ELEVAÇÃO PESO CORPORAL PONTE", 3, "15", "60s"]] },
+          { t: "CORE", ex: [["ABDÔMEN CORE CANIVETE ALTERNADO", 3, "10 por lado", "30s"]] }
+        ], aero: [{ tipo: "Caminhada", texto: "10 min em ritmo rápido" }] }
+      ] },
+    { nome: "Glúteo — Isolamento e Ativação (Intermediário)", nivel: "Intermediário", freq: "3x/semana (A, B, C)",
+      desc: "Mais repetições e pausas curtas para sentir o glúteo trabalhar. Ideal para ativar antes do treino de pernas ou como treino próprio.",
+      dias: [
+        { nome: "TREINO A — ELEVAÇÕES", blocos: [
+          { t: "PRINCIPAL", ex: [["GLÚTEO ELEVAÇÃO PÉLVICA BARRA HIP THRUST", 3, "12-15", "60s"], ["GLÚTEO ELEVAÇÃO PESO CORPORAL PONTE", 3, "20", "45s"]] },
+          { t: "ISOLAMENTO", ex: [["GLÚTEO MÁQUINA ABDUTORA", 3, "15-20", "45s"], ["COXA CADEIRA ADUTORA MÁQUINA", 3, "15", "45s"]] }
+        ] },
+        { nome: "TREINO B — POSTERIOR E GLÚTEO", blocos: [
+          { t: "PRINCIPAL", ex: [["POSTERIOR DE COXA KETTLEBELL SWING", 3, "15", "60s"], ["POSTERIOR DE COXA FLEXÃO MÁQUINA MESA", 3, "12", "60s"]] },
+          { t: "FECHAMENTO", ex: [["COXA AFUNDO HALTERES", 3, "10 por perna", "60s"], ["GLÚTEO MÁQUINA ABDUTORA", 3, "20", "30s"]] }
+        ] },
+        { nome: "TREINO C — UNILATERAL", blocos: [
+          { t: "UNILATERAL", chain: true, ex: [["COXA AGACHAMENTO PESO CORPORAL UNILATERAL PROGRESSIVO", 3, "8 por perna", "30s"], ["GLÚTEO ELEVAÇÃO PESO CORPORAL PONTE", 3, "15", "60s"]] }
+        ] }
+      ] },
+    { nome: "Glúteo e Posterior — Força (Avançado)", nivel: "Avançado", freq: "2x/semana (A e B)",
+      desc: "Cargas pesadas em terra, stiff e hip thrust, com trabalho de glúteo no fim. Exige boa técnica; comece leve.",
+      dias: [
+        { nome: "TREINO A — FORÇA", blocos: [
+          { t: "BASE", ex: [["POSTERIOR DE COXA TERRA BARRA", 4, "6", "2min"], ["GLÚTEO ELEVAÇÃO PÉLVICA BARRA HIP THRUST", 4, "8", "2min"], ["COXA AFUNDO BÚLGARO HALTERES", 3, "8 por perna", "90s"]] },
+          { t: "FECHAMENTO", ex: [["GLÚTEO MÁQUINA ABDUTORA", 3, "15", "45s"]] }
+        ] },
+        { nome: "TREINO B — VOLUME", blocos: [
+          { t: "BASE", ex: [["COXA AGACHAMENTO HACK", 4, "8-10", "2min"], ["POSTERIOR DE COXA STIFF BARRA", 3, "10", "90s"], ["COXA LEG PRESS ARTICULADO", 3, "12", "90s"]] },
+          { t: "FECHAMENTO (BI-SET)", chain: true, ex: [["GLÚTEO ELEVAÇÃO PESO CORPORAL PONTE", 3, "20", "30s"], ["COXA CADEIRA ADUTORA MÁQUINA", 3, "15", "60s"]] }
+        ] }
+      ] },
+    { nome: "Glúteo e Pernas — Equilibrado (Intermediário)", nivel: "Intermediário", freq: "2x/semana (A e B)",
+      desc: "Pernas e glúteo em dois treinos, com equilíbrio entre quadríceps e posterior. Para quem quer treino de perna completo sem exagerar no volume.",
+      dias: [
+        { nome: "TREINO A — QUADRÍCEPS E GLÚTEO", blocos: [
+          { t: "BASE", ex: [["COXA AGACHAMENTO HALTERES", 4, "10", "90s"], ["COXA LEG PRESS HORIZONTAL", 3, "12", "90s"], ["GLÚTEO ELEVAÇÃO PÉLVICA BARRA HIP THRUST", 3, "10", "90s"]] },
+          { t: "FINAL", ex: [["COXA CADEIRA ADUTORA MÁQUINA", 3, "15", "45s"]] }
+        ] },
+        { nome: "TREINO B — POSTERIOR E GLÚTEO", blocos: [
+          { t: "BASE", ex: [["POSTERIOR DE COXA CADEIRA FLEXORA", 3, "12", "60s"], ["POSTERIOR DE COXA KETTLEBELL SWING", 3, "15", "60s"], ["COXA AFUNDO HALTERES", 3, "10 por perna", "75s"]] },
+          { t: "FINAL", ex: [["GLÚTEO MÁQUINA ABDUTORA", 3, "15-20", "45s"], ["PANTURRILHA EM PÉ MÁQUINA", 4, "15", "45s"]] }
+        ] }
+      ] },
+    { nome: "Braço e Perna — Hipertrofia Iniciante (A e B)", nivel: "Iniciante", freq: "2 a 3x/semana (A e B alternando)",
+      desc: "Um dia só de braço e outro só de perna, 3 séries de 10 a 12. Base para começar.",
+      dias: [
+        { nome: "TREINO A — DIA DE BRAÇO", blocos: [
+          { t: "BÍCEPS E TRÍCEPS (BI-SET)", chain: true, ex: [["BÍCEPS ROSCA HALTERES", 3, "12", "60s"], ["TRÍCEPS ROSCA CORDA POLIA", 3, "12", "60s"]] },
+          { t: "OMBROS", ex: [["OMBRO DESENVOLVIMENTO MÁQUINA", 3, "12", "75s"], ["OMBRO ELEVAÇÃO LATERAL COM HALTER", 3, "15", "45s"]] }
+        ] },
+        { nome: "TREINO B — DIA DE PERNA", blocos: [
+          { t: "QUADRÍCEPS", ex: [["COXA LEG PRESS INCLINADO", 3, "12", "90s"], ["COXA CADEIRA EXTENSORA MÁQUINA", 3, "15", "60s"]] },
+          { t: "POSTERIOR E GLÚTEO", ex: [["POSTERIOR DE COXA CADEIRA FLEXORA", 3, "12", "60s"], ["GLÚTEO ELEVAÇÃO PESO CORPORAL PONTE", 3, "15", "45s"]] },
+          { t: "PANTURRILHA", ex: [["PANTURRILHA EM PÉ MÁQUINA", 3, "15", "45s"]] }
+        ] }
+      ] },
+    { nome: "Braço e Perna — Hipertrofia Intermediário (A e B)", nivel: "Intermediário", freq: "2x/semana (A e B), com 1 dia de descanso entre eles",
+      desc: "Braço e perna com mais volume, séries de 8 a 12. Para quem já treina há alguns meses.",
+      dias: [
+        { nome: "TREINO A — DIA DE BRAÇO", blocos: [
+          { t: "BÍCEPS (BI-SET)", chain: true, ex: [["BÍCEPS ROSCA BARRA W", 4, "8-10", "60s"], ["BÍCEPS ROSCA HALTERES BANCO INCLINADO", 3, "12", "60s"]] },
+          { t: "TRÍCEPS (BI-SET)", chain: true, ex: [["TRÍCEPS TESTA HALTERES", 4, "8-10", "60s"], ["TRÍCEPS ROSCA CORDA POLIA", 3, "12-15", "60s"]] },
+          { t: "OMBROS", ex: [["OMBRO DESENVOLVIMENTO HALTERES SENTADO", 3, "10", "90s"], ["OMBRO ELEVAÇÃO LATERAL COM HALTER", 4, "12-15", "45s"]] }
+        ] },
+        { nome: "TREINO B — DIA DE PERNA", blocos: [
+          { t: "QUADRÍCEPS", ex: [["COXA AGACHAMENTO BARRA", 4, "8", "2min"], ["COXA LEG PRESS HORIZONTAL", 3, "12", "90s"]] },
+          { t: "POSTERIOR E GLÚTEO", ex: [["POSTERIOR DE COXA STIFF BARRA", 4, "10", "90s"], ["POSTERIOR DE COXA FLEXÃO MÁQUINA MESA", 3, "12", "60s"], ["GLÚTEO MÁQUINA ABDUTORA", 3, "15", "45s"]] },
+          { t: "PANTURRILHA", ex: [["PANTURRILHA EM PÉ MÁQUINA", 4, "15", "45s"]] }
+        ] }
+      ] },
+    { nome: "Braço e Perna — Emagrecimento com Cardio", nivel: "Iniciante/Intermediário", freq: "3x/semana (A e B alternando)",
+      desc: "Braço e perna em circuito, com descanso curto, e cardio intervalado no fim de cada dia.",
+      dias: [
+        { nome: "TREINO A — DIA DE BRAÇO (CIRCUITO)", blocos: [
+          { t: "CIRCUITO", chain: true, ex: [["BÍCEPS ROSCA HALTERES", 3, "15", "30s"], ["TRÍCEPS TESTA HALTERES", 3, "15", "30s"], ["OMBRO ELEVAÇÃO LATERAL COM HALTER", 3, "15", "60s"]] }
+        ], aero: [{ tipo: "Esteira", texto: "10 min intervalado: 1 min forte e 1 min leve" }] },
+        { nome: "TREINO B — DIA DE PERNA (CIRCUITO)", blocos: [
+          { t: "CIRCUITO", chain: true, ex: [["COXA AGACHAMENTO HALTERES", 3, "12", "45s"], ["POSTERIOR DE COXA KETTLEBELL SWING", 3, "15", "45s"], ["COXA AFUNDO HALTERES", 3, "10 por perna", "60s"]] }
+        ], aero: [{ tipo: "Bike", texto: "10 min intervalado: 30 s forte e 30 s leve" }] }
+      ] },
+    { nome: "Braço e Perna — Glúteo em Foco", nivel: "Intermediário", freq: "2x/semana (A e B)",
+      desc: "Dia de perna com ênfase em glúteo e dia de braço para completar a semana.",
+      dias: [
+        { nome: "TREINO A — DIA DE BRAÇO", blocos: [
+          { t: "BRAÇOS (BI-SET)", chain: true, ex: [["BÍCEPS ROSCA MARTELO HALTERES", 3, "12", "60s"], ["TRÍCEPS TESTA CORDA POLIA", 3, "12", "60s"]] },
+          { t: "OMBROS", ex: [["OMBRO DESENVOLVIMENTO MÁQUINA", 3, "12", "75s"]] }
+        ] },
+        { nome: "TREINO B — DIA DE PERNA E GLÚTEO", blocos: [
+          { t: "PRINCIPAL", ex: [["GLÚTEO ELEVAÇÃO PÉLVICA BARRA HIP THRUST", 4, "10", "90s"], ["COXA AFUNDO BÚLGARO HALTERES", 3, "10 por perna", "90s"], ["COXA LEG PRESS HORIZONTAL", 3, "12", "90s"]] },
+          { t: "ISOLAMENTO", ex: [["GLÚTEO MÁQUINA ABDUTORA", 3, "15-20", "45s"], ["COXA CADEIRA ADUTORA MÁQUINA", 3, "15", "45s"]] }
+        ] }
+      ] },
+    { nome: "Braço e Perna — Força Geral", nivel: "Intermediário", freq: "2x/semana (A e B)",
+      desc: "Cargas mais altas nos básicos de braço e perna, com 4 séries para ganhar força.",
+      dias: [
+        { nome: "TREINO A — DIA DE BRAÇO", blocos: [
+          { t: "FORÇA", ex: [["BÍCEPS ROSCA BARRA W", 4, "6-8", "2min"], ["TRÍCEPS TESTA HALTERES", 4, "6-8", "2min"], ["OMBRO DESENVOLVIMENTO HALTERES FECHADO", 4, "6-8", "2min"]] }
+        ] },
+        { nome: "TREINO B — DIA DE PERNA", blocos: [
+          { t: "FORÇA", ex: [["COXA AGACHAMENTO BARRA", 4, "6", "3min"], ["POSTERIOR DE COXA STIFF BARRA", 4, "8", "2min"], ["COXA LEG PRESS INCLINADO", 3, "10", "2min"]] },
+          { t: "PANTURRILHA", ex: [["PANTURRILHA EM PÉ MÁQUINA", 4, "8", "60s"]] }
+        ] }
+      ] },
+    { nome: "Braço e Perna — Em Casa (sem equipamento)", nivel: "Iniciante", freq: "3x/semana (A e B)",
+      desc: "Braço e perna só com peso corporal, para fazer em casa.",
+      dias: [
+        { nome: "TREINO A — DIA DE BRAÇO", blocos: [
+          { t: "BRAÇOS", ex: [["PEITO SUPINO PESO CORPORAL FLEXÃO DE BRAÇO", 3, "8-10", "60s", "Aperte as mãos um pouco mais perto para trabalhar mais o tríceps."], ["BÍCEPS ROSCA HALTERES", 3, "12", "45s", "Sem halter, use garrafas de água cheias ou uma mochila com livros."]] }
+        ] },
+        { nome: "TREINO B — DIA DE PERNA", blocos: [
+          { t: "PERNAS E GLÚTEO", ex: [["COXA AGACHAMENTO PESO CORPORAL UNILATERAL PROGRESSIVO", 3, "8 por perna", "60s"], ["GLÚTEO ELEVAÇÃO PESO CORPORAL PONTE", 3, "15", "45s"]] },
+          { t: "CORE", ex: [["ABDÔMEN CORE PRANCHA", 3, "30s", "45s"]] }
+        ] }
+      ] },
+    { nome: "Braço e Perna — Condicionamento (circuito)", nivel: "Intermediário", freq: "3x/semana (A e B)",
+      desc: "Circuito de braço e circuito de perna com pouco descanso, para ganhar resistência.",
+      dias: [
+        { nome: "TREINO A — BRAÇO EM CIRCUITO", blocos: [
+          { t: "CIRCUITO", chain: true, ex: [["BÍCEPS ROSCA HALTERES", 3, "15", "30s"], ["TRÍCEPS TESTA HALTERES", 3, "15", "30s"], ["OMBRO ELEVAÇÃO LATERAL COM HALTER", 3, "15", "60s"]] }
+        ], aero: [{ tipo: "Esteira", texto: "8 min intervalado: 40 s forte e 20 s leve" }] },
+        { nome: "TREINO B — PERNA EM CIRCUITO", blocos: [
+          { t: "CIRCUITO", chain: true, ex: [["COXA AGACHAMENTO HALTERES", 3, "15", "30s"], ["POSTERIOR DE COXA KETTLEBELL SWING", 3, "15", "30s"], ["COXA AFUNDO HALTERES", 3, "12 por perna", "60s"]] }
+        ], aero: [{ tipo: "Bike", texto: "8 min intervalado: 40 s forte e 20 s leve" }] }
+      ] },
+    { nome: "Braço e Perna — Saúde e Mobilidade (baixo impacto)", nivel: "Iniciante", freq: "2 a 3x/semana (A e B)",
+      desc: "Treino leve e controlado, sem impacto, para saúde e disposição.",
+      dias: [
+        { nome: "TREINO A — DIA DE BRAÇO", blocos: [
+          { t: "BRAÇOS E OMBROS", ex: [["BÍCEPS ROSCA HALTERES", 2, "12", "60s", "Carga leve, movimento controlado."], ["TRÍCEPS ROSCA CORDA POLIA", 2, "12", "60s"], ["OMBRO ELEVAÇÃO LATERAL COM HALTER", 2, "12", "45s"]] }
+        ] },
+        { nome: "TREINO B — DIA DE PERNA", blocos: [
+          { t: "PERNAS E GLÚTEO", ex: [["COXA LEG PRESS HORIZONTAL", 2, "12", "60s"], ["COXA CADEIRA ADUTORA MÁQUINA", 2, "15", "45s"], ["GLÚTEO ELEVAÇÃO PESO CORPORAL PONTE", 2, "12", "45s"]] }
+        ] }
       ] }
   ];
   window.__modelosInfo = function () {
@@ -6183,8 +6474,7 @@ function startApp() {
   function renderRoster() {
     document.body.classList.add("sa-active");
     document.getElementById("tabs").hidden = true;
-    document.getElementById("headerControls").innerHTML = trBellHtml();
-    trBellBind();
+    document.getElementById("headerControls").innerHTML = "";
     var stalePrint = document.getElementById("printArea");
     if (stalePrint) stalePrint.innerHTML = ""; // never let a previous student's PDF content sit in the DOM here
     if (trTabAtual() !== "alunos") { renderTrainerTab(); return; }
@@ -6573,6 +6863,7 @@ function startApp() {
     }).catch(function () { showToast("Sem conexão. Tente de novo.", true); });
   }
   function trWireTopbar() {
+    trBellBind();
     var bl = document.getElementById("btnCriarLogin");
     if (bl) bl.addEventListener("click", loginAbreCriar);
     document.getElementById("btnChangePin").addEventListener("click", function (e) {
@@ -13115,7 +13406,7 @@ function startApp() {
     return '<div class="tr-topbar"><div class="sa-brand"><img src="' + PDF_LOGO_DATA_URL + '" alt="" style="width:34px;height:34px;border-radius:8px">' +
       '<div class="sa-brand-text"><div class="sa-brand-name sa-display">TREINO ONLINE</div>' +
       '<div class="sa-brand-sub">MATHEUS VENÂNCIO · CREF 038618-G/SC</div></div></div>' +
-      '<div class="tr-topbar-actions">' +
+      '<div class="tr-topbar-actions">' + trBellHtml() +
       '<button type="button" id="btnCopyFormLink" class="tr-btn-outline">🔗 Link pra aluno novo</button>' +
       '<button type="button" id="btnAcervo" class="tr-btn-outline">🎬 Acervo de vídeos</button>' +
       '<button type="button" id="btnTema" class="tr-btn-outline" title="Trocar entre escuro, claro e automático">' + temaRotulo() + '</button>' +

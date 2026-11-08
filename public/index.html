@@ -6864,6 +6864,7 @@ function startApp() {
   }
   function trWireTopbar() {
     trBellBind();
+    var bp = document.getElementById("btnPlanosVenda"); if (bp) bp.addEventListener("click", planosVendaAbrir);
     var bl = document.getElementById("btnCriarLogin");
     if (bl) bl.addEventListener("click", loginAbreCriar);
     document.getElementById("btnChangePin").addEventListener("click", function (e) {
@@ -9701,19 +9702,75 @@ function startApp() {
   // passed — no tabs, no exercise/carga data, nothing to fall back on. The
   // trainer (roster "Abrir") never sees this: isPlanExpired is only checked
   // when isStudentView() is true.
+  // ---------- Planos de venda: o aluno vê estes planos quando o plano dele vence ----------
+  function planosVendaAbrir() {
+    var old = document.getElementById("planosVendaModal"); if (old) old.remove();
+    var cfg = state.data.planosVenda || {};
+    var lista = (cfg.planos || []).slice(0, 3);
+    while (lista.length < 3) lista.push({});
+    var ov = document.createElement("div");
+    ov.className = "sa-modal-overlay"; ov.id = "planosVendaModal";
+    ov.innerHTML = '<div class="sa-modal"><h3 class="sa-display">PLANOS DE VENDA</h3>' +
+      '<p class="ref-note">Quando o plano do aluno vencer, ele vê estes planos e um botão para falar com você no WhatsApp. Deixe o nome em branco para esconder um plano.</p>' +
+      lista.map(function (p, i) {
+        return '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px">' +
+          '<strong>Plano ' + (i + 1) + '</strong>' +
+          '<input id="pvNome' + i + '" placeholder="Nome (ex.: Mensal)" maxlength="30" value="' + escapeAttr(p.nome || "") + '">' +
+          '<input id="pvPreco' + i + '" placeholder="Preço (ex.: R$ 150)" maxlength="30" value="' + escapeAttr(p.preco || "") + '">' +
+          '<input id="pvPeriodo' + i + '" placeholder="Período (ex.: 1 mês)" maxlength="30" value="' + escapeAttr(p.periodo || "") + '">' +
+          '</div>';
+      }).join("") +
+      '<label style="display:flex;flex-direction:column;gap:6px">WhatsApp para o aluno falar com você (DDI + DDD + número, ex.: 5548999999999)' +
+      '<input id="pvWhats" inputmode="numeric" maxlength="20" value="' + escapeAttr(cfg.whats || "") + '"></label>' +
+      '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">' +
+      '<button type="button" class="sa-cta-ghost" id="pvCancelar">Cancelar</button>' +
+      '<button type="button" class="sa-cta" id="pvSalvar">Salvar</button></div></div>';
+    document.body.appendChild(ov);
+    function fecha() { if (ov.parentNode) ov.parentNode.removeChild(ov); }
+    document.getElementById("pvCancelar").addEventListener("click", fecha);
+    ov.addEventListener("click", function (e) { if (e.target === ov) fecha(); });
+    document.getElementById("pvSalvar").addEventListener("click", function () {
+      var planos = [];
+      for (var i = 0; i < 3; i++) {
+        var nome = (document.getElementById("pvNome" + i).value || "").trim();
+        if (!nome) continue;
+        planos.push({ nome: nome, preco: (document.getElementById("pvPreco" + i).value || "").trim(), periodo: (document.getElementById("pvPeriodo" + i).value || "").trim() });
+      }
+      var whats = (document.getElementById("pvWhats").value || "").replace(/\D/g, "");
+      state.data.planosVenda = { planos: planos, whats: whats };
+      persistThen(function () { showToast("Planos salvos"); fecha(); });
+    });
+  }
+
   function renderExpiredLockout(s, plan) {
     document.getElementById("tabs").hidden = true;
     var stalePrint = document.getElementById("printArea");
     if (stalePrint) stalePrint.innerHTML = "";
     document.getElementById("headerControls").innerHTML =
       (!state.cameFromRoster ? '<a href="#" id="forgetAluno" class="link-btn" title="Sair e usar outro código de acesso">Trocar aluno</a>' : '');
+    var pv = state.data.planosVenda || {};
+    var planos = (pv.planos || []).filter(function (p) { return p && p.nome; });
+    var numero = String(pv.whats || "").replace(/\D/g, "");
+    var cards = planos.map(function (p) {
+      var txt = "Oi! Quero renovar meu acesso ao Treino Online, plano " + p.nome + ".";
+      var botao = numero
+        ? '<a class="sa-cta" href="https://wa.me/' + numero + '?text=' + encodeURIComponent(txt) + '" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none;margin-top:10px">Quero este plano</a>'
+        : '<p class="ref-note" style="margin:8px 0 0">Fale com seu treinador para contratar.</p>';
+      return '<div style="border:1px solid rgba(127,127,127,.35);border-radius:14px;padding:14px;text-align:left">' +
+        '<div style="font-weight:700;font-size:16px">' + escapeHtml(p.nome) + '</div>' +
+        (p.preco ? '<div style="font-size:20px;font-weight:800;margin-top:4px">' + escapeHtml(p.preco) + '</div>' : '') +
+        (p.periodo ? '<div class="ref-note" style="margin:2px 0 0">' + escapeHtml(p.periodo) + '</div>' : '') +
+        botao + '</div>';
+    }).join("");
+    var corpo = cards
+      ? '<p class="ref-note">Seu acesso terminou em <strong>' + escapeHtml(formatDateBR(plan.endDate)) + '</strong>. Escolha um plano para continuar.</p>' +
+        '<div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">' + cards + '</div>'
+      : '<p class="ref-note">Este plano de treino era válido até <strong>' + escapeHtml(formatDateBR(plan.endDate)) + '</strong> e não está mais disponível.</p>' +
+        '<p class="ref-note">Fale com seu treinador para renovar o acesso.</p>';
     document.getElementById("main").innerHTML =
       '<div class="panel expired-panel">' +
       '<div class="expired-icon">⏳</div>' +
-      '<h2>Seu plano expirou</h2>' +
-      '<p class="ref-note">Este plano de treino era válido até <strong>' + escapeHtml(formatDateBR(plan.endDate)) + '</strong> e não está mais disponível.</p>' +
-      '<p class="ref-note">Fale com seu treinador para renovar o acesso.</p>' +
-      '</div>';
+      '<h2>Seu plano expirou</h2>' + corpo + '</div>';
     var forgetLink = document.getElementById("forgetAluno");
     if (forgetLink) forgetLink.addEventListener("click", function (e) { e.preventDefault(); forgetMyAluno(); });
   }
@@ -13409,6 +13466,7 @@ function startApp() {
       '<div class="tr-topbar-actions">' + trBellHtml() +
       '<button type="button" id="btnCopyFormLink" class="tr-btn-outline">🔗 Link pra aluno novo</button>' +
       '<button type="button" id="btnAcervo" class="tr-btn-outline">🎬 Acervo de vídeos</button>' +
+      '<button type="button" id="btnPlanosVenda" class="tr-btn-outline">💳 Planos de venda</button>' +
       '<button type="button" id="btnTema" class="tr-btn-outline" title="Trocar entre escuro, claro e automático">' + temaRotulo() + '</button>' +
       '<button type="button" id="btnChangePin" class="tr-btn-outline">' + (HAS_LOGIN ? "👤 Minha conta" : "Trocar PIN") + '</button></div></div>' +
       (!HAS_LOGIN && ROLE === "trainer" ? '<div class="lg-banner"><span>🔐 Crie seu login (e-mail + senha) e entre mais rápido, sem digitar o PIN toda vez.</span><button type="button" id="btnCriarLogin">Criar agora</button></div>' : "") +

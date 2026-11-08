@@ -270,7 +270,7 @@ async function getState(req: Request, url: URL, deps: Deps, now: number): Promis
     }
     return reply(200, {
       version: st.version, role: "student",
-      data: { students: { [slug]: rec }, templates: [], leads: [], alertaCheckinDias: st.data?.alertaCheckinDias || 7 },
+      data: { students: { [slug]: rec }, templates: [], leads: [], alertaCheckinDias: st.data?.alertaCheckinDias || 7, planosVenda: st.data?.planosVenda || null },
       catalog: st.catalog || [],
     });
   }

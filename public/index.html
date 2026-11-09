@@ -602,6 +602,12 @@
     min-height: 34px; field-sizing: content;
   }
   @media (max-width: 640px) {
+    /* Celular: o nome completo aparece na sugestão (antes cortava com "…" e
+       exercícios parecidos viravam "duplicados" na lista) e o campo usa 16px
+       pra o iPhone não dar zoom ao digitar. */
+    .ex-name-input, textarea.ex-name-input { font-size: 16px; }
+    .ex-suggestion-item { padding: 10px 12px; flex-wrap: wrap; row-gap: 5px; }
+    .ex-suggestion-name { flex: 1 1 100%; white-space: normal; overflow: visible; text-overflow: clip; line-height: 1.25; }
     .ex-card-head { flex-wrap: wrap; justify-content: flex-end; }
     .ex-card-head .ex-name-wrap { flex: 1 1 100%; }
     .bloco-toolbar { flex-wrap: wrap; }
@@ -4220,6 +4226,15 @@ function startApp() {
   // caixa aberta ao rolar/redimensionar (os campos são recriados a cada render,
   // então listeners por campo vazariam).
   var acActive = null;
+  // Área realmente visível: com o teclado do celular aberto, a janela visual
+  // encolhe (visualViewport) mas innerHeight não -- antes a caixa calculava
+  // espaço embaixo do teclado e ficava escondida atrás dele.
+  function acViewport() {
+    var vv = window.visualViewport;
+    if (vv) return { top: vv.offsetTop, h: vv.height };
+    return { top: 0, h: window.innerHeight || document.documentElement.clientHeight };
+  }
+  function acIsNarrow() { return window.matchMedia && window.matchMedia("(max-width: 640px)").matches; }
   function acReposition() {
     if (!acActive || acActive.box.hidden) return;
     var r = acActive.input.getBoundingClientRect();
@@ -4227,22 +4242,37 @@ function startApp() {
     // e cortava os nomes: "COSTAS REMADA V…")
     var cardEl = acActive.wrap.closest(".ex-card") || acActive.wrap;
     var wr = cardEl.getBoundingClientRect();
-    var vh = window.innerHeight || document.documentElement.clientHeight;
-    var below = vh - r.bottom - 12, above = r.top - 12;
+    var vp = acViewport();
+    var edgeBottom = vp.top + vp.h - 8, edgeTop = vp.top + 8;
+    var below = edgeBottom - r.bottom - 4, above = r.top - edgeTop - 4;
     var st = acActive.box.style;
     st.position = "fixed"; st.left = wr.left + "px"; st.width = wr.width + "px"; st.right = "auto";
-    if (below >= 200 || below >= above) {
-      st.top = (r.bottom + 4) + "px"; st.bottom = "auto"; st.maxHeight = Math.max(120, Math.min(340, below)) + "px";
+    if (below >= 170 || below >= above) {
+      st.top = (r.bottom + 4) + "px"; st.bottom = "auto"; st.maxHeight = Math.max(110, Math.min(300, below)) + "px";
     } else {
-      st.bottom = (vh - r.top + 4) + "px"; st.top = "auto"; st.maxHeight = Math.max(120, Math.min(340, above)) + "px";
+      st.bottom = ((window.innerHeight || document.documentElement.clientHeight) - r.top + 4) + "px"; st.top = "auto";
+      st.maxHeight = Math.max(110, Math.min(300, above)) + "px";
     }
+  }
+  // No celular, ao abrir o teclado o campo que está sendo digitado sobe para a
+  // parte de cima da área visível, com espaço para a lista de sugestões embaixo.
+  function acRevealField(input) {
+    if (!input || !acIsNarrow() || document.activeElement !== input) return;
+    var vp = acViewport();
+    var r = input.getBoundingClientRect();
+    var want = vp.top + Math.min(vp.h * 0.3, 190);
+    var delta = (r.top + r.height / 2) - want;
+    if (Math.abs(delta) > 6) window.scrollBy({ top: delta, behavior: "smooth" });
   }
   window.addEventListener("scroll", acReposition, true);
   window.addEventListener("resize", acReposition);
   window.addEventListener("resize", function () {
     Array.prototype.forEach.call(document.querySelectorAll("textarea.ex-name-input"), autoGrowName);
   });
-  if (window.visualViewport) window.visualViewport.addEventListener("resize", acReposition);
+  if (window.visualViewport) window.visualViewport.addEventListener("resize", function () {
+    acReposition();
+    if (acActive && document.activeElement === acActive.input) acRevealField(acActive.input);
+  });
 
   function wireAllExerciseNameAutocompletes() {
     Array.prototype.forEach.call(document.querySelectorAll(".ex-name-input"), function (input) {
@@ -4293,7 +4323,10 @@ function startApp() {
       }
 
       input.addEventListener("input", renderSuggestions);
-      input.addEventListener("focus", function () { if (input.value.trim()) renderSuggestions(); });
+      input.addEventListener("focus", function () {
+        if (input.value.trim()) renderSuggestions();
+        setTimeout(function () { acRevealField(input); acReposition(); }, 350);
+      });
       input.addEventListener("blur", function () { setTimeout(function () { box.hidden = true; if (acActive && acActive.box === box) acActive = null; }, 150); });
       // mousedown fires before the input's blur, so preventDefault here
       // keeps focus/selection sane; the actual pick happens on click.
@@ -5570,6 +5603,48 @@ function startApp() {
       .then(function (body) { return body.url; });
   }
 
+  // Possíveis duplicados no acervo. Mesmo movimento com grupo diferente NÃO é
+  // duplicado ("GLÚTEO COICE" x "TRÍCEPS COICE"). Dois itens são suspeitos quando
+  // têm o mesmo núcleo de nome (sem acento, ordem das palavras e palavras de ligação)
+  // e o grupo no começo do nome bate, ou um dos dois não tem grupo escrito
+  // ("LEG PRESS HORIZONTAL" x "COXA LEG PRESS HORIZONTAL"). Ou quando dividem o mesmo
+  // link de vídeo. Só MARCA -- nada é apagado aqui: quem remove é o ✕ do item.
+  var ACERVO_PREFIXOS_GRUPO = ["POSTERIOR DE COXA", "ABDOMEN CORE", "ABDOMEN", "COXA", "GLUTEO", "OMBRO", "COSTAS", "PEITO", "BICEPS", "TRICEPS", "PANTURRILHA", "ANTEBRACO"];
+  var ACERVO_LIGACOES = ["COM", "DE", "DA", "DO", "NA", "NO", "EM", "E", "A", "O", "PARA", "POR", "SOBRE", "PELO", "PELA"];
+  function acervoNomePartes(nome) {
+    var n = foldAccents(String(nome || "")).toUpperCase().replace(/\([^)]*\)/g, " ").replace(/[^A-Z0-9 ]+/g, " ").replace(/\s+/g, " ").trim();
+    var grupo = "";
+    for (var i = 0; i < ACERVO_PREFIXOS_GRUPO.length; i++) {
+      if (n.indexOf(ACERVO_PREFIXOS_GRUPO[i] + " ") === 0) { grupo = ACERVO_PREFIXOS_GRUPO[i]; n = n.slice(grupo.length + 1); break; }
+    }
+    var toks = n.split(" ").filter(function (t) { return t && ACERVO_LIGACOES.indexOf(t) === -1; });
+    toks = toks.filter(function (t, idx) { return toks.indexOf(t) === idx; }).sort();
+    return { nucleo: toks.join(" "), grupo: grupo };
+  }
+  function acervoDuplicados() {
+    var porNucleo = {}, porVideo = {}, marca = [], grupos = 0;
+    CATALOG.forEach(function (ex, i) {
+      var partes = acervoNomePartes(ex.nome);
+      if (partes.nucleo) (porNucleo[partes.nucleo] = porNucleo[partes.nucleo] || []).push({ i: i, grupo: partes.grupo });
+      var v = (ex.video || "").trim();
+      if (v) (porVideo[v] = porVideo[v] || []).push(i);
+    });
+    Object.keys(porNucleo).forEach(function (k) {
+      var lista = porNucleo[k];
+      var achou = false;
+      for (var a = 0; a < lista.length; a++) for (var b = a + 1; b < lista.length; b++) {
+        var ga = lista[a].grupo, gb = lista[b].grupo;
+        if (ga === gb || ga === "" || gb === "") { marca[lista[a].i] = true; marca[lista[b].i] = true; achou = true; }
+      }
+      if (achou) grupos++;
+    });
+    Object.keys(porVideo).forEach(function (v) {
+      if (porVideo[v].length > 1) { grupos++; porVideo[v].forEach(function (i) { marca[i] = true; }); }
+    });
+    var itens = 0; CATALOG.forEach(function (ex, i) { if (marca[i]) itens++; });
+    return { marca: marca, grupos: grupos, itens: itens };
+  }
+
   function renderAcervo() {
     document.body.classList.add("sa-active");
     document.getElementById("tabs").hidden = true;
@@ -5581,7 +5656,9 @@ function startApp() {
     var dim = ACERVO_GROUP_DIMENSIONS[state.acervoGroupBy];
     var groupOrder = dim.options.concat([dim.sem]);
     var byGroup = {};
-    CATALOG.forEach(function (ex) {
+    var dupInfo = acervoDuplicados();
+    CATALOG.forEach(function (ex, idxCat) {
+      if (state.acervoSoDuplicados && !dupInfo.marca[idxCat]) return;
       var g = ex[state.acervoGroupBy] || dim.sem;
       if (!byGroup[g]) byGroup[g] = [];
       byGroup[g].push(ex);
@@ -5637,6 +5714,9 @@ function startApp() {
     }).length;
 
     var groupOrderToRender = activeFilterLabel ? groupOrder.filter(function (g) { return g === activeFilterLabel; }) : groupOrder;
+    var avisoDuplicadosHtml = state.acervoSoDuplicados
+      ? '<p class="roster-note" style="margin:10px 0">' + dupInfo.grupos + ' grupo(s) com nome parecido ou o mesmo vídeo. Confira e apague com o ✕ os que sobram. Nada é apagado sem você clicar.</p>'
+      : '';
 
     var rowsHtml = CATALOG.length ? groupOrderToRender.filter(function (g) { return byGroup[g] && byGroup[g].length; }).map(function (g) {
       var lastSerie = null;
@@ -5690,6 +5770,7 @@ function startApp() {
       '<button type="button" class="btn-secondary" id="btnExportCatalog">📋 Copiar lista completa</button>' +
       (CATALOG.filter(function (c) { return !c.exec && !mobInfo(c) && execPadrao(c.nome); }).length ? '<button type="button" class="btn-secondary" id="btnFillExec">✍️ Preencher "como fazer" (' + CATALOG.filter(function (c) { return !c.exec && !mobInfo(c) && execPadrao(c.nome); }).length + ')</button>' : '') +
       '<button type="button" class="btn-secondary" id="btnPendingVideos">🎥 Falta gravar (' + CATALOG.filter(function (c) { return !(c.video || "").trim(); }).length + ')</button>' +
+      '<button type="button" class="btn-secondary' + (state.acervoSoDuplicados ? ' active' : '') + '" id="btnSoDuplicados">🔁 ' + (state.acervoSoDuplicados ? 'Voltar a lista completa' : 'Ver duplicados (' + dupInfo.itens + ')') + '</button>' +
       '<button type="button" class="btn-secondary" id="btnBulkAddCatalog">📥 Adicionar em lote</button>' +
       '<button type="button" class="btn-secondary" id="btnEssentialMachines">🏋️ Máquinas essenciais</button>' +
       (pendingPadronizacao ? '<button type="button" class="btn-secondary" id="btnPadronizarNomes">🔤 Padronizar nomes (' + pendingPadronizacao + ')</button>' : '') +
@@ -5703,10 +5784,16 @@ function startApp() {
       '<select id="newCatalogGrupo" class="roster-add-select">' + optionsFor("grupoMuscular", activeFilterLabel && activeFilterLabel !== dim.sem && state.acervoGroupBy === "grupoMuscular" ? activeFilterLabel : "") + '</select>' +
       '<button type="button" class="primary" id="btnAddCatalog">+ Adicionar ao acervo</button>' +
       '</div>' +
-      rowsHtml +
+      avisoDuplicadosHtml + rowsHtml +
       '<p class="ref-note" id="acervoSearchEmpty" style="display:none">Nenhum exercício encontrado com esse nome.</p>' +
       '</div></div></div>';
     trWireTabs(); trWireTopbar(); trcLoad(false);
+
+    var btnDup = document.getElementById("btnSoDuplicados");
+    if (btnDup) btnDup.addEventListener("click", function () {
+      state.acervoSoDuplicados = !state.acervoSoDuplicados;
+      renderAcervo();
+    });
 
     Array.prototype.forEach.call(document.querySelectorAll("[data-groupby]"), function (btn) {
       btn.addEventListener("click", function () {

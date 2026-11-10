@@ -10051,10 +10051,38 @@ function startApp() {
       return '<div style="position:relative;background:#101a31;border:1px solid ' + (dest ? '#ffc247' : '#1f2b4a') + ';border-radius:16px;padding:' + (dest ? '20px' : '18px') + ' 16px 16px;color:#eef2ff;text-align:left;' + (dest ? 'box-shadow:0 14px 34px -18px rgba(255,194,71,.55);' : '') + '">' +
         (dest ? '<span style="position:absolute;top:-11px;left:16px;background:#ffc247;color:#080d1a;font:800 11px/1 Barlow,sans-serif;letter-spacing:.08em;text-transform:uppercase;padding:6px 10px;border-radius:999px">Melhor valor</span>' : '') +
         '<div style="font-family:' + FONTE_TITULO + ';font-style:italic;font-weight:900;text-transform:uppercase;font-size:22px;letter-spacing:.02em">' + escapeHtml(p.nome) + '</div>' +
-        (p.preco ? '<div style="margin-top:6px;font-family:' + FONTE_TITULO + ';font-style:italic;font-weight:900;font-size:40px;line-height:1;color:' + (dest ? '#ffc247' : '#eef2ff') + '">' + escapeHtml(p.preco) + (p.periodo ? '<span style="font-family:Barlow,sans-serif;font-style:normal;font-weight:500;font-size:15px;color:#9fb0d6"> / ' + escapeHtml(p.periodo) + '</span>' : '') + '</div>' : '') +
+        (p.preco ? '<div style="margin-top:6px;font-family:' + FONTE_TITULO + ';font-style:italic;font-weight:900;font-size:40px;line-height:1;color:' + (dest ? '#ffc247' : '#eef2ff') + '">' + escapeHtml(p.preco) + (p.periodo ? '<span style="font-family:Barlow,sans-serif;font-style:normal;font-weight:500;font-size:15px;color:#9fb0d6"> / ' + escapeHtml(String(p.periodo).replace(/^\s*\/\s*/, "")) + '</span>' : '') + '</div>' : '') +
         (p.desc ? '<div style="margin-top:8px;font-size:14px;color:#9fb0d6">' + escapeHtml(p.desc) + '</div>' : '') +
         botaoCartao + botao + '</div>';
     }).join("");
+  }
+  // Chave Pix com botão de copiar (tela de plano vencido e oferta depois do treino).
+  function pixBlocoHtml(pv) {
+    var chave = String((pv && pv.pix) || "").trim();
+    if (!chave) return "";
+    var numero = String(pv.whats || "").replace(/\D/g, "");
+    return '<div class="pv-pix" style="margin-top:14px;padding:14px 16px;border-radius:16px;border:1px solid rgba(56,211,159,.5);background:#0f2230;color:#eef2ff;text-align:left">' +
+      '<div style="font:800 12px Barlow,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#38d39f">⚡ Pagar com Pix</div>' +
+      '<div style="margin-top:8px;font:600 16px/1.35 ui-monospace,Menlo,Consolas,monospace;overflow-wrap:anywhere;user-select:all" data-pix-chave>' + escapeHtml(chave) + '</div>' +
+      '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">' +
+      '<button type="button" data-pix-copiar style="flex:1 1 140px;padding:11px;border:0;border-radius:999px;background:#38d39f;color:#06261a;font:800 15px Barlow,sans-serif;cursor:pointer">Copiar chave Pix</button>' +
+      (numero ? '<a href="https://wa.me/' + numero + '?text=' + encodeURIComponent("Oi! Paguei por Pix o Treino Online. Segue o comprovante.") + '" target="_blank" rel="noopener" style="flex:1 1 140px;text-align:center;text-decoration:none;padding:11px;border-radius:999px;border:1.5px solid rgba(56,211,159,.6);color:#eef2ff;font:800 15px Barlow,sans-serif">Enviar comprovante</a>' : '') +
+      '</div><div data-pix-ok style="margin-top:8px;font-size:13px;color:#38d39f"></div></div>';
+  }
+  function pixBind(raiz) {
+    if (!raiz) return;
+    Array.prototype.forEach.call(raiz.querySelectorAll("[data-pix-copiar]"), function (b) {
+      b.addEventListener("click", function () {
+        var box = b.closest(".pv-pix"), chaveEl = box.querySelector("[data-pix-chave]"), ok = box.querySelector("[data-pix-ok]");
+        var feito = function () { ok.textContent = "Chave copiada. Cole no app do seu banco, na área Pix."; };
+        var falha = function () {
+          var rg = document.createRange(); rg.selectNodeContents(chaveEl);
+          var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(rg);
+          ok.textContent = "Selecionei a chave: toque e segure para copiar.";
+        };
+        try { navigator.clipboard.writeText(chaveEl.textContent).then(feito, falha); } catch (e) { falha(); }
+      });
+    });
   }
   // Depois de concluir um treino: se o personal ligou a oferta para este aluno, mostra os planos.
   function ofertaPlanosDepoisTreino(s) {
@@ -10066,11 +10094,12 @@ function startApp() {
     ov.className = "sa-modal-overlay"; ov.id = "ofertaPlanosOv";
     ov.innerHTML = '<div class="sa-modal"><h3 class="sa-display">ESCOLHA O SEU RITMO</h3>' +
       '<p class="sa-modal-sub">Quanto mais tempo você se compromete, menor o valor por mês.</p>' +
-      '<div style="display:flex;flex-direction:column;gap:14px;margin:16px 0">' + planosCardsHtml(pv) + '</div>' +
+      '<div style="display:flex;flex-direction:column;gap:14px;margin:16px 0">' + planosCardsHtml(pv) + pixBlocoHtml(pv) + '</div>' +
       '<a class="sa-cta-ghost" href="' + escapeAttr(renovarUrl(s, false)) + '" style="display:block;text-align:center;text-decoration:none;margin-bottom:10px">Ver benefícios, videochamada e formas de pagamento</a>' +
       '<button type="button" class="sa-post-skip" id="ofertaFechar">Agora não</button></div>';
     document.body.appendChild(ov);
     function fecha() { if (ov.parentNode) ov.parentNode.removeChild(ov); }
+    pixBind(ov);
     document.getElementById("ofertaFechar").addEventListener("click", fecha);
     ov.addEventListener("click", function (e) { if (e.target === ov) fecha(); });
   }
@@ -10085,7 +10114,7 @@ function startApp() {
     var cards = planosCardsHtml(pv);
     var corpo = cards
       ? '<p class="ref-note">Seu acesso terminou em <strong>' + escapeHtml(formatDateBR(plan.endDate)) + '</strong>. Escolha um plano para continuar.</p>' +
-        '<div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">' + cards + '</div>'
+        '<div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">' + cards + pixBlocoHtml(pv) + '</div>'
       : '<p class="ref-note">Este plano de treino era válido até <strong>' + escapeHtml(formatDateBR(plan.endDate)) + '</strong> e não está mais disponível.</p>' +
         '<p class="ref-note">Fale com seu treinador para renovar o acesso.</p>';
     var gratisAcabou = mesGratisAcabou(s, plan);
@@ -10103,6 +10132,7 @@ function startApp() {
       try { jaAbriu = sessionStorage.getItem("renovarAberta") === plan.endDate; sessionStorage.setItem("renovarAberta", plan.endDate); } catch (e) {}
       if (!jaAbriu) { location.assign(urlRenovar); return; }
     }
+    pixBind(document.getElementById("main"));
     var forgetLink = document.getElementById("forgetAluno");
     if (forgetLink) forgetLink.addEventListener("click", function (e) { e.preventDefault(); forgetMyAluno(); });
   }

@@ -363,7 +363,7 @@
     art.appendChild(el("h3", null, String(p.nome).slice(0, 30)));
     if (p.preco) {
       var pr = el("p", "preco"); pr.appendChild(el("b", null, String(p.preco).slice(0, 30)));
-      if (p.periodo) pr.appendChild(el("span", null, String(p.periodo).slice(0, 30)));
+      if (p.periodo) pr.appendChild(el("span", null, "/ " + String(p.periodo).replace(/^\s*\/\s*/, "").slice(0, 30)));
       art.appendChild(pr);
     }
     if (p.desc) art.appendChild(el("p", "sub", String(p.desc).slice(0, 80)));

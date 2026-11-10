@@ -9923,11 +9923,15 @@ function startApp() {
           '<input id="pvPreco' + i + '" placeholder="Preço (ex.: R$ 150)" maxlength="30" value="' + escapeAttr(p.preco || "") + '">' +
           '<input id="pvPeriodo' + i + '" placeholder="Período (ex.: 1 mês)" maxlength="30" value="' + escapeAttr(p.periodo || "") + '">' +
           '<input id="pvDesc' + i + '" placeholder="Descrição (ex.: Pagamento de R$ 480 a cada 6 meses)" maxlength="80" value="' + escapeAttr(p.desc || "") + '">' +
+          '<input id="pvLink' + i + '" type="url" inputmode="url" placeholder="Link de pagamento com cartão (https://…)" maxlength="300" value="' + escapeAttr(p.link || "") + '">' +
           '<label style="display:flex;gap:8px;align-items:center;font-size:14px"><input type="radio" name="pvDestaque" value="' + i + '"' + (p.destaque ? " checked" : "") + ' style="width:auto"> ⭐ Marcar como “Melhor valor”</label>' +
           '</div>';
       }).join("") +
       '<label style="display:flex;flex-direction:column;gap:6px">WhatsApp para o aluno falar com você (DDI + DDD + número, ex.: 5548999999999)' +
       '<input id="pvWhats" inputmode="numeric" maxlength="20" value="' + escapeAttr(cfg.whats || "") + '"></label>' +
+      '<label style="display:flex;flex-direction:column;gap:6px;margin-top:10px">Chave Pix (CPF, e-mail, telefone ou chave aleatória)' +
+      '<input id="pvPix" maxlength="120" value="' + escapeAttr(cfg.pix || "") + '"></label>' +
+      '<p class="ref-note" style="margin-top:10px">O link de cartão vem do seu app de pagamento (Mercado Pago, InfinitePay, PagSeguro…): crie um link para cada plano e cole aqui. Quando o mês grátis de um aluno acaba, ele vê uma página com os benefícios, a videochamada mensal e estes planos para pagar.</p>' +
       '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">' +
       '<button type="button" class="sa-cta-ghost" id="pvCancelar">Cancelar</button>' +
       '<button type="button" class="sa-cta" id="pvSalvar">Salvar</button></div></div>';
@@ -9941,12 +9945,40 @@ function startApp() {
         var nome = (document.getElementById("pvNome" + i).value || "").trim();
         if (!nome) continue;
         var rad = document.querySelector('input[name="pvDestaque"]:checked');
-        planos.push({ nome: nome, preco: (document.getElementById("pvPreco" + i).value || "").trim(), periodo: (document.getElementById("pvPeriodo" + i).value || "").trim(), desc: (document.getElementById("pvDesc" + i).value || "").trim(), destaque: !!rad && parseInt(rad.value, 10) === i });
+        planos.push({ nome: nome, preco: (document.getElementById("pvPreco" + i).value || "").trim(), periodo: (document.getElementById("pvPeriodo" + i).value || "").trim(), desc: (document.getElementById("pvDesc" + i).value || "").trim(), destaque: !!rad && parseInt(rad.value, 10) === i , link: pvLinkLimpo(document.getElementById("pvLink" + i).value) });
       }
       var whats = (document.getElementById("pvWhats").value || "").replace(/\D/g, "");
-      state.data.planosVenda = { planos: planos, whats: whats };
+      var pixChave = (document.getElementById("pvPix").value || "").trim().slice(0, 120);
+      state.data.planosVenda = { planos: planos, whats: whats, pix: pixChave };
       persistThen(function () { showToast("Planos salvos"); fecha(); });
     });
+  }
+
+  // Só aceita link https (nada de javascript: ou texto solto).
+  function pvLinkLimpo(u) {
+    u = String(u || "").trim();
+    if (u && !/^https?:\/\//i.test(u)) u = "https://" + u;
+    return /^https:\/\/[^\s"'<>]+$/i.test(u) ? u.slice(0, 300) : "";
+  }
+  // Página de renovação (/renovar.html): benefícios, videochamada mensal, planos e pagamento.
+  // Os dados vão no próprio endereço, então a página não precisa de login.
+  function renovarUrl(s, mesGratis) {
+    var pv = state.data.planosVenda || {};
+    var dados = {
+      n: (s && s.nome) || "",
+      g: mesGratis ? 1 : 0,
+      w: String(pv.whats || "").replace(/\D/g, ""),
+      x: pv.pix || "",
+      p: (pv.planos || []).filter(function (p) { return p && p.nome; }).map(function (p) {
+        return { nome: p.nome, preco: p.preco || "", periodo: p.periodo || "", desc: p.desc || "", destaque: !!p.destaque, link: pvLinkLimpo(p.link) };
+      })
+    };
+    var bytes = new TextEncoder().encode(JSON.stringify(dados)), bin = "";
+    for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return "/renovar.html#d=" + btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+  function mesGratisAcabou(s, plan) {
+    return !!(s && s.mesGratisEm && plan && plan.endDate && plan.endDate > s.mesGratisEm && isPlanExpired(plan));
   }
 
   // ---------- Seleção de alunos (1 mês grátis e oferta de planos) ----------
@@ -10009,6 +10041,10 @@ function startApp() {
     return planos.map(function (p) {
       var dest = !!p.destaque;
       var txt = "Oi! Quero o plano " + p.nome + " do Treino Online.";
+      var linkCartao = pvLinkLimpo(p.link);
+      var botaoCartao = linkCartao
+        ? '<a href="' + escapeAttr(linkCartao) + '" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none;margin-top:14px;padding:12px;border-radius:999px;font:800 15px Barlow,sans-serif;background:#ffc247;color:#080d1a">💳 Pagar com cartão</a>'
+        : '';
       var botao = numero
         ? '<a href="https://wa.me/' + numero + '?text=' + encodeURIComponent(txt) + '" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none;margin-top:14px;padding:12px;border-radius:999px;font:800 15px Barlow,sans-serif;' + (dest ? 'background:#ffc247;color:#080d1a;' : 'border:1px solid #2e6bff;color:#eef2ff;') + '">Quero este plano</a>'
         : '<p style="margin:12px 0 0;font-size:14px;color:#9fb0d6">Fale com seu treinador para contratar.</p>';
@@ -10017,7 +10053,7 @@ function startApp() {
         '<div style="font-family:' + FONTE_TITULO + ';font-style:italic;font-weight:900;text-transform:uppercase;font-size:22px;letter-spacing:.02em">' + escapeHtml(p.nome) + '</div>' +
         (p.preco ? '<div style="margin-top:6px;font-family:' + FONTE_TITULO + ';font-style:italic;font-weight:900;font-size:40px;line-height:1;color:' + (dest ? '#ffc247' : '#eef2ff') + '">' + escapeHtml(p.preco) + (p.periodo ? '<span style="font-family:Barlow,sans-serif;font-style:normal;font-weight:500;font-size:15px;color:#9fb0d6"> / ' + escapeHtml(p.periodo) + '</span>' : '') + '</div>' : '') +
         (p.desc ? '<div style="margin-top:8px;font-size:14px;color:#9fb0d6">' + escapeHtml(p.desc) + '</div>' : '') +
-        botao + '</div>';
+        botaoCartao + botao + '</div>';
     }).join("");
   }
   // Depois de concluir um treino: se o personal ligou a oferta para este aluno, mostra os planos.
@@ -10031,6 +10067,7 @@ function startApp() {
     ov.innerHTML = '<div class="sa-modal"><h3 class="sa-display">ESCOLHA O SEU RITMO</h3>' +
       '<p class="sa-modal-sub">Quanto mais tempo você se compromete, menor o valor por mês.</p>' +
       '<div style="display:flex;flex-direction:column;gap:14px;margin:16px 0">' + planosCardsHtml(pv) + '</div>' +
+      '<a class="sa-cta-ghost" href="' + escapeAttr(renovarUrl(s, false)) + '" style="display:block;text-align:center;text-decoration:none;margin-bottom:10px">Ver benefícios, videochamada e formas de pagamento</a>' +
       '<button type="button" class="sa-post-skip" id="ofertaFechar">Agora não</button></div>';
     document.body.appendChild(ov);
     function fecha() { if (ov.parentNode) ov.parentNode.removeChild(ov); }
@@ -10051,10 +10088,21 @@ function startApp() {
         '<div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">' + cards + '</div>'
       : '<p class="ref-note">Este plano de treino era válido até <strong>' + escapeHtml(formatDateBR(plan.endDate)) + '</strong> e não está mais disponível.</p>' +
         '<p class="ref-note">Fale com seu treinador para renovar o acesso.</p>';
+    var gratisAcabou = mesGratisAcabou(s, plan);
+    var urlRenovar = renovarUrl(s, gratisAcabou);
+    var temPlanos = (pv.planos || []).some(function (p) { return p && p.nome; });
     document.getElementById("main").innerHTML =
       '<div class="panel expired-panel">' +
       '<div class="expired-icon">⏳</div>' +
-      '<h2>Seu plano expirou</h2>' + corpo + '</div>';
+      '<h2>' + (gratisAcabou ? 'Seu mês grátis terminou' : 'Seu plano expirou') + '</h2>' +
+      (temPlanos ? '<a class="sa-cta" href="' + escapeAttr(urlRenovar) + '" style="display:block;text-align:center;text-decoration:none;margin:14px 0">Ver benefícios e formas de pagamento</a>' : '') +
+      corpo + '</div>';
+    // Fim do mês grátis: abre a página de renovação uma vez por sessão (o personal vendo como aluno não é levado).
+    if (gratisAcabou && temPlanos && !state.trainerPreview && !state.atendimento && !state.cameFromRoster) {
+      var jaAbriu = false;
+      try { jaAbriu = sessionStorage.getItem("renovarAberta") === plan.endDate; sessionStorage.setItem("renovarAberta", plan.endDate); } catch (e) {}
+      if (!jaAbriu) { location.assign(urlRenovar); return; }
+    }
     var forgetLink = document.getElementById("forgetAluno");
     if (forgetLink) forgetLink.addEventListener("click", function (e) { e.preventDefault(); forgetMyAluno(); });
   }

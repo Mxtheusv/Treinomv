@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Continue treinando · Método Venâncio</title>
+<meta name="description" content="Planos, formas de pagamento e benefícios para continuar o acompanhamento de treino com Matheus Venâncio.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#080d1a">
+<link rel="icon" href="/icons/icon-192.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@1,800;1,900&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080d1a; --bg2: #0c1428; --panel: #101a31; --line: rgba(140,165,225,.18);
+    --ink: #eef2ff; --soft: #a3b0d0; --faint: #6f7ea5;
+    --gold: #ffc220; --gold-ink: #1a1300; --blue: #2e6bff; --teal: #38d39f;
+    --display: "Barlow Condensed", "Arial Narrow", Impact, sans-serif;
+    --body: "Barlow", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 17px/1.55 var(--body); -webkit-font-smoothing: antialiased; padding-bottom: env(safe-area-inset-bottom, 0); }
+  img { max-width: 100%; display: block; }
+  a { color: inherit; }
+  .wrap { width: min(1080px, 100% - 40px); margin-inline: auto; }
+  h1, h2, h3 { font-family: var(--display); font-style: italic; font-weight: 900; text-transform: uppercase; line-height: .98; margin: 0; text-wrap: balance; letter-spacing: .005em; }
+  h2 { font-size: clamp(34px, 6vw, 54px); }
+  h3 { font-size: 24px; }
+  p { margin: 0; }
+  .eyebrow { font-weight: 700; font-size: 13px; letter-spacing: .16em; text-transform: uppercase; color: var(--gold); }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 0; cursor: pointer; text-decoration: none; font: 700 17px/1 var(--body); padding: 17px 28px; border-radius: 999px; background: var(--gold); color: var(--gold-ink); box-shadow: 0 8px 30px rgba(255,194,32,.22); transition: transform .15s, box-shadow .15s; }
+  .btn:hover { transform: translateY(-1px); box-shadow: 0 10px 34px rgba(255,194,32,.34); }
+  .btn:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+  .btn.ghost { background: transparent; color: var(--ink); border: 1.5px solid var(--line); box-shadow: none; }
+  .btn.ghost:hover { border-color: var(--gold); box-shadow: none; }
+
+  /* topo */
+  .top { position: sticky; top: 0; z-index: 20; background: rgba(8,13,26,.86); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); padding-top: env(safe-area-inset-top, 0); }
+  .top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 62px; }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; min-width: 0; }
+  .brand img { width: 36px; height: 36px; border-radius: 9px; }
+  .brand b { font-family: var(--display); font-style: italic; font-weight: 900; text-transform: uppercase; font-size: 19px; line-height: 1; white-space: nowrap; }
+  .brand small { display: block; font-size: 11.5px; color: var(--soft); letter-spacing: .02em; }
+  .top .btn { padding: 11px 18px; font-size: 14.5px; box-shadow: none; }
+
+  /* herói */
+  .hero { position: relative; overflow: hidden; padding: 54px 0 70px; background: radial-gradient(1100px 520px at 85% -8%, rgba(46,107,255,.30), transparent 62%), radial-gradient(700px 420px at -5% 105%, rgba(255,194,32,.10), transparent 60%), var(--bg); }
+  .hero .wrap { display: grid; grid-template-columns: 1.1fr .9fr; gap: 48px; align-items: center; }
+  .hero h1 { font-size: clamp(44px, 9vw, 96px); margin: 14px 0 20px; }
+  .hero h1 em { font-style: italic; color: var(--gold); }
+  .lead { font-size: clamp(18px, 2.4vw, 21px); color: var(--soft); max-width: 34em; }
+  .lead b { color: var(--ink); font-weight: 600; }
+  .hero-cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+  .hero-note { margin-top: 16px; font-size: 14px; color: var(--faint); }
+  .phone { position: relative; width: min(300px, 78%); margin-inline: auto; border-radius: 38px; padding: 9px; background: linear-gradient(160deg, #26345c, #0e1730); box-shadow: 0 40px 80px rgba(0,0,0,.55), 0 0 0 1px rgba(140,165,225,.22); }
+  .phone img { border-radius: 30px; width: 100%; height: auto; }
+  .hero .phone { transform: rotate(3deg); }
+
+  /* seções */
+  section { padding: 76px 0; }
+  .alt { background: var(--bg2); border-block: 1px solid var(--line); }
+  .sec-head { max-width: 40em; margin-bottom: 40px; }
+  .sec-head h2 { margin-top: 12px; }
+  .sec-head p { margin-top: 16px; color: var(--soft); }
+
+  .dores { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .dor { padding: 24px; border: 1px solid var(--line); border-radius: 20px; background: var(--panel); }
+  .dor h3 { font-size: 26px; margin-bottom: 10px; }
+  .dor p { color: var(--soft); font-size: 16px; }
+
+  .passos { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; counter-reset: p; }
+  .passos li { counter-increment: p; position: relative; padding: 26px 22px 24px; border-radius: 20px; background: var(--panel); border: 1px solid var(--line); }
+  .passos li::before { content: counter(p); display: block; font: italic 900 56px/1 var(--display); color: var(--gold); margin-bottom: 10px; }
+  .passos h3 { font-size: 22px; margin-bottom: 8px; }
+  .passos p { font-size: 15.5px; color: var(--soft); }
+
+  .galeria { display: flex; gap: 26px; overflow-x: auto; padding: 6px 20px 26px; margin-inline: -20px; scroll-snap-type: x mandatory; scrollbar-width: thin; }
+  .shot { flex: 0 0 min(246px, 74vw); scroll-snap-align: center; }
+  .shot .phone { width: 100%; }
+  .shot figcaption { margin-top: 18px; }
+  .shot figcaption b { display: block; font: italic 900 22px/1.05 var(--display); text-transform: uppercase; margin-bottom: 6px; }
+  .shot figcaption span { color: var(--soft); font-size: 15px; line-height: 1.45; display: block; }
+  .shot { margin: 0; }
+
+  .recebe { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px 40px; list-style: none; margin: 0; padding: 0; }
+  .recebe li { display: grid; grid-template-columns: 30px 1fr; gap: 12px; padding: 16px 0; border-top: 1px solid var(--line); }
+  .recebe li::before { content: "✓"; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: rgba(56,211,159,.16); color: var(--teal); font-weight: 800; font-size: 14px; margin-top: 2px; }
+  .recebe b { display: block; font-weight: 700; }
+  .recebe span { color: var(--soft); font-size: 15.5px; }
+
+  .quem { display: grid; grid-template-columns: .9fr 1.1fr; gap: 40px; align-items: center; }
+  .cred { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+  .cred li { padding: 15px 0; border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 16px; font-size: 16px; }
+  .cred li:last-child { border-bottom: 1px solid var(--line); }
+  .cred span { color: var(--soft); text-align: right; }
+  .quem p + p { margin-top: 14px; }
+  .quem p { color: var(--soft); }
+  .quem p b { color: var(--ink); }
+  .quem-foto { margin: 0 0 26px; }
+  .cert { margin: 26px 0 0; }
+  .cert img { width: 100%; height: auto; border-radius: 14px; border: 1px solid var(--line); box-shadow: 0 18px 40px rgba(0,0,0,.35); }
+  .cert figcaption { margin-top: 10px; color: var(--faint); font-size: 14px; }
+  .quem-foto img { width: 100%; max-width: 380px; aspect-ratio: 4 / 5; object-fit: cover; border-radius: 24px; border: 1px solid var(--line); box-shadow: 0 24px 60px rgba(0,0,0,.4); }
+
+  /* últimas vagas + planos */
+  .vagas { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; padding: 18px 22px; margin-bottom: 44px; border-radius: 18px; background: rgba(255,194,32,.08); border: 1px solid rgba(255,194,32,.45); }
+  .vagas-tag { font: italic 900 22px/1 var(--display); text-transform: uppercase; color: var(--gold-ink); background: var(--gold); padding: 10px 16px; border-radius: 999px; white-space: nowrap; }
+  .vagas p { flex: 1 1 280px; color: var(--soft); font-size: 16px; }
+  .planos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; align-items: stretch; }
+  .plano { position: relative; display: flex; flex-direction: column; padding: 30px 26px 26px; border-radius: 22px; background: var(--panel); border: 1px solid var(--line); }
+  .plano h3 { font-size: 26px; }
+  .plano .preco { display: flex; align-items: baseline; gap: 6px; margin-top: 14px; }
+  .plano .preco b { font: italic 900 60px/1 var(--display); color: var(--ink); }
+  .plano .preco span { color: var(--soft); font-size: 17px; }
+  .plano .sub { margin-top: auto; padding-top: 16px; color: var(--soft); font-size: 15.5px; }
+  .plano.destaque { border-color: var(--gold); box-shadow: 0 24px 60px rgba(255,194,32,.14); }
+  .plano.destaque .preco b { color: var(--gold); }
+  .selo { position: absolute; top: -13px; left: 26px; background: var(--gold); color: var(--gold-ink); font-weight: 800; font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase; padding: 6px 12px; border-radius: 999px; }
+  .planos-note { margin-top: 26px; color: var(--faint); font-size: 14.5px; }
+
+  /* formulário */
+  .form-sec { background: radial-gradient(900px 480px at 15% 0%, rgba(255,194,32,.12), transparent 60%), var(--bg); }
+  .form-grid { display: grid; grid-template-columns: .9fr 1.1fr; gap: 48px; align-items: start; }
+  .form-grid h2 { margin: 12px 0 16px; }
+  .form-grid .lead { margin-bottom: 22px; }
+  .garantias { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; color: var(--soft); font-size: 15.5px; }
+  .garantias li::before { content: "•"; color: var(--gold); font-weight: 900; margin-right: 10px; }
+  form { background: var(--panel); border: 1px solid var(--line); border-radius: 24px; padding: 28px; display: grid; gap: 16px; }
+  label { display: grid; gap: 7px; font-weight: 600; font-size: 14.5px; color: var(--ink); }
+  label small { font-weight: 400; color: var(--faint); }
+  input, select, textarea { font: 500 17px var(--body); color: var(--ink); background: #0a1122; border: 1.5px solid var(--line); border-radius: 12px; padding: 14px 15px; width: 100%; }
+  input::placeholder, textarea::placeholder { color: var(--faint); }
+  textarea { min-height: 84px; resize: vertical; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+  form .btn { width: 100%; padding: 19px; font-size: 18px; }
+  .consent { display: flex; gap: 10px; align-items: flex-start; font-weight: 400; font-size: 14.5px; color: var(--soft); }
+  .consent input { width: auto; margin-top: 3px; flex: none; }
+  .consent a { color: var(--gold); }
+  .fine { font-size: 13px; color: var(--faint); text-align: center; line-height: 1.45; }
+  .erro { color: #ff8f8f; font-size: 14.5px; text-align: center; display: none; }
+  .ok { display: none; text-align: center; padding: 38px 28px; background: var(--panel); border: 1px solid rgba(56,211,159,.4); border-radius: 24px; }
+  .ok .big { font: italic 900 38px/1 var(--display); text-transform: uppercase; color: var(--teal); margin-bottom: 12px; }
+  .ok p { color: var(--soft); }
+  .ok .btn { margin-top: 22px; }
+
+  .faq details { border-top: 1px solid var(--line); padding: 20px 0; }
+  .faq details:last-child { border-bottom: 1px solid var(--line); }
+  .faq summary { cursor: pointer; font-weight: 700; font-size: 18px; list-style: none; display: flex; justify-content: space-between; gap: 16px; align-items: center; }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after { content: "+"; font-size: 26px; color: var(--gold); line-height: 1; flex: none; }
+  .faq details[open] summary::after { content: "–"; }
+  .faq p { margin-top: 12px; color: var(--soft); max-width: 44em; }
+
+  footer { padding: 40px 0 120px; border-top: 1px solid var(--line); color: var(--faint); font-size: 14px; }
+  footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 14px; }
+  footer a { color: var(--soft); }
+
+  .sticky { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; padding: 12px 20px calc(12px + env(safe-area-inset-bottom, 0)); background: linear-gradient(to top, var(--bg) 60%, transparent); display: none; transition: transform .25s, opacity .25s; }
+  .sticky .btn { width: 100%; }
+  .sticky.off { transform: translateY(120%); opacity: 0; pointer-events: none; }
+
+  @media (max-width: 860px) {
+    section { padding: 56px 0; }
+    .hero { padding: 36px 0 54px; }
+    .hero .wrap, .quem, .form-grid { grid-template-columns: 1fr; gap: 34px; }
+    .hero .phone { transform: none; width: min(250px, 70%); }
+    .dores { grid-template-columns: 1fr; }
+    .passos { grid-template-columns: 1fr 1fr; }
+    .recebe { grid-template-columns: 1fr; }
+    .planos { grid-template-columns: 1fr; }
+    .brand small { display: none; }
+    .sticky { display: block; }
+  }
+  @media (max-width: 520px) {
+    body { font-size: 16.5px; }
+    .passos { grid-template-columns: 1fr; }
+    .two { grid-template-columns: 1fr; }
+    form { padding: 22px 18px; }
+    .hero-cta .btn { width: 100%; }
+    .top .btn { display: none; }
+  }
+  /* Depoimento autorizado (foto e texto autorizados por escrito) */
+  .depo-destaque { margin: 0; display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: 32px; align-items: start; }
+  .depo-destaque img { width: 100%; height: auto; border-radius: 20px; display: block; }
+  .depo-destaque blockquote { margin: 0 0 24px; }
+  .depo-destaque blockquote p { font-family: var(--display); font-weight: 900; font-style: italic; text-transform: uppercase; font-size: clamp(26px, 3.2vw, 34px); line-height: 1.12; color: var(--ink); text-wrap: balance; }
+  .depo-fala { font-size: 17px; color: var(--soft); margin: 0 0 16px; }
+  .depo-quem { color: var(--ink); margin-top: 20px; }
+  .depo-quem b { font-weight: 700; }
+  .depo-aviso { font-size: 14px; color: var(--faint); margin-top: 24px; }
+  @media (max-width: 760px) { .depo-destaque { grid-template-columns: 1fr; } .depo-destaque img { max-width: 420px; } }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .btn, .sticky { transition: none; } }
+
+  /* renovação: botões dos planos, formas de pagamento e Pix */
+  .plano > .sub { margin-top: 0; padding-top: 14px; }
+  .plano-acoes { margin-top: auto; padding-top: 18px; display: grid; gap: 10px; }
+  .plano-acoes .btn { width: 100%; padding: 15px 18px; font-size: 16px; }
+  .plano-acoes .sub { padding-top: 0; }
+  .pagamento { margin-top: 44px; padding: 28px; border-radius: 22px; background: var(--panel); border: 1px solid var(--line); }
+  .pagamento h3 { font-size: 26px; margin-bottom: 18px; }
+  .formas { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .formas li { display: grid; grid-template-columns: 40px 1fr; gap: 12px; align-items: start; }
+  .formas .ico { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: rgba(255,194,32,.12); font-size: 20px; }
+  .formas b { display: block; }
+  .formas span:last-child { color: var(--soft); font-size: 15px; }
+  .pix-box { margin-top: 24px; padding: 20px; border-radius: 16px; border: 1px solid rgba(56,211,159,.45); background: rgba(56,211,159,.06); display: grid; gap: 12px; }
+  .pix-label { font-size: 13px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--teal); }
+  .pix-box code { font: 600 18px/1.35 ui-monospace, Menlo, Consolas, monospace; color: var(--ink); overflow-wrap: anywhere; user-select: all; }
+  .pix-acoes { display: flex; flex-wrap: wrap; gap: 10px; }
+  .pix-ok { color: var(--teal); font-size: 15px; min-height: 1em; }
+  @media (max-width: 860px) { .formas { grid-template-columns: 1fr; } .pagamento { padding: 22px 18px; } .pix-acoes .btn { width: 100%; } }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#topo" aria-label="Início">
+      <img src="/icons/icon-192.png" alt="" width="36" height="36">
+      <span><b>Método Venâncio</b><small>Consultoria de treino</small></span>
+    </a>
+    <a class="btn" href="#planos">Continuar treinando</a>
+  </div>
+</header>
+
+<main id="topo">
+  <div class="hero">
+    <div class="wrap">
+      <div>
+        <div class="eyebrow" id="r-eyebrow">Seu mês grátis terminou</div>
+        <h1><span id="r-ola">Bora continuar</span> <em>no seu ritmo?</em></h1>
+        <p class="lead">Você já conhece o treino, o app e o acompanhamento. Escolha um plano para <b>seguir evoluindo sem parar</b>, com o mesmo cuidado do mês de teste e uma <b>videochamada todo mês</b> para revisar os seus treinos.</p>
+        <div class="hero-cta">
+          <a class="btn" href="#planos">Ver planos e pagamento</a>
+          <a class="btn ghost" href="#video">Como é a videochamada</a>
+        </div>
+        <p class="hero-note">Pague com cartão de crédito ou Pix. Seu histórico de treinos continua salvo.</p>
+      </div>
+      <div class="phone"><img src="/lp/hist.jpg" width="560" height="1149" alt="Tela do app com o histórico de treinos do aluno"></div>
+    </div>
+  </div>
+
+  <section class="alt" id="video">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="eyebrow">Novo no acompanhamento</div>
+        <h2>Uma videochamada por mês, agendada com você</h2>
+        <p>Todo mês a gente marca uma conversa por vídeo, com dia e horário combinados, para olhar juntos o que aconteceu nos seus treinos e planejar o próximo mês.</p>
+      </div>
+      <ol class="passos">
+        <li><h3>Agendamento</h3><p>No começo do mês eu te chamo para combinar o melhor dia e horário. Você recebe o convite com o link da chamada.</p></li>
+        <li><h3>Revisão dos treinos</h3><p>Olhamos as cargas, a frequência e a sua percepção de esforço que você registrou no app.</p></li>
+        <li><h3>Dúvidas e execução</h3><p>Você tira dúvidas de exercícios, conta como o corpo respondeu e falamos sobre dores ou limitações.</p></li>
+        <li><h3>Plano do próximo mês</h3><p>Saímos da chamada com as metas do mês e o treino ajustado para você.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="recebe">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="eyebrow">O que continua com você</div>
+        <h2>Benefícios do acompanhamento</h2>
+      </div>
+      <ul class="recebe">
+        <li><div><b>Videochamada mensal agendada</b><span>Uma conversa por vídeo todo mês para revisar os treinos e planejar o próximo mês.</span></div></li>
+        <li><div><b>Treino individual</b><span>Montado a partir da sua ficha de saúde, do seu nível e do tempo que você tem.</span></div></li>
+        <li><div><b>Ajuste de carga com dados</b><span>Olho o que você registrou e digo quando progredir, manter ou aliviar.</span></div></li>
+        <li><div><b>Correção de execução por vídeo</b><span>Você envia vídeos das suas séries e eu devolvo os ajustes de execução.</span></div></li>
+        <li><div><b>Metas do mês</b><span>Objetivos claros para treinar com direção, e não por impulso.</span></div></li>
+        <li><div><b>App com todo o seu histórico</b><span>Treinos, cargas e evolução continuam salvos e você segue de onde parou.</span></div></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="alt" id="planos">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="eyebrow">Planos e pagamento</div>
+        <h2>Escolha o seu ritmo</h2>
+        <p>Quanto mais tempo você se compromete, menor o valor por mês.</p>
+      </div>
+      <div class="planos" id="r-planos"></div>
+      <div class="pagamento" id="r-pagamento">
+        <h3>Formas de pagamento</h3>
+        <ul class="formas">
+          <li id="r-forma-cartao"><span class="ico" aria-hidden="true">💳</span><div><b>Cartão de crédito</b><span>Pelo link seguro de pagamento de cada plano.</span></div></li>
+          <li id="r-forma-pix"><span class="ico" aria-hidden="true">⚡</span><div><b>Pix</b><span>Copie a chave, pague no app do seu banco e me mande o comprovante.</span></div></li>
+          <li id="r-forma-whats"><span class="ico" aria-hidden="true">💬</span><div><b>Outra forma?</b><span>Me chame no WhatsApp e a gente combina.</span></div></li>
+        </ul>
+        <div class="pix-box" id="r-pix" hidden>
+          <span class="pix-label">Chave Pix</span>
+          <code id="r-pix-chave"></code>
+          <div class="pix-acoes">
+            <button type="button" class="btn" id="r-pix-copiar">Copiar chave Pix</button>
+            <a class="btn ghost" id="r-pix-comprovante" target="_blank" rel="noopener" hidden>Enviar comprovante</a>
+          </div>
+          <p class="pix-ok" id="r-pix-ok" role="status"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="duvidas">
+    <div class="wrap faq">
+      <div class="sec-head"><div class="eyebrow">Dúvidas</div><h2>Perguntas frequentes</h2></div>
+      <details><summary>Como funciona a videochamada mensal?</summary><p>Uma vez por mês a gente combina um dia e horário e conversa por vídeo. Revisamos os treinos, as cargas e as metas, e você tira as suas dúvidas. Você recebe o link da chamada antes.</p></details>
+      <details><summary>Quais formas de pagamento eu posso usar?</summary><p>Cartão de crédito, pelo link de pagamento do plano, ou Pix. Se preferir outra forma, me chame no WhatsApp.</p></details>
+      <details><summary>Quando o meu acesso volta?</summary><p>Assim que eu confirmar o pagamento, libero o seu plano no app. Se pagou por Pix, mande o comprovante para agilizar.</p></details>
+      <details><summary>Perco o que eu já treinei?</summary><p>Não. Seu histórico, cargas e evolução continuam salvos no app.</p></details>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Método Venâncio · Matheus Venâncio · CREF 038618-G/SC</span>
+    <span><a href="https://www.instagram.com/matheusvenancio.pf/" rel="noopener">@matheusvenancio.pf</a> · <a href="/">Voltar ao app</a> · <a href="/privacidade.html">Privacidade</a></span>
+  </div>
+</footer>
+
+<div class="sticky" id="sticky"><a class="btn" href="#planos">Ver planos e pagamento</a></div>
+
+<script>
+(function () {
+  function $(id) { return document.getElementById(id); }
+  function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
+  // Os dados chegam no endereço (#d=...), montados pelo app: planos, links de pagamento, Pix e WhatsApp do personal.
+  var d = {};
+  try {
+    var m = /[#&]d=([^&]+)/.exec(location.hash);
+    if (m) {
+      var b64 = decodeURIComponent(m[1]).replace(/-/g, "+").replace(/_/g, "/");
+      while (b64.length % 4) b64 += "=";
+      var bin = atob(b64), bytes = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      d = JSON.parse(new TextDecoder().decode(bytes)) || {};
+    }
+  } catch (e) { d = {}; }
+  // Sem dados (página aberta direto): planos padrão da consultoria.
+  var planos = Array.isArray(d.p) && d.p.length ? d.p : [
+    { nome: "Mensal", preco: "R$ 120", periodo: "/ mês", desc: "Pague mês a mês." },
+    { nome: "Trimestral", preco: "R$ 100", periodo: "/ mês", desc: "Pagamento de R$ 300 a cada 3 meses." },
+    { nome: "Semestral", preco: "R$ 80", periodo: "/ mês", desc: "Pagamento de R$ 480 a cada 6 meses.", destaque: true }
+  ];
+  var whats = String(d.w || "").replace(/\D/g, "");
+  var pix = String(d.x || "").trim().slice(0, 120);
+  var nome = String(d.n || "").trim().split(/\s+/)[0].slice(0, 30);
+  if (d.g === 0) $("r-eyebrow").textContent = "Seu plano terminou";
+  if (nome) $("r-ola").textContent = nome + ", bora continuar";
+  function linkSeguro(u) { u = String(u || "").trim(); return /^https:\/\/[^\s"'<>]+$/i.test(u) ? u : ""; }
+  function wa(txt) { return whats ? "https://wa.me/" + whats + "?text=" + encodeURIComponent(txt) : ""; }
+  var temCartao = false;
+  var box = $("r-planos");
+  planos.forEach(function (p) {
+    if (!p || !p.nome) return;
+    var art = el("article", "plano" + (p.destaque ? " destaque" : ""));
+    if (p.destaque) art.appendChild(el("span", "selo", "Melhor valor"));
+    art.appendChild(el("h3", null, String(p.nome).slice(0, 30)));
+    if (p.preco) {
+      var pr = el("p", "preco"); pr.appendChild(el("b", null, String(p.preco).slice(0, 30)));
+      if (p.periodo) pr.appendChild(el("span", null, String(p.periodo).slice(0, 30)));
+      art.appendChild(pr);
+    }
+    if (p.desc) art.appendChild(el("p", "sub", String(p.desc).slice(0, 80)));
+    var acoes = el("div", "plano-acoes");
+    var link = linkSeguro(p.link);
+    if (link) {
+      temCartao = true;
+      var a = el("a", "btn", "💳 Pagar com cartão"); a.href = link; a.target = "_blank"; a.rel = "noopener";
+      acoes.appendChild(a);
+    }
+    if (pix) {
+      var bp = el("button", "btn" + (link ? " ghost" : ""), "⚡ Pagar com Pix"); bp.type = "button";
+      bp.addEventListener("click", function () { abrePix(p.nome); });
+      acoes.appendChild(bp);
+    }
+    var w = wa("Oi! Quero continuar com o plano " + p.nome + " do Treino Online.");
+    if (w) {
+      var aw = el("a", "btn" + (link || pix ? " ghost" : ""), link || pix ? "Tirar dúvida no WhatsApp" : "Quero este plano"); aw.href = w; aw.target = "_blank"; aw.rel = "noopener";
+      acoes.appendChild(aw);
+    }
+    if (!acoes.children.length) acoes.appendChild(el("p", "sub", "Fale com o seu treinador para contratar."));
+    art.appendChild(acoes);
+    box.appendChild(art);
+  });
+  if (!temCartao) $("r-forma-cartao").querySelector("span:last-child").textContent = "Peça o link de pagamento no WhatsApp.";
+  if (!pix) $("r-forma-pix").querySelector("span:last-child").textContent = "Peça a chave Pix no WhatsApp.";
+  if (!whats) $("r-forma-whats").hidden = true;
+  function abrePix(plano) {
+    var b = $("r-pix");
+    $("r-pix-chave").textContent = pix;
+    var c = $("r-pix-comprovante"), w = wa("Oi! Paguei o plano " + plano + " por Pix. Segue o comprovante.");
+    if (w) { c.href = w; c.hidden = false; } else c.hidden = true;
+    $("r-pix-ok").textContent = "";
+    b.hidden = false;
+    b.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+  $("r-pix-copiar").addEventListener("click", function () {
+    var ok = function () { $("r-pix-ok").textContent = "Chave copiada. Cole no app do seu banco, na área Pix."; };
+    var falha = function () {
+      var r = document.createRange(); r.selectNodeContents($("r-pix-chave"));
+      var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+      $("r-pix-ok").textContent = "Selecionei a chave: toque e segure para copiar.";
+    };
+    try { navigator.clipboard.writeText(pix).then(ok, falha); } catch (e) { falha(); }
+  });
+  var st = $("sticky"), alvo = $("planos");
+  if (st && alvo && "IntersectionObserver" in window) {
+    new IntersectionObserver(function (es) { st.classList.toggle("off", es[0].isIntersecting); }, { threshold: 0.15 }).observe(alvo);
+  }
+})();
+</script>
+</body>
+</html>

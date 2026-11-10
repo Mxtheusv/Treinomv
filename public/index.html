@@ -1581,6 +1581,14 @@
   .tr-roster-list { display: flex; flex-direction: column; gap: 8px; }
   .tr-roster-row { display: flex; align-items: center; gap: 12px; background: var(--sa-panel); border: 1px solid var(--sa-border-soft); border-left: 3px solid var(--sa-border-soft); border-radius: 14px; padding: 12px 14px; position: relative; flex-wrap: wrap; }
   .tr-roster-row.status-emdia { border-left-color: var(--sa-teal); }
+  .tr-sel-box { display: flex; align-items: center; justify-content: center; padding: 6px; cursor: pointer; }
+  .tr-sel-box input { width: 22px; height: 22px; margin: 0; accent-color: var(--sa-accent, #ffc247); cursor: pointer; }
+  .tr-sel-bar { display: flex; flex-direction: column; gap: 10px; background: var(--sa-panel); border: 1px solid var(--sa-border-soft); border-radius: 14px; padding: 12px; margin-bottom: 12px; }
+  .tr-sel-info { font-size: 14px; color: var(--sa-text-muted, var(--sa-text)); }
+  .tr-sel-acoes { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tr-sel-acoes button { margin: 0; }
+  .tr-chip-gratis, .tr-chip-oferta { display: inline-block; font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 999px; margin: 4px 6px 0 0; background: rgba(56,211,159,.14); color: var(--sa-teal); }
+  .tr-chip-oferta { background: rgba(255,194,71,.14); color: var(--sa-accent, #ffc247); }
   .tr-roster-row.status-sumido { border-left-color: var(--sa-accent); }
   .tr-roster-row.status-semacesso { border-left-color: var(--sa-purple); }
   .tr-roster-row .sa-avatar { flex-shrink: 0; }
@@ -2600,6 +2608,19 @@ function startApp() {
     upsert("BÍCEPS ROSCA SCOTT BARRA W", { grupoMuscular: "Bíceps", tipoExercicio: "Flexão", equipamento: "Barra", exec: "Sentado no banco Scott, barra W com pegada por baixo e cotovelos apoiados. Suba contraindo o bíceps e desça controlando, sem estender totalmente." });
     upsert("BÍCEPS ROSCA CONCENTRADA HALTERES", { grupoMuscular: "Bíceps", tipoExercicio: "Flexão", equipamento: "Halteres", exec: "Sentado, cotovelo apoiado na parte interna da coxa e halter na mão. Suba girando a palma para cima e contraia o bíceps no topo. Desça sem deixar o braço balançar." });
     upsert("BÍCEPS ROSCA INVERSA BARRA", { grupoMuscular: "Bíceps", tipoExercicio: "Flexão", equipamento: "Barra", exec: "Em pé, barra com pegada por cima (palmas para baixo) e cotovelos junto ao tronco. Suba contraindo antebraço e bíceps e desça devagar." });
+    // Animações entregues pelo designer (zip "Animações de exercícios musculares"): vídeos 480x480, 4 s, em loop.
+    upsert("GLÚTEO COICE NA POLIA", { video: "/exercicios/gluteo-coice-polia.mp4" });
+    upsert("OMBRO DESENVOLVIMENTO BARRA EM PÉ", { video: "/exercicios/ombro-desenvolvimento-barra.mp4" });
+    upsert("OMBRO REMADA ALTA BARRA", { video: "/exercicios/ombro-remada-alta-barra.mp4" });
+    upsert("OMBRO ENCOLHIMENTO HALTERES", { video: "/exercicios/ombro-encolhimento-halteres.mp4" });
+    upsert("BÍCEPS ROSCA CONCENTRADA HALTERES", { video: "/exercicios/biceps-rosca-concentrada.mp4" });
+    upsert("BÍCEPS ROSCA INVERSA BARRA", { video: "/exercicios/biceps-rosca-inversa-barra.mp4" });
+    upsert("TRÍCEPS MERGULHO BANCO", { video: "/exercicios/triceps-mergulho-banco.mp4" });
+    upsert("TRÍCEPS MERGULHO PARALELAS", { video: "/exercicios/triceps-mergulho-paralelas.mp4" });
+    upsert("TRÍCEPS COICE HALTERES", { video: "/exercicios/triceps-coice-halteres.mp4" });
+    upsert("TRÍCEPS COICE POLIA", { video: "/exercicios/triceps-coice-polia.mp4" });
+    upsert("PEITO CRUCIFIXO INCLINADO HALTER", { video: "/exercicios/peito-crucifixo-inclinado.mp4" });
+    upsert("COSTAS PUXADA ESTENDIDA COM A BARRA", { video: "/exercicios/costas-puxada-estendida.mp4" });
     upsert("BÍCEPS ROSCA MARTELO CORDA POLIA", { grupoMuscular: "Bíceps", tipoExercicio: "Flexão", equipamento: "Polia/Cabo", exec: "Em pé de frente para a polia baixa, corda com pegada neutra (palmas uma de frente para a outra). Suba com os cotovelos fixos ao lado do corpo e desça controlando." });
     upsert("TRÍCEPS MERGULHO BANCO", { grupoMuscular: "Tríceps", tipoExercicio: "Extensão", equipamento: "Peso corporal", exec: "Apoie as mãos na borda de um banco atrás de você, pernas estendidas ou dobradas. Desça dobrando os cotovelos até cerca de 90°, mantendo-os apontando para trás, e suba estendendo os braços." });
     upsert("TRÍCEPS MERGULHO PARALELAS", { grupoMuscular: "Tríceps", tipoExercicio: "Extensão", equipamento: "Peso corporal", exec: "Apoiado nas barras paralelas com os braços estendidos e o tronco levemente inclinado. Desça dobrando os cotovelos e suba sem travar." });
@@ -6657,7 +6678,7 @@ function startApp() {
       var lastCheckin = s.checkins.length ? formatDateBR(s.checkins[s.checkins.length - 1]) : null;
       var aberto = !!(state.rosterResumo && state.rosterResumo[slug]);
       return '<div class="tr-roster-row status-' + statusKey + '" data-slug="' + escapeAttr(slug) + '" data-name="' + escapeAttr((s.nome || "").toLowerCase()) + '" data-status="' + statusKey + '" data-semana="' + (trTreinouRecente(s, 7) ? "1" : "0") + '" data-pres="' + (s.presencial ? "1" : "0") + '">' +
-        '<div class="tr-rr-top">' +
+        '<div class="tr-rr-top">' + (state.rosterSelAtiva ? '<label class="tr-sel-box" title="Selecionar aluno"><input type="checkbox" data-sel="' + escapeAttr(slug) + '"' + (state.rosterSel && state.rosterSel[slug] ? " checked" : "") + '></label>' : '') +
         (feedFotoOk(s.fotoUrl) ? '<span class="sa-avatar img" style="background:#1b2540 url(' + s.fotoUrl + ') center/cover no-repeat"></span>' : '<span class="sa-avatar" style="background:hsl(' + avatarHue(slug) + ',65%,45%)">' + escapeHtml(initialsOf(s.nome)) + '</span>') +
         '<div class="tr-roster-name-block">' +
         '<div class="tr-roster-name">' + escapeHtml(s.nome) +
@@ -6666,7 +6687,7 @@ function startApp() {
         (s.presencial ? '<span class="tr-badge-pres">presencial</span>' : '') +
         '</div>' +
         '<div class="tr-roster-meta">' + escapeHtml((plan && plan.microciclo) || "") + ' · código ' + escapeHtml(slug) + '</div>' +
-        (plan ? planValidadeChipHtml(plan) : '') +
+        (plan ? planValidadeChipHtml(plan) : '') + (s.mesGratisEm ? '<span class="tr-chip-gratis">🎁 1 mês grátis em ' + escapeHtml(formatDateBR(s.mesGratisEm)) + '</span>' : '') + (s.ofertaPlanos ? '<span class="tr-chip-oferta">🏷️ oferta de planos ligada</span>' : '') +
         trStreakChipHtml(s) +
         '</div>' + trSemanasHtml(s) + '</div>' +
         '<div class="tr-rr-mid">' +
@@ -6723,7 +6744,7 @@ function startApp() {
       vencimentoAlertHtml +
       turmaHtml +
       leadsHtml +
-      '<div class="tr-search-row">' +
+      rosterSelBarraHtml() + '<div class="tr-search-row">' +
       '<input type="text" class="tr-search-input" id="trSearchInput" placeholder="Buscar aluno..." autocomplete="off" value="' + escapeAttr(state.rosterSearch || "") + '">' +
       '<div class="tr-filter-tabs" id="trFilterTabs">' +
       ["todos", "emdia", "semana", "sumido", "semacesso"].concat(allStudents.some(function (x) { return x.s.presencial; }) ? ["presencial"] : []).map(function (key) {
@@ -6824,6 +6845,42 @@ function startApp() {
       state.data.alertaCheckinDias = v;
       persistThen(function () { setTimeout(renderRoster, 0); });
     });
+
+    // Seleção de alunos para o mês grátis e a oferta de planos
+    var btnSelAtiva = document.getElementById("btnSelAtiva");
+    if (btnSelAtiva) btnSelAtiva.addEventListener("click", function () {
+      state.rosterSelAtiva = !state.rosterSelAtiva;
+      if (!state.rosterSelAtiva) state.rosterSel = {};
+      renderRoster();
+    });
+    Array.prototype.forEach.call(document.querySelectorAll("[data-sel]"), function (cb) {
+      cb.addEventListener("change", function () {
+        state.rosterSel = state.rosterSel || {};
+        state.rosterSel[cb.getAttribute("data-sel")] = cb.checked;
+        renderRoster();
+      });
+    });
+    var btnSelVisiveis = document.getElementById("btnSelVisiveis");
+    if (btnSelVisiveis) btnSelVisiveis.addEventListener("click", function () {
+      state.rosterSel = state.rosterSel || {};
+      Array.prototype.forEach.call(document.querySelectorAll("#trRosterList .tr-roster-row"), function (row) {
+        if (row.style.display !== "none") state.rosterSel[row.getAttribute("data-slug")] = true;
+      });
+      renderRoster();
+    });
+    var btnSelLimpar = document.getElementById("btnSelLimpar");
+    if (btnSelLimpar) btnSelLimpar.addEventListener("click", function () { state.rosterSel = {}; renderRoster(); });
+    var btnSelGratis = document.getElementById("btnSelGratis");
+    if (btnSelGratis) {
+      var nGratis = rosterSelLista().length;
+      makeConfirmButton(btnSelGratis, "Confirmar: 1 mês grátis para " + nGratis + (nGratis === 1 ? " aluno" : " alunos") + "?", function () {
+        rosterDarMesGratis(rosterSelLista());
+      });
+    }
+    var btnSelOfertaOn = document.getElementById("btnSelOfertaOn");
+    if (btnSelOfertaOn) btnSelOfertaOn.addEventListener("click", function () { rosterDefinirOferta(rosterSelLista(), true); });
+    var btnSelOfertaOff = document.getElementById("btnSelOfertaOff");
+    if (btnSelOfertaOff) btnSelOfertaOff.addEventListener("click", function () { rosterDefinirOferta(rosterSelLista(), false); });
 
     trWireTopbar();
     trWireTabs();
@@ -9828,13 +9885,15 @@ function startApp() {
     var ov = document.createElement("div");
     ov.className = "sa-modal-overlay"; ov.id = "planosVendaModal";
     ov.innerHTML = '<div class="sa-modal"><h3 class="sa-display">PLANOS DE VENDA</h3>' +
-      '<p class="ref-note">Quando o plano do aluno vencer, ele vê estes planos e um botão para falar com você no WhatsApp. Deixe o nome em branco para esconder um plano.</p>' +
+      '<p class="ref-note">Eles aparecem para o aluno quando ele termina um treino (se você ligar a oferta no painel dele) e quando o plano vence. Têm botão para falar com você no WhatsApp. Deixe o nome em branco para esconder um plano.</p>' +
       lista.map(function (p, i) {
         return '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px">' +
           '<strong>Plano ' + (i + 1) + '</strong>' +
           '<input id="pvNome' + i + '" placeholder="Nome (ex.: Mensal)" maxlength="30" value="' + escapeAttr(p.nome || "") + '">' +
           '<input id="pvPreco' + i + '" placeholder="Preço (ex.: R$ 150)" maxlength="30" value="' + escapeAttr(p.preco || "") + '">' +
           '<input id="pvPeriodo' + i + '" placeholder="Período (ex.: 1 mês)" maxlength="30" value="' + escapeAttr(p.periodo || "") + '">' +
+          '<input id="pvDesc' + i + '" placeholder="Descrição (ex.: Pagamento de R$ 480 a cada 6 meses)" maxlength="80" value="' + escapeAttr(p.desc || "") + '">' +
+          '<label style="display:flex;gap:8px;align-items:center;font-size:14px"><input type="radio" name="pvDestaque" value="' + i + '"' + (p.destaque ? " checked" : "") + ' style="width:auto"> ⭐ Marcar como “Melhor valor”</label>' +
           '</div>';
       }).join("") +
       '<label style="display:flex;flex-direction:column;gap:6px">WhatsApp para o aluno falar com você (DDI + DDD + número, ex.: 5548999999999)' +
@@ -9851,12 +9910,102 @@ function startApp() {
       for (var i = 0; i < 3; i++) {
         var nome = (document.getElementById("pvNome" + i).value || "").trim();
         if (!nome) continue;
-        planos.push({ nome: nome, preco: (document.getElementById("pvPreco" + i).value || "").trim(), periodo: (document.getElementById("pvPeriodo" + i).value || "").trim() });
+        var rad = document.querySelector('input[name="pvDestaque"]:checked');
+        planos.push({ nome: nome, preco: (document.getElementById("pvPreco" + i).value || "").trim(), periodo: (document.getElementById("pvPeriodo" + i).value || "").trim(), desc: (document.getElementById("pvDesc" + i).value || "").trim(), destaque: !!rad && parseInt(rad.value, 10) === i });
       }
       var whats = (document.getElementById("pvWhats").value || "").replace(/\D/g, "");
       state.data.planosVenda = { planos: planos, whats: whats };
       persistThen(function () { showToast("Planos salvos"); fecha(); });
     });
+  }
+
+  // ---------- Seleção de alunos (1 mês grátis e oferta de planos) ----------
+  function rosterSelLista() {
+    var sel = state.rosterSel || {};
+    return Object.keys(sel).filter(function (k) { return sel[k] && state.data.students[k]; });
+  }
+  function rosterSelBarraHtml() {
+    var n = rosterSelLista().length;
+    var toggle = '<button type="button" class="sa-cta-ghost" id="btnSelAtiva" style="margin:0 0 10px">' + (state.rosterSelAtiva ? "✕ Sair da seleção" : "☑ Selecionar alunos") + '</button>';
+    if (!state.rosterSelAtiva) return toggle;
+    return toggle + '<div class="tr-sel-bar">' +
+      '<div class="tr-sel-info"><strong>' + n + '</strong> selecionado' + (n === 1 ? "" : "s") + '</div>' +
+      '<div class="tr-sel-acoes">' +
+      '<button type="button" class="sa-cta-ghost" id="btnSelVisiveis">Marcar os visíveis</button>' +
+      '<button type="button" class="sa-cta-ghost" id="btnSelLimpar"' + (n ? "" : " disabled") + '>Limpar</button>' +
+      '<button type="button" class="sa-cta" id="btnSelGratis"' + (n ? "" : " disabled") + '>🎁 Dar 1 mês grátis</button>' +
+      '<button type="button" class="sa-cta-ghost" id="btnSelOfertaOn"' + (n ? "" : " disabled") + '>🏷️ Oferecer planos ao terminar treino</button>' +
+      '<button type="button" class="sa-cta-ghost" id="btnSelOfertaOff"' + (n ? "" : " disabled") + '>Tirar a oferta</button>' +
+      '</div></div>';
+  }
+  function addDiasIso(iso, n) {
+    var p = String(iso || "").split("-");
+    if (p.length !== 3) return null;
+    var d = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10) + n);
+    return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
+  }
+  // Dá 1 mês (30 dias) ao plano atual de cada aluno. Quem já ganhou não ganha de novo, e quem não tem data final é pulado.
+  function rosterDarMesGratis(slugs) {
+    var hoje = todayISO(), feitos = [], jaTinham = [], semFim = [], semPlano = [];
+    slugs.forEach(function (slug) {
+      var s = migrateStudentPlans(state.data.students[slug]);
+      state.data.students[slug] = s;
+      var plan = activePlan(s);
+      if (!plan) { semPlano.push(s.nome); return; }
+      if (s.mesGratisEm) { jaTinham.push(s.nome); return; }
+      if (!plan.endDate) { semFim.push(s.nome); return; }
+      plan.endDate = addDiasIso(plan.endDate > hoje ? plan.endDate : hoje, 30);
+      s.mesGratisEm = hoje;
+      feitos.push(s.nome);
+    });
+    state.rosterSel = {};
+    var partes = [];
+    partes.push(feitos.length ? "1 mês grátis para " + feitos.length + " aluno" + (feitos.length === 1 ? "" : "s") : "Nenhum aluno recebeu o mês");
+    if (jaTinham.length) partes.push("já tinham: " + jaTinham.length);
+    if (semFim.length) partes.push("sem data final (defina o fim do plano): " + semFim.length);
+    if (semPlano.length) partes.push("sem plano: " + semPlano.length);
+    saveNow(partes.join(" · "), true);
+  }
+  function rosterDefinirOferta(slugs, ligada) {
+    slugs.forEach(function (slug) { var s = state.data.students[slug]; if (s) s.ofertaPlanos = !!ligada; });
+    state.rosterSel = {};
+    saveNow(ligada ? "Oferta de planos ligada para " + slugs.length + " aluno" + (slugs.length === 1 ? "" : "s") : "Oferta tirada de " + slugs.length + " aluno" + (slugs.length === 1 ? "" : "s"), true);
+  }
+  // Cards no visual da landing (fundo escuro, preço grande, "Melhor valor" no plano destacado).
+  function planosCardsHtml(pv) {
+    var numero = String(pv.whats || "").replace(/\D/g, "");
+    var planos = (pv.planos || []).filter(function (p) { return p && p.nome; });
+    var FONTE_TITULO = "'Barlow Condensed',Barlow,sans-serif";
+    return planos.map(function (p) {
+      var dest = !!p.destaque;
+      var txt = "Oi! Quero o plano " + p.nome + " do Treino Online.";
+      var botao = numero
+        ? '<a href="https://wa.me/' + numero + '?text=' + encodeURIComponent(txt) + '" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none;margin-top:14px;padding:12px;border-radius:999px;font:800 15px Barlow,sans-serif;' + (dest ? 'background:#ffc247;color:#080d1a;' : 'border:1px solid #2e6bff;color:#eef2ff;') + '">Quero este plano</a>'
+        : '<p style="margin:12px 0 0;font-size:14px;color:#9fb0d6">Fale com seu treinador para contratar.</p>';
+      return '<div style="position:relative;background:#101a31;border:1px solid ' + (dest ? '#ffc247' : '#1f2b4a') + ';border-radius:16px;padding:' + (dest ? '20px' : '18px') + ' 16px 16px;color:#eef2ff;text-align:left;' + (dest ? 'box-shadow:0 14px 34px -18px rgba(255,194,71,.55);' : '') + '">' +
+        (dest ? '<span style="position:absolute;top:-11px;left:16px;background:#ffc247;color:#080d1a;font:800 11px/1 Barlow,sans-serif;letter-spacing:.08em;text-transform:uppercase;padding:6px 10px;border-radius:999px">Melhor valor</span>' : '') +
+        '<div style="font-family:' + FONTE_TITULO + ';font-style:italic;font-weight:900;text-transform:uppercase;font-size:22px;letter-spacing:.02em">' + escapeHtml(p.nome) + '</div>' +
+        (p.preco ? '<div style="margin-top:6px;font-family:' + FONTE_TITULO + ';font-style:italic;font-weight:900;font-size:40px;line-height:1;color:' + (dest ? '#ffc247' : '#eef2ff') + '">' + escapeHtml(p.preco) + (p.periodo ? '<span style="font-family:Barlow,sans-serif;font-style:normal;font-weight:500;font-size:15px;color:#9fb0d6"> / ' + escapeHtml(p.periodo) + '</span>' : '') + '</div>' : '') +
+        (p.desc ? '<div style="margin-top:8px;font-size:14px;color:#9fb0d6">' + escapeHtml(p.desc) + '</div>' : '') +
+        botao + '</div>';
+    }).join("");
+  }
+  // Depois de concluir um treino: se o personal ligou a oferta para este aluno, mostra os planos.
+  function ofertaPlanosDepoisTreino(s) {
+    if (!s || !s.ofertaPlanos || state.atendimento || !isStudentView()) return;
+    var pv = state.data.planosVenda || {};
+    if (!(pv.planos || []).some(function (p) { return p && p.nome; })) return;
+    var velho = document.getElementById("ofertaPlanosOv"); if (velho) velho.remove();
+    var ov = document.createElement("div");
+    ov.className = "sa-modal-overlay"; ov.id = "ofertaPlanosOv";
+    ov.innerHTML = '<div class="sa-modal"><h3 class="sa-display">ESCOLHA O SEU RITMO</h3>' +
+      '<p class="sa-modal-sub">Quanto mais tempo você se compromete, menor o valor por mês.</p>' +
+      '<div style="display:flex;flex-direction:column;gap:14px;margin:16px 0">' + planosCardsHtml(pv) + '</div>' +
+      '<button type="button" class="sa-post-skip" id="ofertaFechar">Agora não</button></div>';
+    document.body.appendChild(ov);
+    function fecha() { if (ov.parentNode) ov.parentNode.removeChild(ov); }
+    document.getElementById("ofertaFechar").addEventListener("click", fecha);
+    ov.addEventListener("click", function (e) { if (e.target === ov) fecha(); });
   }
 
   function renderExpiredLockout(s, plan) {
@@ -9866,19 +10015,7 @@ function startApp() {
     document.getElementById("headerControls").innerHTML =
       (!state.cameFromRoster ? '<a href="#" id="forgetAluno" class="link-btn" title="Sair e usar outro código de acesso">Trocar aluno</a>' : '');
     var pv = state.data.planosVenda || {};
-    var planos = (pv.planos || []).filter(function (p) { return p && p.nome; });
-    var numero = String(pv.whats || "").replace(/\D/g, "");
-    var cards = planos.map(function (p) {
-      var txt = "Oi! Quero renovar meu acesso ao Treino Online, plano " + p.nome + ".";
-      var botao = numero
-        ? '<a class="sa-cta" href="https://wa.me/' + numero + '?text=' + encodeURIComponent(txt) + '" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none;margin-top:10px">Quero este plano</a>'
-        : '<p class="ref-note" style="margin:8px 0 0">Fale com seu treinador para contratar.</p>';
-      return '<div style="border:1px solid rgba(127,127,127,.35);border-radius:14px;padding:14px;text-align:left">' +
-        '<div style="font-weight:700;font-size:16px">' + escapeHtml(p.nome) + '</div>' +
-        (p.preco ? '<div style="font-size:20px;font-weight:800;margin-top:4px">' + escapeHtml(p.preco) + '</div>' : '') +
-        (p.periodo ? '<div class="ref-note" style="margin:2px 0 0">' + escapeHtml(p.periodo) + '</div>' : '') +
-        botao + '</div>';
-    }).join("");
+    var cards = planosCardsHtml(pv);
     var corpo = cards
       ? '<p class="ref-note">Seu acesso terminou em <strong>' + escapeHtml(formatDateBR(plan.endDate)) + '</strong>. Escolha um plano para continuar.</p>' +
         '<div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">' + cards + '</div>'
@@ -12587,7 +12724,7 @@ function startApp() {
     desenhaCartaoPost();
     var nomeArqCartao = "treino-" + (nova.date || "") + ".png";
     function compartilhaCartao() { saCartaoEnviar(cartaoCv, nomeArqCartao, nova.nome || ""); }
-    function fecha() { if (SA_POST.url) URL.revokeObjectURL(SA_POST.url); SA_POST.url = ""; SA_POST.blob = null; if (ov.parentNode) ov.parentNode.removeChild(ov); }
+    function fecha() { if (SA_POST.url) URL.revokeObjectURL(SA_POST.url); SA_POST.url = ""; SA_POST.blob = null; if (ov.parentNode) ov.parentNode.removeChild(ov); ofertaPlanosDepoisTreino(s); }
     function publica(modo, legenda) {
       if (SA_POST.busy) return;
       SA_POST.busy = true; desenha();

@@ -6717,7 +6717,7 @@ function startApp() {
         (s.presencial ? '<span class="tr-badge-pres">presencial</span>' : '') +
         '</div>' +
         '<div class="tr-roster-meta">' + escapeHtml((plan && plan.microciclo) || "") + ' · código ' + escapeHtml(slug) + '</div>' +
-        (plan ? planValidadeChipHtml(plan) : '') + (s.mesGratisEm ? '<span class="tr-chip-gratis">🎁 1 mês grátis em ' + escapeHtml(formatDateBR(s.mesGratisEm)) + '</span>' : '') + (s.ofertaPlanos ? '<span class="tr-chip-oferta">🏷️ oferta de planos ligada</span>' : '') +
+        (plan ? planValidadeChipHtml(plan) : '') + (s.mesGratisEm ? '<span class="tr-chip-gratis">🎁 Mês grátis' + (plan && plan.endDate ? (isPlanExpired(plan) ? ' · acabou em ' : ' · até ') + escapeHtml(formatDateBR(plan.endDate)) : '') + '</span>' : '') + (s.ofertaPlanos ? '<span class="tr-chip-oferta">🏷️ oferta de planos ligada</span>' : '') +
         trStreakChipHtml(s) +
         '</div>' + trSemanasHtml(s) + '</div>' +
         '<div class="tr-rr-mid">' +
@@ -6907,6 +6907,10 @@ function startApp() {
         rosterDarMesGratis(rosterSelLista());
       });
     }
+    var btnSelMarcaGratis = document.getElementById("btnSelMarcaGratis");
+    if (btnSelMarcaGratis) btnSelMarcaGratis.addEventListener("click", function () { rosterMarcarMesGratis(rosterSelLista(), true); });
+    var btnSelTiraGratis = document.getElementById("btnSelTiraGratis");
+    if (btnSelTiraGratis) btnSelTiraGratis.addEventListener("click", function () { rosterMarcarMesGratis(rosterSelLista(), false); });
     var btnSelOfertaOn = document.getElementById("btnSelOfertaOn");
     if (btnSelOfertaOn) btnSelOfertaOn.addEventListener("click", function () { rosterDefinirOferta(rosterSelLista(), true); });
     var btnSelOfertaOff = document.getElementById("btnSelOfertaOff");
@@ -9995,7 +9999,9 @@ function startApp() {
       '<div class="tr-sel-acoes">' +
       '<button type="button" class="sa-cta-ghost" id="btnSelVisiveis">Marcar os visíveis</button>' +
       '<button type="button" class="sa-cta-ghost" id="btnSelLimpar"' + (n ? "" : " disabled") + '>Limpar</button>' +
-      '<button type="button" class="sa-cta" id="btnSelGratis"' + (n ? "" : " disabled") + '>🎁 Dar 1 mês grátis</button>' +
+      '<button type="button" class="sa-cta" id="btnSelGratis"' + (n ? "" : " disabled") + '>🎁 Dar 1 mês grátis (+30 dias)</button>' +
+      '<button type="button" class="sa-cta-ghost" id="btnSelMarcaGratis"' + (n ? "" : " disabled") + ' title="Para quem já está no mês de teste: só marca, sem mudar a data do plano">🏷️ Já está no mês grátis (só marcar)</button>' +
+      '<button type="button" class="sa-cta-ghost" id="btnSelTiraGratis"' + (n ? "" : " disabled") + '>Tirar marca de mês grátis</button>' +
       '<button type="button" class="sa-cta-ghost" id="btnSelOfertaOn"' + (n ? "" : " disabled") + '>🏷️ Oferecer planos ao terminar treino</button>' +
       '<button type="button" class="sa-cta-ghost" id="btnSelOfertaOff"' + (n ? "" : " disabled") + '>Tirar a oferta</button>' +
       '</div></div>';
@@ -10027,6 +10033,28 @@ function startApp() {
     if (semFim.length) partes.push("sem data final (defina o fim do plano): " + semFim.length);
     if (semPlano.length) partes.push("sem plano: " + semPlano.length);
     saveNow(partes.join(" · "), true);
+  }
+  // Para quem JÁ está no mês de teste: só marca (não mexe na data do plano). Quando o plano vencer,
+  // o aluno vê a página de renovação. "Tirar marca" desfaz.
+  function rosterMarcarMesGratis(slugs, marcar) {
+    var hoje = todayISO(), feitos = 0, semFim = 0;
+    slugs.forEach(function (slug) {
+      var s = state.data.students[slug];
+      if (!s) return;
+      if (!marcar) { if (s.mesGratisEm) { delete s.mesGratisEm; feitos++; } return; }
+      var plan = activePlan(migrateStudentPlans(s));
+      if (!plan || !plan.endDate) { semFim++; return; }
+      // Data da marca: início do plano (se houver) para que o fim do plano conte como fim do mês grátis.
+      var ini = plan.startDate && plan.startDate < plan.endDate ? plan.startDate : (hoje < plan.endDate ? hoje : addDiasIso(plan.endDate, -1));
+      s.mesGratisEm = ini;
+      feitos++;
+    });
+    state.rosterSel = {};
+    var msg = marcar
+      ? (feitos ? feitos + " aluno" + (feitos === 1 ? "" : "s") + " marcado" + (feitos === 1 ? "" : "s") + " como mês grátis" : "Nenhum aluno marcado")
+      : (feitos ? "Marca de mês grátis tirada de " + feitos + " aluno" + (feitos === 1 ? "" : "s") : "Nenhum dos selecionados tinha a marca");
+    if (semFim) msg += " · sem data final no plano (defina o fim do plano): " + semFim;
+    saveNow(msg, true);
   }
   function rosterDefinirOferta(slugs, ligada) {
     slugs.forEach(function (slug) { var s = state.data.students[slug]; if (s) s.ofertaPlanos = !!ligada; });

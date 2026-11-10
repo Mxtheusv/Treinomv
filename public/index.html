@@ -1595,6 +1595,10 @@
   .tr-roster-name-block { min-width: 0; flex: 1; }
   .tr-roster-name { font-weight: 700; font-size: 14.5px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; color: var(--sa-text); }
   .tr-roster-meta { font-size: 12px; color: var(--sa-text-muted); margin-top: 2px; }
+  /* Selos do cartão do aluno: uma linha só, que quebra se precisar, sem invadir as "Últimas 4 semanas". */
+  .tr-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; max-width: 100%; }
+  .tr-chips > * { margin: 0 !important; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tr-chips .tr-chip-gratis, .tr-chips .tr-chip-oferta { display: inline-flex; align-items: center; font-size: 11px; padding: 5px 10px; }
   .tr-roster-checkin { text-align: right; font-size: 10px; color: var(--sa-text-muted); text-transform: uppercase; letter-spacing: .4px; flex-shrink: 0; }
   .tr-roster-checkin strong { display: block; font-size: 12.5px; text-transform: none; letter-spacing: 0; color: var(--sa-text); margin-top: 2px; font-weight: 700; }
   .tr-roster-checkin.warn strong { color: var(--sa-accent-text); }
@@ -3118,6 +3122,22 @@ function startApp() {
     if (dias <= LIMIAR_VENCIMENTO_PLANO_DIAS) return "vencendo";
     return "ok";
   }
+  // Versão curta para a lista de alunos: validade e mês grátis num selo só, data sem o ano.
+  function trValidadeCurtaHtml(s, plan) {
+    if (!plan) return "";
+    var status = planValidadeStatus(plan);
+    var gratis = !!(s && s.mesGratisEm);
+    var dataCurta = plan.endDate ? escapeHtml(formatDateBR(plan.endDate).slice(0, 5)) : "";
+    var titulo = plan.endDate ? ' title="' + (gratis ? "Mês grátis · " : "") + "Plano até " + escapeAttr(formatDateBR(plan.endDate)) + '"' : "";
+    if (status === "sem-data") return '<span class="tr-validade-chip tr-validade-semdata">— Sem data de fim</span>';
+    if (status === "expirado") return '<span class="tr-validade-chip tr-validade-expirado"' + titulo + '>⛔ ' + (gratis ? "Grátis acabou " : "Venceu ") + dataCurta + '</span>';
+    if (status === "vencendo") {
+      var dias = diasAteVencimentoPlano(plan);
+      var txt = dias === 0 ? "vence hoje" : (dias === 1 ? "vence amanhã" : dias + " dias");
+      return '<span class="tr-validade-chip ' + (gratis ? "tr-chip-gratis" : "tr-validade-vencendo") + '"' + titulo + '>' + (gratis ? "🎁 Grátis · " : "⏳ ") + txt + ' (' + dataCurta + ')</span>';
+    }
+    return '<span class="tr-validade-chip ' + (gratis ? "tr-chip-gratis" : "tr-validade-ok") + '"' + titulo + '>' + (gratis ? "🎁 Grátis até " : "✅ Até ") + dataCurta + '</span>';
+  }
   function planValidadeChipHtml(plan) {
     var status = planValidadeStatus(plan);
     if (status === "sem-data") return '<div class="tr-validade-chip tr-validade-semdata">— Sem data de término definida</div>';
@@ -3136,11 +3156,11 @@ function startApp() {
   // abaixo, mas hoisted -- funcionam normalmente aqui).
   function trStreakChipHtml(s) {
     var dias = saDiasNoMes(s);
-    if (!dias) return '<div class="tr-streak-chip tr-streak-chip-off">— Sem treino em ' + saMesNome() + '</div>';
+    if (!dias) return '<div class="tr-streak-chip tr-streak-chip-off" title="Sem treino em ' + saMesNome() + '">— 0 no mês</div>';
     var tier = saStreakTier(dias);
     var cor = tier ? tier.cor : "#ff8a3d";
     var bg = tier ? tier.badgeBg : "rgba(255,138,61,.22)";
-    return '<div class="tr-streak-chip" style="color:' + cor + ';background:' + bg + '">🔥 ' + dias + ' dia' + (dias === 1 ? "" : "s") + ' no mês' + (tier ? ' · ' + escapeHtml(tier.nome) : '') + '</div>';
+    return '<div class="tr-streak-chip" style="color:' + cor + ';background:' + bg + '">🔥 ' + dias + ' no mês' + (tier ? ' · ' + escapeHtml(tier.nome) : '') + '</div>';
   }
 
   // True for a student who reached this page with their own access code
@@ -6719,9 +6739,9 @@ function startApp() {
         (s.online ? '<span class="tr-badge-online">online</span>' : '') +
         '</div>' +
         '<div class="tr-roster-meta">' + escapeHtml((plan && plan.microciclo) || "") + ' · código ' + escapeHtml(slug) + '</div>' +
-        (plan ? planValidadeChipHtml(plan) : '') + (s.mesGratisEm ? '<span class="tr-chip-gratis">🎁 Mês grátis' + (plan && plan.endDate ? (isPlanExpired(plan) ? ' · acabou em ' : ' · até ') + escapeHtml(formatDateBR(plan.endDate)) : '') + '</span>' : '') + (s.ofertaPlanos ? '<span class="tr-chip-oferta">🏷️ oferta de planos ligada</span>' : '') +
-        trStreakChipHtml(s) +
         '</div>' + trSemanasHtml(s) + '</div>' +
+        '<div class="tr-chips">' + trValidadeCurtaHtml(s, plan) + (s.ofertaPlanos ? '<span class="tr-chip-oferta">🏷️ Oferta ligada</span>' : '') +
+        trStreakChipHtml(s) + '</div>' +
         '<div class="tr-rr-mid">' +
         '<div class="tr-roster-checkin' + (statusKey === "sumido" ? " warn" : "") + '">último check-in<strong>' + (statusKey === "semacesso" ? "Nunca entrou" : (lastCheckin || "—")) + '</strong></div>' +
         '<div class="tr-roster-actions">' +

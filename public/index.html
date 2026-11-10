@@ -2077,6 +2077,7 @@
   .tec-steps { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 8px; font-size: 14.5px; line-height: 1.45; }
   .tec-cuidado { margin-top: 14px; padding: 12px 14px; border-radius: 12px; background: rgba(255,107,107,.1); border: 1px solid rgba(255,107,107,.35); font-size: 13.5px; line-height: 1.45; }
   .tr-badge-pres { background: rgba(var(--sa-teal-rgb),.14); color: var(--sa-teal); font-size: 9.5px; font-weight: 700; padding: 2px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: .3px; }
+  .tr-badge-online { background: rgba(46,107,255,.16); color: #7fa6ff; font-size: 9.5px; font-weight: 700; padding: 2px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: .06em; }
   .cm-foto, .trp-foto img { cursor: zoom-in; }
   .lg-ov { position: fixed; inset: 0; z-index: 10001; background: rgba(4,7,14,.82); display: flex; align-items: center; justify-content: center; padding: 16px; overflow-y: auto; }
   .lg-sheet { width: 100%; max-width: 380px; background: var(--sa-x-d2-111a30); color: var(--sa-x-wf-fff); border: 1px solid var(--sa-x-b1-27345a); border-radius: 16px; padding: 20px 18px; display: flex; flex-direction: column; gap: 10px; text-align: left; font-family: "Barlow", system-ui, sans-serif; }
@@ -6707,7 +6708,7 @@ function startApp() {
       var statusKey = trStatusKey(s);
       var lastCheckin = s.checkins.length ? formatDateBR(s.checkins[s.checkins.length - 1]) : null;
       var aberto = !!(state.rosterResumo && state.rosterResumo[slug]);
-      return '<div class="tr-roster-row status-' + statusKey + '" data-slug="' + escapeAttr(slug) + '" data-name="' + escapeAttr((s.nome || "").toLowerCase()) + '" data-status="' + statusKey + '" data-semana="' + (trTreinouRecente(s, 7) ? "1" : "0") + '" data-pres="' + (s.presencial ? "1" : "0") + '">' +
+      return '<div class="tr-roster-row status-' + statusKey + '" data-slug="' + escapeAttr(slug) + '" data-name="' + escapeAttr((s.nome || "").toLowerCase()) + '" data-status="' + statusKey + '" data-semana="' + (trTreinouRecente(s, 7) ? "1" : "0") + '" data-pres="' + (s.presencial ? "1" : "0") + '" data-online="' + (s.online ? "1" : "0") + '">' +
         '<div class="tr-rr-top">' + (state.rosterSelAtiva ? '<label class="tr-sel-box" title="Selecionar aluno"><input type="checkbox" data-sel="' + escapeAttr(slug) + '"' + (state.rosterSel && state.rosterSel[slug] ? " checked" : "") + '></label>' : '') +
         (feedFotoOk(s.fotoUrl) ? '<span class="sa-avatar img" style="background:#1b2540 url(' + s.fotoUrl + ') center/cover no-repeat"></span>' : '<span class="sa-avatar" style="background:hsl(' + avatarHue(slug) + ',65%,45%)">' + escapeHtml(initialsOf(s.nome)) + '</span>') +
         '<div class="tr-roster-name-block">' +
@@ -6715,6 +6716,7 @@ function startApp() {
         (s.fromForm && !s.reviewed ? '<span class="tr-badge-new">🆕 novo contato</span>' : '') +
         (expired ? '<span class="tr-badge-expired">plano expirado</span>' : '') +
         (s.presencial ? '<span class="tr-badge-pres">presencial</span>' : '') +
+        (s.online ? '<span class="tr-badge-online">online</span>' : '') +
         '</div>' +
         '<div class="tr-roster-meta">' + escapeHtml((plan && plan.microciclo) || "") + ' · código ' + escapeHtml(slug) + '</div>' +
         (plan ? planValidadeChipHtml(plan) : '') + (s.mesGratisEm ? '<span class="tr-chip-gratis">🎁 Mês grátis' + (plan && plan.endDate ? (isPlanExpired(plan) ? ' · acabou em ' : ' · até ') + escapeHtml(formatDateBR(plan.endDate)) : '') + '</span>' : '') + (s.ofertaPlanos ? '<span class="tr-chip-oferta">🏷️ oferta de planos ligada</span>' : '') +
@@ -6733,6 +6735,7 @@ function startApp() {
           '<button type="button" data-copy="' + escapeAttr(slug) + '">📋 Copiar convite</button>' +
           '<button type="button" data-metas-de="' + escapeAttr(slug) + '">🎯 Metas do aluno</button>' +
           '<button type="button" data-presencial="' + escapeAttr(slug) + '">' + (s.presencial ? '🏋️ Tirar de presencial' : '🏋️ Marcar como presencial') + '</button>' +
+          '<button type="button" data-online="' + escapeAttr(slug) + '">' + (s.online ? '🌐 Tirar de online' : '🌐 Marcar como online') + '</button>' +
           '<a href="' + escapeAttr(whatsappUrlFor(slug)) + '" target="_blank" rel="noopener">📲 WhatsApp</a>' +
           '<button type="button" data-rename="' + escapeAttr(slug) + '">🔑 Trocar código</button>' +
           '<button type="button" data-remove="' + escapeAttr(slug) + '">✕ Remover aluno</button>' +
@@ -6777,8 +6780,8 @@ function startApp() {
       rosterSelBarraHtml() + '<div class="tr-search-row">' +
       '<input type="text" class="tr-search-input" id="trSearchInput" placeholder="Buscar aluno..." autocomplete="off" value="' + escapeAttr(state.rosterSearch || "") + '">' +
       '<div class="tr-filter-tabs" id="trFilterTabs">' +
-      ["todos", "emdia", "semana", "sumido", "semacesso"].concat(allStudents.some(function (x) { return x.s.presencial; }) ? ["presencial"] : []).map(function (key) {
-        var labels = { todos: "Todos", emdia: "Em dia", semana: "Na semana", sumido: "Sumidos", semacesso: "Sem acesso", presencial: "Presenciais" };
+      ["todos", "emdia", "semana", "sumido", "semacesso"].concat(allStudents.some(function (x) { return x.s.presencial; }) ? ["presencial"] : []).concat(allStudents.some(function (x) { return x.s.online; }) ? ["online"] : []).map(function (key) {
+        var labels = { todos: "Todos", emdia: "Em dia", semana: "Na semana", sumido: "Sumidos", semacesso: "Sem acesso", presencial: "Presenciais", online: "Online" };
         return '<button type="button" class="tr-filter-tab' + ((state.rosterFilter || "todos") === key ? " active" : "") + '" data-filter="' + key + '">' + labels[key] + '</button>';
       }).join("") +
       '</div></div>' +
@@ -6821,7 +6824,7 @@ function startApp() {
       var anyVisible = false;
       Array.prototype.forEach.call(document.querySelectorAll("#trRosterList .tr-roster-row"), function (row) {
         var matchesSearch = !q || row.getAttribute("data-name").indexOf(q) !== -1;
-        var matchesFilter = filter === "todos" || (filter === "semana" ? row.getAttribute("data-semana") === "1" : filter === "presencial" ? row.getAttribute("data-pres") === "1" : row.getAttribute("data-status") === filter);
+        var matchesFilter = filter === "todos" || (filter === "semana" ? row.getAttribute("data-semana") === "1" : filter === "presencial" ? row.getAttribute("data-pres") === "1" : filter === "online" ? row.getAttribute("data-online") === "1" : row.getAttribute("data-status") === filter);
         var show = matchesSearch && matchesFilter;
         row.style.display = show ? "" : "none";
         if (show) anyVisible = true;
@@ -6911,6 +6914,10 @@ function startApp() {
     if (btnSelMarcaGratis) btnSelMarcaGratis.addEventListener("click", function () { rosterMarcarMesGratis(rosterSelLista(), true); });
     var btnSelTiraGratis = document.getElementById("btnSelTiraGratis");
     if (btnSelTiraGratis) btnSelTiraGratis.addEventListener("click", function () { rosterMarcarMesGratis(rosterSelLista(), false); });
+    var btnSelOnline = document.getElementById("btnSelOnline");
+    if (btnSelOnline) btnSelOnline.addEventListener("click", function () { rosterMarcarOnline(rosterSelLista(), true); });
+    var btnSelTiraOnline = document.getElementById("btnSelTiraOnline");
+    if (btnSelTiraOnline) btnSelTiraOnline.addEventListener("click", function () { rosterMarcarOnline(rosterSelLista(), false); });
     var btnSelOfertaOn = document.getElementById("btnSelOfertaOn");
     if (btnSelOfertaOn) btnSelOfertaOn.addEventListener("click", function () { rosterDefinirOferta(rosterSelLista(), true); });
     var btnSelOfertaOff = document.getElementById("btnSelOfertaOff");
@@ -7007,6 +7014,16 @@ function startApp() {
         state.rosterOpenMenu = null;
         if (state.rosterFilter === "presencial" && !Object.keys(state.data.students).some(function (k) { return state.data.students[k].presencial; })) state.rosterFilter = "todos";
         persistThen(function () { showToast(st.presencial ? "Marcado como presencial" : "Removido de presencial"); renderRoster(); });
+      });
+    });
+    Array.prototype.forEach.call(document.querySelectorAll("button[data-online]"), function (btn) {
+      btn.addEventListener("click", function () {
+        var sl = btn.getAttribute("data-online"), st = state.data.students[sl];
+        if (!st) return;
+        if (st.online) { delete st.online; } else { st.online = true; }
+        state.rosterOpenMenu = null;
+        if (state.rosterFilter === "online" && !Object.keys(state.data.students).some(function (k) { return state.data.students[k].online; })) state.rosterFilter = "todos";
+        persistThen(function () { showToast(st.online ? "Marcado como online: quando o plano acabar, ele vê a página de renovação" : "Removido de online"); renderRoster(); });
       });
     });
     Array.prototype.forEach.call(document.querySelectorAll("[data-metas-de]"), function (btn) {
@@ -10002,6 +10019,8 @@ function startApp() {
       '<button type="button" class="sa-cta" id="btnSelGratis"' + (n ? "" : " disabled") + '>🎁 Dar 1 mês grátis (+30 dias)</button>' +
       '<button type="button" class="sa-cta-ghost" id="btnSelMarcaGratis"' + (n ? "" : " disabled") + ' title="Para quem já está no mês de teste: só marca, sem mudar a data do plano">🏷️ Já está no mês grátis (só marcar)</button>' +
       '<button type="button" class="sa-cta-ghost" id="btnSelTiraGratis"' + (n ? "" : " disabled") + '>Tirar marca de mês grátis</button>' +
+      '<button type="button" class="sa-cta-ghost" id="btnSelOnline"' + (n ? "" : " disabled") + ' title="Quando o plano acabar, o aluno vê a página de renovação com planos e pagamento">🌐 Marcar como online</button>' +
+      '<button type="button" class="sa-cta-ghost" id="btnSelTiraOnline"' + (n ? "" : " disabled") + '>Tirar de online</button>' +
       '<button type="button" class="sa-cta-ghost" id="btnSelOfertaOn"' + (n ? "" : " disabled") + '>🏷️ Oferecer planos ao terminar treino</button>' +
       '<button type="button" class="sa-cta-ghost" id="btnSelOfertaOff"' + (n ? "" : " disabled") + '>Tirar a oferta</button>' +
       '</div></div>';
@@ -10055,6 +10074,19 @@ function startApp() {
       : (feitos ? "Marca de mês grátis tirada de " + feitos + " aluno" + (feitos === 1 ? "" : "s") : "Nenhum dos selecionados tinha a marca");
     if (semFim) msg += " · sem data final no plano (defina o fim do plano): " + semFim;
     saveNow(msg, true);
+  }
+  // Aluno online: quando o plano acaba, ele vê a página de renovação (planos, cartão e Pix).
+  function rosterMarcarOnline(slugs, marcar) {
+    var n = 0;
+    slugs.forEach(function (slug) {
+      var s = state.data.students[slug];
+      if (!s) return;
+      if (marcar && !s.online) { s.online = true; n++; }
+      else if (!marcar && s.online) { delete s.online; n++; }
+    });
+    state.rosterSel = {};
+    if (!marcar && state.rosterFilter === "online") state.rosterFilter = "todos";
+    saveNow(marcar ? n + " aluno" + (n === 1 ? "" : "s") + " marcado" + (n === 1 ? "" : "s") + " como online" : "Online tirado de " + n + " aluno" + (n === 1 ? "" : "s"), true);
   }
   function rosterDefinirOferta(slugs, ligada) {
     slugs.forEach(function (slug) { var s = state.data.students[slug]; if (s) s.ofertaPlanos = !!ligada; });
@@ -10154,8 +10186,8 @@ function startApp() {
       '<h2>' + (gratisAcabou ? 'Seu mês grátis terminou' : 'Seu plano expirou') + '</h2>' +
       (temPlanos ? '<a class="sa-cta" href="' + escapeAttr(urlRenovar) + '" style="display:block;text-align:center;text-decoration:none;margin:14px 0">Ver benefícios e formas de pagamento</a>' : '') +
       corpo + '</div>';
-    // Fim do mês grátis: abre a página de renovação uma vez por sessão (o personal vendo como aluno não é levado).
-    if (gratisAcabou && temPlanos && !state.trainerPreview && !state.atendimento && !state.cameFromRoster) {
+    // Fim do mês grátis ou do plano de aluno online: abre a página de renovação uma vez por sessão (o personal vendo como aluno não é levado).
+    if ((gratisAcabou || s.online) && temPlanos && !state.trainerPreview && !state.atendimento && !state.cameFromRoster) {
       var jaAbriu = false;
       try { jaAbriu = sessionStorage.getItem("renovarAberta") === plan.endDate; sessionStorage.setItem("renovarAberta", plan.endDate); } catch (e) {}
       if (!jaAbriu) { location.assign(urlRenovar); return; }

@@ -233,7 +233,7 @@
       <div>
         <div class="eyebrow" id="r-eyebrow">Seu mês grátis terminou</div>
         <h1><span id="r-ola">Bora continuar</span> <em>no seu ritmo?</em></h1>
-        <p class="lead">Você já conhece o treino, o app e o acompanhamento. Escolha um plano para <b>seguir evoluindo sem parar</b>, com o mesmo cuidado do mês de teste e uma <b>videochamada todo mês</b> para revisar os seus treinos.</p>
+        <p class="lead" id="r-lead">Você já conhece o treino, o app e o acompanhamento. Escolha um plano para <b>seguir evoluindo sem parar</b>, com o mesmo cuidado do mês de teste e uma <b>videochamada todo mês</b> para revisar os seus treinos.</p>
         <div class="hero-cta">
           <a class="btn" href="#planos">Ver planos e pagamento</a>
           <a class="btn ghost" href="#video">Como é a videochamada</a>
@@ -350,7 +350,10 @@
   var whats = String(d.w || "").replace(/\D/g, "");
   var pix = String(d.x || "").trim().slice(0, 120);
   var nome = String(d.n || "").trim().split(/\s+/)[0].slice(0, 30);
-  if (d.g === 0) $("r-eyebrow").textContent = "Seu plano terminou";
+  if (d.g === 0) {
+    $("r-eyebrow").textContent = "Seu plano terminou";
+    $("r-lead").innerHTML = "Renove para <b>seguir evoluindo sem parar</b>, com o mesmo treino individual, o app com todo o seu histórico e uma <b>videochamada todo mês</b> para revisar os seus treinos.";
+  }
   if (nome) $("r-ola").textContent = nome + ", bora continuar";
   function linkSeguro(u) { u = String(u || "").trim(); return /^https:\/\/[^\s"'<>]+$/i.test(u) ? u : ""; }
   function wa(txt) { return whats ? "https://wa.me/" + whats + "?text=" + encodeURIComponent(txt) : ""; }

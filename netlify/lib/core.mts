@@ -370,6 +370,26 @@ function mesclaSessoesAluno(antes: any, depois: any): void {
   depois.sessoesApagadas = [...apagadas].slice(-200);
 }
 
+// Treino em andamento encerrado de propósito (personal troca/cancela, ou o próprio aluno troca de treino)
+// fica registrado em sessoesCanceladas, pelo início. Um salvamento antigo do app do aluno (aparelho ou aba
+// que ainda mostra o treino aberto) não reabre esse treino: no lugar dele fica o treino em andamento que o
+// servidor já tinha, se ainda estiver aberto e não tiver sido concluído. Devolve true quando trocou a sessão.
+function aplicaSessoesCanceladas(antes: any, depois: any): boolean {
+  if (!depois || typeof depois !== "object") return false;
+  const canc = new Set<string>();
+  for (const x of [...(Array.isArray(antes?.sessoesCanceladas) ? antes.sessoesCanceladas : []), ...(Array.isArray(depois.sessoesCanceladas) ? depois.sessoesCanceladas : [])]) {
+    if (x !== null && x !== undefined && String(x).length <= 40) canc.add(String(x));
+  }
+  depois.sessoesCanceladas = [...canc].slice(-50);
+  const enviada = depois.sessaoEmAndamento;
+  if (!enviada || enviada.startedAt === undefined || enviada.startedAt === null || !canc.has(String(enviada.startedAt))) return false;
+  const aindaAberta = antes && antes.sessaoEmAndamento;
+  const concluida = (id: string) => (Array.isArray(depois.sessoes) ? depois.sessoes : []).some((x: any) => x && x.inicio != null && String(x.inicio) === id);
+  const valida = !!aindaAberta && aindaAberta.startedAt != null && !canc.has(String(aindaAberta.startedAt)) && !concluida(String(aindaAberta.startedAt));
+  depois.sessaoEmAndamento = valida ? aindaAberta : null;
+  return true;
+}
+
 async function postState(req: Request, deps: Deps, now: number): Promise<Response> {
   const body = await readJson(req);
   if (!body || typeof body !== "object") return reply(400, { error: "bad_json" });
@@ -398,10 +418,14 @@ async function postState(req: Request, deps: Deps, now: number): Promise<Respons
     // Treino "em andamento" que já está salvo nas sessões (envio atrasado ou de outra aba/aparelho): não reabre.
     const abertoAgora = (student as any).sessaoEmAndamento;
     if (abertoAgora && Array.isArray((student as any).sessoes) && (student as any).sessoes.some((x: any) => x && x.inicio != null && String(x.inicio) === String(abertoAgora.startedAt))) (student as any).sessaoEmAndamento = null;
+    // Treino que o personal (ou o próprio aluno) já cancelou não volta por um envio antigo.
+    const idEnviado = (student as any).sessaoEmAndamento?.startedAt;
+    const trocou = aplicaSessoesCanceladas(antes, student);
     st.data.students[slug] = student;
     st.version = (st.version || 0) + 1;
     await deps.kv.set(STATE_STORE, STATE_KEY, st);
     await avisoTreinoFinalizado(deps, now, slug, antes, student);
+    if (trocou) return reply(200, { version: st.version, sessaoCancelada: true, sessaoCanceladaId: String(idEnviado), sessaoEmAndamento: (student as any).sessaoEmAndamento || null });
     return reply(200, { version: st.version });
   }
 
@@ -412,6 +436,9 @@ async function postState(req: Request, deps: Deps, now: number): Promise<Respons
   const enforce = !deps.admin || deps.strictAdmin;
   if (enforce && clientVersion !== current.version) return reply(409, { ...publicState(current) });
   const data = { ...body.data };
+  if (data.students && typeof data.students === "object") {
+    for (const slug of Object.keys(data.students)) aplicaSessoesCanceladas(current.data?.students?.[slug], data.students[slug]);
+  }
   const pinFromClient = typeof data.pin === "string" ? data.pin.trim() : "";
   delete data.pin; // o PIN nunca mais mora no banco
   if (deps.admin && pinFromClient && !auth) await deps.kv.set(AUTH_STORE, AUTH_KEY, await makeAuth(pinFromClient)); // só testes: semeia o PIN se ainda não existe

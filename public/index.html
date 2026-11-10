@@ -10625,6 +10625,12 @@ function startApp() {
     }
     return sess;
   }
+  // Treino em andamento encerrado de propósito (trocar ou cancelar): o início fica guardado no aluno,
+  // para o servidor não reabrir esse treino com um envio antigo deste ou de outro aparelho.
+  function saMarcaCancelado(s, sess) {
+    if (!s || !sess || sess.startedAt == null) return;
+    s.sessoesCanceladas = (s.sessoesCanceladas || []).concat([sess.startedAt]).slice(-50);
+  }
   // treinoId is explicit now -- the student picks which treino to do (from
   // the chooser cards on Hoje/Treino), it's never forced by the rotation.
   // The rotation still moves forward on finish, but only to decide which
@@ -14830,6 +14836,7 @@ function startApp() {
         if (ativa && !(ativa.kind === "treino" && ativa.treinoId === alvo)) {
           var tn = getTreino(plan, alvo), ta = ativa.kind === "treino" ? getTreino(plan, ativa.treinoId) : null;
           if (!window.confirm("Você já iniciou " + (ta ? "o " + (ta.nome || "treino") : "um treino") + ". Quer trocar para " + (tn ? "o " + (tn.nome || "outro treino") : "outro treino") + "? O treino atual será cancelado.")) return;
+          saMarcaCancelado(s, ativa);
           s.sessaoEmAndamento = null; scheduleSave();
         }
         state.saView = alvo; state.saTab = "treino"; renderStudentApp(); window.scrollTo(0, 0);
@@ -14896,6 +14903,7 @@ function startApp() {
       var sa = s.sessaoEmAndamento, feitas = sa && sa.touchedSets ? Object.keys(sa.touchedSets).length : 0;
       var msg = "Trocar de treino? Este treino em andamento será cancelado" + (feitas ? " e as " + feitas + " série(s) marcadas aqui serão descartadas" : "") + ". Depois você escolhe outro.";
       if (!window.confirm(msg)) return;
+      saMarcaCancelado(s, sa);
       s.sessaoEmAndamento = null; state.saView = null; state.saTab = "hoje";
       saveNow("Treino cancelado. Escolha outro 👇", true); window.scrollTo(0, 0);
     };
@@ -17675,6 +17683,22 @@ function startApp() {
   window.addEventListener("online", function () { setTimeout(enviarPendente, 800); });
   window.__enviarPendente = enviarPendente;
 
+  // O servidor encerrou um treino em andamento que este aparelho ainda mostrava (o personal cancelou):
+  // o aparelho passa a mostrar o que o servidor tem, sem mexer em um treino novo iniciado depois do envio.
+  function saAplicaCancelamentoDoServidor(body) {
+    try {
+      var sl = state.slug && state.data && state.data.students && state.data.students[state.slug];
+      if (!sl || isTrainerRole() || state.trainerPreview) return;
+      var local = sl.sessaoEmAndamento;
+      if (!local || String(local.startedAt) !== String(body.sessaoCanceladaId)) return;
+      sl.sessaoEmAndamento = body.sessaoEmAndamento || null;
+      setTimeout(function () {
+        showToast("O personal encerrou o treino em andamento.");
+        if (!document.getElementById("saModalOverlay")) render();
+      }, 400);
+    } catch (e) {}
+  }
+
   function persistThen(onDone, msg, attempt, onError) {
     // Trainer preview ("👁️ Ver como o aluno vê"): EVERY save funnels
     // through this one function (scheduleSave -> saveNow -> persistThen,
@@ -17739,6 +17763,7 @@ function startApp() {
       if (!res.ok) throw new Error("http_" + res.status);
       return res.json().then(function (body) {
         serverVersion = body.version;
+        if (body.sessaoCancelada) saAplicaCancelamentoDoServidor(body);
         // Our local data (missing whatever this session deleted) is now the
         // accepted server copy, so there's nothing left to force out on a
         // future conflict -- keeping entries here forever would risk wrongly

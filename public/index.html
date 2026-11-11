@@ -4326,7 +4326,27 @@ function startApp() {
     "PEITO SUPINO BARRA": "/exercicios/anim-supino.mp4",
     "OMBRO DESENVOLVIMENTO BARRA EM PÉ": "/exercicios/anim-desenvolvimento.mp4",
     "COSTAS REMADA ABERTA BARRA": "/exercicios/anim-remada.mp4",
-    "GLÚTEO ELEVAÇÃO PÉLVICA BARRA HIP THRUST": "/exercicios/anim-elevacao.mp4"
+    "GLÚTEO ELEVAÇÃO PÉLVICA BARRA HIP THRUST": "/exercicios/anim-elevacao.mp4",
+    "PEITO SUPINO BARRA GUIADA": "/exercicios/anim-supino.mp4",
+    // costas
+    "COSTAS PUXADA BARRA PEGADA ABERTA": "/exercicios/anim-puxada.mp4",
+    "COSTAS PUXADA POLIA/CABO PEGADA FECHADA": "/exercicios/anim-puxada.mp4",
+    "COSTAS REMADA BAIXA COM BARRA": "/exercicios/anim-remada-baixa.mp4",
+    "COSTAS REMADA SENTADA MÁQUINA": "/exercicios/anim-remada-baixa.mp4",
+    "COSTAS PULL DOWN COM BARRA POLIA": "/exercicios/anim-pulldown.mp4",
+    "COSTAS PUXADA ESTENDIDA COM A BARRA": "/exercicios/anim-pulldown.mp4",
+    // peito
+    "PEITO SUPINO HALTERES": "/exercicios/anim-supino-halteres.mp4",
+    "PEITO SUPINO INCLINADO BARRA": "/exercicios/anim-supino-inclinado.mp4",
+    "PEITO SUPINO INCLINADO BARRA GUIADA": "/exercicios/anim-supino-inclinado.mp4",
+    "PEITO SUPINO PESO CORPORAL FLEXÃO DE BRAÇO": "/exercicios/anim-flexao.mp4",
+    // coxa
+    "COXA LEG PRESS INCLINADO": "/exercicios/anim-legpress.mp4",
+    "COXA CADEIRA EXTENSORA MÁQUINA": "/exercicios/anim-extensora.mp4",
+    "POSTERIOR DE COXA CADEIRA FLEXORA": "/exercicios/anim-flexora.mp4",
+    "POSTERIOR DE COXA FLEXÃO MÁQUINA CADEIRA": "/exercicios/anim-flexora.mp4",
+    "COXA AFUNDO HALTERES": "/exercicios/anim-afundo.mp4",
+    "COXA AFUNDO BÚLGARO HALTERES": "/exercicios/anim-bulgaro.mp4"
   };
   function animMusculosDe(ex) {
     if (!ex || !ex.nome) return "";
@@ -5181,6 +5201,7 @@ function startApp() {
   // request.
   function openInfo(nome, equip) {
     var ex = findCatalog(nome);
+    if (!ex && animMusculosDe({ nome: nome })) ex = { nome: nome };
     if (!ex) {
       document.getElementById("detailModal").innerHTML = '<div class="modal-head"><h2 class="ex-title-upper">' + escapeHtml(nome || "Exercício") + '</h2>' +
         '<button class="icon-btn" id="detailClose" aria-label="Fechar">✕</button></div><div class="modal-body"><div class="video-empty">Ainda sem vídeo cadastrado no Acervo.</div></div>';
@@ -10996,6 +11017,7 @@ function startApp() {
       var attrs = ' data-info="' + escapeAttr(ex.nome) + '" data-info-equip="' + escapeAttr(effectiveEquip(ex)) + '"';
       if (has) return '<button type="button" class="sa-video-btn"' + attrs + '><span class="sa-video-play">▶</span> ' + (ref ? "Ver animação de como fazer" : "Ver vídeo de como fazer") + '</button>';
       if (how) return '<button type="button" class="sa-video-btn sa-howto-btn"' + attrs + '><span class="sa-video-play">📝</span> Ver como fazer</button>';
+      if (animMusculosDe({ nome: ex.nome })) return '<button type="button" class="sa-video-btn"' + attrs + '><span class="sa-video-play">💪</span> Ver músculos que trabalham</button>';
     } catch (e) {}
     return "";
   }
@@ -11290,7 +11312,9 @@ function startApp() {
             '<button type="button" class="sa-video-btn" data-info="' + escapeAttr(ex.nome) + '" data-info-equip="' + escapeAttr(effectiveEquip(ex)) + '"><span class="sa-video-play">▶</span> ' + (videoEhRef ? "Ver animação de como fazer" : "Ver vídeo de como fazer") + '</button>' :
             (temComoFazer ?
               '<button type="button" class="sa-video-btn sa-howto-btn" data-info="' + escapeAttr(ex.nome) + '" data-info-equip="' + escapeAttr(effectiveEquip(ex)) + '"><span class="sa-video-play">📝</span> Ver como fazer</button>' :
-              '<div class="sa-no-video">🎬 Vídeo em breve</div>');
+              (animMusculosDe({ nome: ex.nome }) ?
+                '<button type="button" class="sa-video-btn" data-info="' + escapeAttr(ex.nome) + '" data-info-equip="' + escapeAttr(effectiveEquip(ex)) + '"><span class="sa-video-play">💪</span> Ver músculos que trabalham</button>' :
+                '<div class="sa-no-video">🎬 Vídeo em breve</div>'));
           // Same rest-timer countdown the trainer's table has next to
           // "Descanso" (openRestTimer/#detailModal) -- reused as-is here,
           // just triggered from the exercise's own ex.intervalo instead of

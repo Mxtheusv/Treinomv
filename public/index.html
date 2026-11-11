@@ -1007,6 +1007,12 @@
      instead of the 16:9 box above which would squish a portrait source. */
   .video-embed-loop { border-radius: 12px; overflow: hidden; background: #000; display: flex; align-items: center; justify-content: center; max-height: 70vh; }
   .video-embed-loop video { max-width: 100%; max-height: 70vh; width: auto; height: auto; display: block; border: none; }
+  /* Animação própria com os músculos que trabalham (exercícios principais) */
+  .anim-musc { border-radius: 14px; overflow: hidden; background: #070c1a; margin: 4px 0 14px; aspect-ratio: 1 / 1; max-height: 62vh; display: flex; justify-content: center; }
+  .anim-musc video { width: 100%; height: 100%; max-height: 62vh; object-fit: contain; display: block; }
+  .anim-abas { display: flex; gap: 6px; padding: 4px; margin: 0 0 12px; border-radius: 12px; background: rgba(127,140,180,.14); }
+  .anim-aba { flex: 1; border: 0; border-radius: 9px; padding: 10px 8px; font: 700 14px inherit; font-family: inherit; color: var(--ink-soft, #8b98bd); background: transparent; cursor: pointer; }
+  .anim-aba.on { background: var(--sa-accent, #ffc247); color: #1a1300; }
   .video-empty {
     border: 1.5px dashed #e0c66b; background: var(--gold-tint); border-radius: 12px;
     padding: 24px 16px; text-align: center; color: var(--gold-deep); font-weight: 600; font-size: 13px;
@@ -4312,6 +4318,22 @@ function startApp() {
   }
   function isRefGif(url) { return /^\/exercicios-ref\//.test(url || ""); }
   // O que tocar pra esse exercício: vídeo do Acervo, ou (se vazio) a animação de referência.
+  // Animações próprias com os músculos que trabalham (boneco de lado, ângulos e fase do movimento).
+  var ANIM_MUSCULOS = {
+    "COXA AGACHAMENTO BARRA": "/exercicios/anim-agachamento.mp4",
+    "POSTERIOR DE COXA TERRA BARRA": "/exercicios/anim-terra.mp4",
+    "POSTERIOR DE COXA STIFF BARRA": "/exercicios/anim-stiff.mp4",
+    "PEITO SUPINO BARRA": "/exercicios/anim-supino.mp4",
+    "OMBRO DESENVOLVIMENTO BARRA EM PÉ": "/exercicios/anim-desenvolvimento.mp4",
+    "COSTAS REMADA ABERTA BARRA": "/exercicios/anim-remada.mp4",
+    "GLÚTEO ELEVAÇÃO PÉLVICA BARRA HIP THRUST": "/exercicios/anim-elevacao.mp4"
+  };
+  function animMusculosDe(ex) {
+    if (!ex || !ex.nome) return "";
+    var alvo = normNome(ex.nome);
+    for (var k in ANIM_MUSCULOS) { if (normNome(k) === alvo) return ANIM_MUSCULOS[k]; }
+    return "";
+  }
   function videoDe(ex) {
     if (!ex) return "";
     var v = (ex.video || "").trim();
@@ -5182,6 +5204,17 @@ function startApp() {
     var videoBlock = embed ? '<div class="' + (isLocalLoop ? "video-embed-loop" : "video-embed") + '">' + embed + '</div>' :
       (vidUrl ? '<a href="' + escapeAttr(vidUrl) + '" target="_blank" rel="noopener">↗ Abrir vídeo</a>' :
         '<div class="video-empty">Ainda sem vídeo cadastrado no Acervo.</div>');
+    var animUrl = animMusculosDe(ex);
+    // Exercícios principais: abas "Vídeo" e "Músculos" (animação própria com os músculos que trabalham).
+    function abasMidia(midia) {
+      if (!animUrl) return midia;
+      return '<div class="anim-abas" role="tablist">' +
+        '<button type="button" class="anim-aba on" data-aba="video" role="tab" aria-selected="true">🎬 Vídeo</button>' +
+        '<button type="button" class="anim-aba" data-aba="musc" role="tab" aria-selected="false">💪 Músculos</button></div>' +
+        '<div data-painel="video">' + midia + '</div>' +
+        '<div data-painel="musc" hidden><div class="anim-musc"><video src="' + escapeAttr(animUrl) + '" loop muted playsinline preload="auto"></video></div>' +
+        '<p class="video-prov">💪 Os músculos acendem mais forte na fase em que trabalham mais.</p></div>';
+    }
     var equipLine = equip ? (function () {
       var c = equipColorsFor(equip);
       return '<span class="equip-badge" style="color:' + c[0] + ';background:' + c[1] + ';border-color:' + c[0] + '33;margin:0 0 10px">' + escapeHtml(equip) + '</span>';
@@ -5189,7 +5222,7 @@ function startApp() {
     document.getElementById("detailModal").innerHTML =
       '<div class="modal-head"><h2 class="ex-title-upper">' + escapeHtml(ex.nome) + '</h2>' +
       '<button class="icon-btn" id="detailClose" aria-label="Fechar">✕</button></div>' +
-      '<div class="modal-body">' + equipLine + (fotoRef ? '<div class="foto-ref"><img src="' + escapeAttr(fotoRef[0]) + '" alt=""><img src="' + escapeAttr(fotoRef[1]) + '" alt=""></div><p class="video-prov">📷 Foto de referência de um exercício parecido. Em breve, o vídeo do Matheus.</p>' : videoBlock) +
+      '<div class="modal-body">' + equipLine + abasMidia((fotoRef ? '<div class="foto-ref"><img src="' + escapeAttr(fotoRef[0]) + '" alt=""><img src="' + escapeAttr(fotoRef[1]) + '" alt=""></div><p class="video-prov">📷 Foto de referência de um exercício parecido. Em breve, o vídeo do Matheus.</p>' : videoBlock)) +
       (refAnim ? '<p class="video-prov">🎞️ Animação de referência. Em breve, o vídeo do Matheus.</p>' : '') +
       (provisorio ? '<p class="video-prov">🌐 Vídeo de referência da internet. Em breve, o vídeo do Matheus.</p>' : '') +
       (execTxt ? '<div class="exec-label">COMO FAZER</div>' : '') +
@@ -5198,6 +5231,18 @@ function startApp() {
       '</div>';
     document.getElementById("detailOverlay").hidden = false;
     document.getElementById("detailClose").addEventListener("click", closeInfo);
+    Array.prototype.forEach.call(document.querySelectorAll("#detailModal .anim-aba"), function (b) {
+      b.addEventListener("click", function () {
+        var aba = b.getAttribute("data-aba");
+        Array.prototype.forEach.call(document.querySelectorAll("#detailModal .anim-aba"), function (o) { var on = o === b; o.classList.toggle("on", on); o.setAttribute("aria-selected", on ? "true" : "false"); });
+        Array.prototype.forEach.call(document.querySelectorAll("#detailModal [data-painel]"), function (pn) {
+          var mostra = pn.getAttribute("data-painel") === aba; pn.hidden = !mostra;
+          Array.prototype.forEach.call(pn.querySelectorAll("video"), function (v) {
+            if (mostra) { v.muted = true; try { var pp = v.play(); if (pp && pp.catch) pp.catch(function () {}); } catch (e4) {} } else { try { v.pause(); } catch (e5) {} }
+          });
+        });
+      });
+    });
   }
   // Botão de vídeo/"como fazer" por delegação: funciona mesmo que a ligação direta dos botões
   // (feita a cada desenho da tela) tenha falhado, e mostra o erro na tela em vez de ficar mudo.

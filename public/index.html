@@ -1290,6 +1290,25 @@
   .sa-micro-top b { color: var(--sa-text); font-family: "Saira Condensed", sans-serif; font-size: 18px; }
   .sa-micro-track { margin-top: 8px; }
   .sa-micro-note { font-size: 11px; color: var(--sa-text-muted); margin-top: 6px; font-weight: 600; }
+  /* Calendário do microciclo: 4 semanas x 7 dias, dias treinados acesos */
+  .sa-mc { background: var(--sa-panel); border: 1px solid var(--sa-border); border-radius: 18px; padding: 14px 16px 12px; margin: 12px 0 14px; }
+  .sa-mc-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .sa-mc-eyebrow { font-size: 10.5px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; color: var(--sa-accent-text); }
+  .sa-mc-titulo { font-family: "Saira Condensed", sans-serif; font-style: italic; font-weight: 800; font-size: 21px; line-height: 1.05; color: var(--sa-text); margin-top: 3px; text-transform: uppercase; }
+  .sa-mc-sub { font-size: 12px; color: var(--sa-text-muted); font-weight: 600; margin-top: 2px; }
+  .sa-mc-num { text-align: right; flex-shrink: 0; }
+  .sa-mc-num b { display: block; font-family: "Saira Condensed", sans-serif; font-weight: 800; font-size: 34px; line-height: .95; color: var(--sa-teal); }
+  .sa-mc-num span { font-size: 11px; font-weight: 700; color: var(--sa-text-muted); text-transform: uppercase; letter-spacing: .06em; }
+  .sa-mc-grade { display: grid; grid-template-columns: 26px repeat(7, 1fr); gap: 5px; margin-top: 12px; align-items: center; }
+  .sa-mc-sem { font-size: 10px; font-weight: 700; color: var(--sa-text-muted); letter-spacing: .04em; }
+  .sa-mc-sem.atual { color: var(--sa-accent-text); }
+  .sa-mc-d { height: 16px; border-radius: 5px; background: rgba(var(--sa-tint-rgb),.10); }
+  .sa-mc-d.passou { background: rgba(var(--sa-tint-rgb),.18); }
+  .sa-mc-d.ok { background: linear-gradient(135deg, var(--sa-teal), #2fb889); box-shadow: 0 0 0 1px rgba(var(--sa-teal-rgb),.35); }
+  .sa-mc-d.hoje { box-shadow: inset 0 0 0 2px var(--sa-accent); }
+  .sa-mc-d.ok.hoje { box-shadow: inset 0 0 0 2px var(--sa-accent), 0 0 0 1px rgba(var(--sa-teal-rgb),.35); }
+  .sa-mc-leg { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; font-size: 11px; font-weight: 600; color: var(--sa-text-muted); }
+  .sa-mc-leg i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
 
   /* ---------- Atividade livre (registro manual, mantém a sequência em dias
      sem treino do plano -- corrida de fim de semana e afins) ---------- */
@@ -10472,15 +10491,36 @@ function startApp() {
       if (d > hoje) break;
       if (set[isoFromDate(d)]) feitos++;
     }
-    return { feitos: feitos, total: SA_MICRO_DIAS, dia: Math.min(dias + 1, SA_MICRO_DIAS), concluido: dias >= SA_MICRO_DIAS, pct: Math.round(feitos / SA_MICRO_DIAS * 100) };
+    var grade = [];
+    for (var j = 0; j < SA_MICRO_DIAS; j++) {
+      var dj = new Date(base.getFullYear(), base.getMonth(), base.getDate() + j);
+      grade.push({ ok: !!set[isoFromDate(dj)], hoje: dj.getTime() === hoje.getTime(), futuro: dj > hoje });
+    }
+    return { feitos: feitos, total: SA_MICRO_DIAS, dia: Math.min(dias + 1, SA_MICRO_DIAS), concluido: dias >= SA_MICRO_DIAS, pct: Math.round(feitos / SA_MICRO_DIAS * 100), grade: grade };
   }
+  // Calendário do microciclo para o aluno: 4 semanas de 7 dias, dias treinados acesos e o total de treinos em destaque.
   function microcicloBarHtml(s, plan) {
     if (!plan) return "";
     var m = saMicrocicloInfo(s, plan);
-    return '<div class="sa-micro-bar">' +
-      '<div class="sa-micro-top"><span>' + (m.concluido ? "Microciclo concluído" : "Dia " + m.dia + " de " + m.total + " do microciclo") + '</span><b>' + m.pct + '%</b></div>' +
-      '<div class="sa-tier-progress-track sa-micro-track"><div class="sa-tier-progress-fill" style="width:' + m.pct + '%;background:linear-gradient(90deg,var(--sa-teal),#ffc247)"></div></div>' +
-      '<div class="sa-micro-note">' + m.feitos + ' dia' + (m.feitos === 1 ? "" : "s") + ' treinado' + (m.feitos === 1 ? "" : "s") + (m.concluido ? " neste microciclo" : " até agora neste microciclo") + '</div>' +
+    var semAtual = m.concluido ? -1 : Math.floor((m.dia - 1) / 7);
+    var grade = "";
+    for (var w = 0; w < 4; w++) {
+      grade += '<span class="sa-mc-sem' + (w === semAtual ? " atual" : "") + '">S' + (w + 1) + '</span>';
+      for (var d = 0; d < 7; d++) {
+        var g = m.grade[w * 7 + d];
+        grade += '<i class="sa-mc-d' + (g.ok ? " ok" : (!g.futuro ? " passou" : "")) + (g.hoje ? " hoje" : "") + '"></i>';
+      }
+    }
+    var titulo = m.concluido ? "Microciclo concluído" : "Semana " + (semAtual + 1) + " de 4";
+    var sub = m.concluido ? "Fale com seu treinador sobre o próximo" : "Dia " + m.dia + " de " + m.total;
+    return '<div class="sa-mc">' +
+      '<div class="sa-mc-top"><div>' +
+      '<div class="sa-mc-eyebrow">' + escapeHtml(plan.microciclo || "Seu microciclo") + '</div>' +
+      '<div class="sa-mc-titulo">' + titulo + '</div>' +
+      '<div class="sa-mc-sub">' + sub + '</div>' +
+      '</div><div class="sa-mc-num"><b>' + m.feitos + '</b><span>treino' + (m.feitos === 1 ? "" : "s") + '</span></div></div>' +
+      '<div class="sa-mc-grade" aria-label="' + m.feitos + ' dias treinados neste microciclo">' + grade + '</div>' +
+      '<div class="sa-mc-leg"><span><i style="background:var(--sa-teal)"></i>treinou</span><span><i style="box-shadow:inset 0 0 0 2px var(--sa-accent)"></i>hoje</span></div>' +
       '</div>';
   }
 

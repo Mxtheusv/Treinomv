@@ -1255,6 +1255,17 @@
   .sa-novidade-item .sa-card-title { font-size: 16.5px; margin-top: 4px; }
   .sa-novidade-text { color: var(--sa-text); font-size: 13.5px; line-height: 1.55; margin-top: 6px; }
   .sa-novidade-dismiss { margin-top: 16px; }
+  /* Aviso do mês grátis na tela Hoje do aluno */
+  .sa-gratis-card { border-color: rgba(var(--sa-teal-rgb),.55); background: linear-gradient(135deg, rgba(var(--sa-teal-rgb),.12), var(--sa-panel) 65%); }
+  .sa-gratis-card .sa-card-eyebrow { color: var(--sa-teal); }
+  .sa-gratis-card.fim { border-color: var(--sa-accent); background: linear-gradient(135deg, rgba(var(--sa-gold-rgb),.14), var(--sa-panel) 65%); }
+  .sa-gratis-card.fim .sa-card-eyebrow { color: var(--sa-accent-text); }
+  .sa-gratis-data { font-size: 22px; margin-top: 6px; }
+  .sa-gratis-texto { color: var(--sa-text); font-size: 13.5px; line-height: 1.5; margin-top: 6px; }
+  .sa-gratis-barra { height: 6px; border-radius: 999px; background: rgba(var(--sa-tint-rgb),.14); margin-top: 12px; overflow: hidden; }
+  .sa-gratis-barra i { display: block; height: 100%; border-radius: inherit; background: var(--sa-teal); }
+  .sa-gratis-card.fim .sa-gratis-barra i { background: var(--sa-accent); }
+  .sa-gratis-cta { display: block; text-align: center; text-decoration: none; margin-top: 14px; }
 
   /* ---------- Sequência (streak) ---------- */
   /* Base colors below are the "sem fase ainda" (0 dias) default; once a
@@ -3109,6 +3120,31 @@ function startApp() {
   var LIMIAR_VENCIMENTO_PLANO_DIAS = 7;
   // Days from today until plan.endDate -- negative once it's already past.
   // null when the trainer never set an endDate at all (most plans today).
+  // Tela Hoje do aluno: até quando vai o mês grátis. Na última semana, aparece o botão dos planos.
+  function saMesGratisAvisoHtml(s, plan) {
+    if (!s || !s.mesGratisEm || !plan || !plan.endDate || isPlanExpired(plan)) return "";
+    var dias = diasAteVencimentoPlano(plan);
+    if (dias === null || dias < 0) return "";
+    var data = formatDateBR(plan.endDate);
+    var ini = new Date(s.mesGratisEm + "T00:00:00").getTime(), fimT = new Date(plan.endDate + "T00:00:00").getTime();
+    var total = Math.max(1, Math.round((fimT - ini) / 86400000));
+    var usado = Math.min(100, Math.max(4, Math.round(((total - dias) / total) * 100)));
+    var fim = dias <= 7;
+    var falta = dias === 0 ? "Termina hoje" : (dias === 1 ? "Falta 1 dia" : "Faltam " + dias + " dias");
+    var pv = (state.data && state.data.planosVenda) || {};
+    var temPlanos = (pv.planos || []).some(function (p) { return p && p.nome; });
+    var cta = fim && temPlanos && !state.trainerPreview && !state.atendimento
+      ? '<a class="sa-cta sa-gratis-cta" href="' + escapeAttr(renovarUrl(s, true)) + '">Ver planos para continuar</a>'
+      : '';
+    return '<div class="sa-card sa-gratis-card' + (fim ? ' fim' : '') + '"><div class="sa-card-inner">' +
+      '<div class="sa-card-eyebrow"><span class="sa-dot"></span>🎁 SEU MÊS GRÁTIS</div>' +
+      '<div class="sa-gratis-data sa-display">Até ' + escapeHtml(data) + '</div>' +
+      '<div class="sa-gratis-texto"><strong>' + falta + '</strong>' + (fim
+        ? ' do seu mês de teste. Escolha um plano para continuar treinando sem parar.'
+        : ' do seu mês de teste. Aproveite para treinar e registrar suas cargas.') + '</div>' +
+      '<div class="sa-gratis-barra" aria-hidden="true"><i style="width:' + usado + '%"></i></div>' +
+      cta + '</div></div>';
+  }
   function diasAteVencimentoPlano(plan) {
     if (!plan || !plan.endDate) return null;
     var hoje = new Date(todayISO() + "T00:00:00").getTime();
@@ -10755,6 +10791,7 @@ function startApp() {
       '<div class="sa-greeting sa-display">OLÁ, ' + escapeHtml(((s.nome || "").split(/\s+/)[0] || "ALUNO").toUpperCase()) + '</div>' +
       '<div class="sa-subtitle">' + escapeHtml(plan.microciclo || "") + '</div>' +
       microcicloBarHtml(s, plan) +
+      saMesGratisAvisoHtml(s, plan) +
       pushBoxHtml(true) +
       saFotoDicaHtml(s) +
       reavCardAlunoHtml(s, plan) +

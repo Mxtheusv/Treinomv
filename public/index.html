@@ -1290,25 +1290,25 @@
   .sa-micro-top b { color: var(--sa-text); font-family: "Saira Condensed", sans-serif; font-size: 18px; }
   .sa-micro-track { margin-top: 8px; }
   .sa-micro-note { font-size: 11px; color: var(--sa-text-muted); margin-top: 6px; font-weight: 600; }
-  /* Calendário do microciclo: 4 semanas x 7 dias, dias treinados acesos */
-  .sa-mc { background: var(--sa-panel); border: 1px solid var(--sa-border); border-radius: 18px; padding: 14px 16px 12px; margin: 12px 0 14px; }
-  .sa-mc-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  /* Metas do microciclo: meta da semana (pelo número de treinos do plano) e medalha por semana fechada */
+  .sa-mc { background: linear-gradient(135deg, rgba(var(--sa-teal-rgb),.10), var(--sa-panel) 60%); border: 1px solid var(--sa-border); border-radius: 18px; padding: 14px 16px; margin: 12px 0 14px; }
+  .sa-mc.batida { border-color: rgba(var(--sa-gold-rgb),.6); background: linear-gradient(135deg, rgba(var(--sa-gold-rgb),.14), var(--sa-panel) 60%); }
   .sa-mc-eyebrow { font-size: 10.5px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; color: var(--sa-accent-text); }
-  .sa-mc-titulo { font-family: "Saira Condensed", sans-serif; font-style: italic; font-weight: 800; font-size: 21px; line-height: 1.05; color: var(--sa-text); margin-top: 3px; text-transform: uppercase; }
-  .sa-mc-sub { font-size: 12px; color: var(--sa-text-muted); font-weight: 600; margin-top: 2px; }
-  .sa-mc-num { text-align: right; flex-shrink: 0; }
-  .sa-mc-num b { display: block; font-family: "Saira Condensed", sans-serif; font-weight: 800; font-size: 34px; line-height: .95; color: var(--sa-teal); }
-  .sa-mc-num span { font-size: 11px; font-weight: 700; color: var(--sa-text-muted); text-transform: uppercase; letter-spacing: .06em; }
-  .sa-mc-grade { display: grid; grid-template-columns: 26px repeat(7, 1fr); gap: 5px; margin-top: 12px; align-items: center; }
-  .sa-mc-sem { font-size: 10px; font-weight: 700; color: var(--sa-text-muted); letter-spacing: .04em; }
-  .sa-mc-sem.atual { color: var(--sa-accent-text); }
-  .sa-mc-d { height: 16px; border-radius: 5px; background: rgba(var(--sa-tint-rgb),.10); }
-  .sa-mc-d.passou { background: rgba(var(--sa-tint-rgb),.18); }
-  .sa-mc-d.ok { background: linear-gradient(135deg, var(--sa-teal), #2fb889); box-shadow: 0 0 0 1px rgba(var(--sa-teal-rgb),.35); }
-  .sa-mc-d.hoje { box-shadow: inset 0 0 0 2px var(--sa-accent); }
-  .sa-mc-d.ok.hoje { box-shadow: inset 0 0 0 2px var(--sa-accent), 0 0 0 1px rgba(var(--sa-teal-rgb),.35); }
-  .sa-mc-leg { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; font-size: 11px; font-weight: 600; color: var(--sa-text-muted); }
-  .sa-mc-leg i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+  .sa-mc-frase { font-family: "Saira Condensed", sans-serif; font-style: italic; font-weight: 800; font-size: 23px; line-height: 1.05; color: var(--sa-text); margin-top: 4px; text-transform: uppercase; }
+  .sa-mc-frase em { font-style: italic; color: var(--sa-teal); }
+  .sa-mc.batida .sa-mc-frase em { color: var(--sa-accent-text); }
+  .sa-mc-sub { font-size: 12.5px; color: var(--sa-text-muted); font-weight: 600; margin-top: 4px; line-height: 1.4; }
+  .sa-mc-semanas { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 14px; }
+  .sa-mc-s { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+  .sa-mc-s svg { width: 54px; height: 54px; display: block; }
+  .sa-mc-s .trilha { fill: none; stroke: rgba(var(--sa-tint-rgb),.16); stroke-width: 5; }
+  .sa-mc-s .arco { fill: none; stroke: var(--sa-teal); stroke-width: 5; stroke-linecap: round; transform: rotate(-90deg); transform-origin: 50% 50%; }
+  .sa-mc-s.fechou .arco { stroke: var(--sa-accent); }
+  .sa-mc-s .num { font: 800 15px "Saira Condensed", sans-serif; fill: var(--sa-text); }
+  .sa-mc-s.futura .num { fill: var(--sa-text-muted); }
+  .sa-mc-s span { font-size: 10.5px; font-weight: 700; color: var(--sa-text-muted); letter-spacing: .05em; text-transform: uppercase; }
+  .sa-mc-s.atual span { color: var(--sa-accent-text); }
+  .sa-mc-s.fechou span { color: var(--sa-accent-text); }
 
   /* ---------- Atividade livre (registro manual, mantém a sequência em dias
      sem treino do plano -- corrida de fim de semana e afins) ---------- */
@@ -10498,29 +10498,47 @@ function startApp() {
     }
     return { feitos: feitos, total: SA_MICRO_DIAS, dia: Math.min(dias + 1, SA_MICRO_DIAS), concluido: dias >= SA_MICRO_DIAS, pct: Math.round(feitos / SA_MICRO_DIAS * 100), grade: grade };
   }
-  // Calendário do microciclo para o aluno: 4 semanas de 7 dias, dias treinados acesos e o total de treinos em destaque.
+  // Metas do microciclo para o aluno: a meta da semana é o número de treinos do plano (2 a 6).
+  // Mostra quanto falta para fechar a semana e uma medalha para cada semana fechada.
+  function saMetaSemanal(plan) {
+    var n = (plan && plan.treinos ? plan.treinos.length : 0) || 3;
+    return Math.max(2, Math.min(6, n));
+  }
   function microcicloBarHtml(s, plan) {
     if (!plan) return "";
-    var m = saMicrocicloInfo(s, plan);
-    var semAtual = m.concluido ? -1 : Math.floor((m.dia - 1) / 7);
-    var grade = "";
-    for (var w = 0; w < 4; w++) {
-      grade += '<span class="sa-mc-sem' + (w === semAtual ? " atual" : "") + '">S' + (w + 1) + '</span>';
-      for (var d = 0; d < 7; d++) {
-        var g = m.grade[w * 7 + d];
-        grade += '<i class="sa-mc-d' + (g.ok ? " ok" : (!g.futuro ? " passou" : "")) + (g.hoje ? " hoje" : "") + '"></i>';
-      }
+    var m = saMicrocicloInfo(s, plan), meta = saMetaSemanal(plan);
+    var semAtual = m.concluido ? 4 : Math.floor((m.dia - 1) / 7);
+    var porSemana = [0, 1, 2, 3].map(function (w) { return m.grade.slice(w * 7, w * 7 + 7).filter(function (g) { return g.ok; }).length; });
+    var fechadas = porSemana.filter(function (n, w) { return n >= meta && w <= semAtual; }).length;
+    var nAtual = semAtual < 4 ? porSemana[semAtual] : 0, faltam = Math.max(0, meta - nAtual);
+    var batida = semAtual < 4 && faltam === 0;
+    var frase, sub;
+    if (m.concluido) {
+      frase = 'Microciclo <em>concluído</em>';
+      sub = m.feitos + ' treino' + (m.feitos === 1 ? '' : 's') + ' e ' + fechadas + ' de 4 semanas fechadas. Fale com seu treinador sobre o próximo.';
+    } else if (batida) {
+      frase = 'Semana <em>fechada!</em> 🔥';
+      sub = nAtual > meta ? 'Você já passou da meta: cada treino extra é bônus.' : 'Meta de ' + meta + ' treinos batida. Treino extra conta como bônus.';
+    } else {
+      frase = faltam === meta ? 'Bora começar a <em>semana ' + (semAtual + 1) + '</em>' : 'Falta' + (faltam === 1 ? '' : 'm') + ' <em>' + faltam + ' treino' + (faltam === 1 ? '' : 's') + '</em> pra fechar a semana';
+      sub = 'Meta: ' + meta + ' treinos por semana · ' + m.feitos + ' treino' + (m.feitos === 1 ? '' : 's') + ' neste microciclo' + (fechadas ? ' · ' + fechadas + ' semana' + (fechadas === 1 ? '' : 's') + ' fechada' + (fechadas === 1 ? '' : 's') : '');
     }
-    var titulo = m.concluido ? "Microciclo concluído" : "Semana " + (semAtual + 1) + " de 4";
-    var sub = m.concluido ? "Fale com seu treinador sobre o próximo" : "Dia " + m.dia + " de " + m.total;
-    return '<div class="sa-mc">' +
-      '<div class="sa-mc-top"><div>' +
-      '<div class="sa-mc-eyebrow">' + escapeHtml(plan.microciclo || "Seu microciclo") + '</div>' +
-      '<div class="sa-mc-titulo">' + titulo + '</div>' +
-      '<div class="sa-mc-sub">' + sub + '</div>' +
-      '</div><div class="sa-mc-num"><b>' + m.feitos + '</b><span>treino' + (m.feitos === 1 ? "" : "s") + '</span></div></div>' +
-      '<div class="sa-mc-grade" aria-label="' + m.feitos + ' dias treinados neste microciclo">' + grade + '</div>' +
-      '<div class="sa-mc-leg"><span><i style="background:var(--sa-teal)"></i>treinou</span><span><i style="box-shadow:inset 0 0 0 2px var(--sa-accent)"></i>hoje</span></div>' +
+    var R = 22, C = 2 * Math.PI * R;
+    var semanas = porSemana.map(function (n, w) {
+      var futura = w > semAtual, fechou = n >= meta && !futura, atual = w === semAtual;
+      var frac = futura ? 0 : Math.min(1, n / meta);
+      var centro = fechou ? '✓' : (futura ? '–' : n + '/' + meta);
+      return '<div class="sa-mc-s' + (fechou ? ' fechou' : '') + (atual ? ' atual' : '') + (futura ? ' futura' : '') + '">' +
+        '<svg viewBox="0 0 54 54" aria-hidden="true"><circle class="trilha" cx="27" cy="27" r="' + R + '"></circle>' +
+        (frac ? '<circle class="arco" cx="27" cy="27" r="' + R + '" style="stroke-dasharray:' + (frac * C).toFixed(1) + ' ' + C.toFixed(1) + '"></circle>' : '') +
+        '<text class="num" x="27" y="32" text-anchor="middle">' + centro + '</text></svg>' +
+        '<span>Sem ' + (w + 1) + '</span></div>';
+    }).join('');
+    return '<div class="sa-mc' + (batida ? ' batida' : '') + '">' +
+      '<div class="sa-mc-eyebrow">' + escapeHtml(plan.microciclo || 'Seu microciclo') + (m.concluido ? '' : ' · semana ' + (semAtual + 1) + ' de 4') + '</div>' +
+      '<div class="sa-mc-frase">' + frase + '</div>' +
+      '<div class="sa-mc-sub">' + escapeHtml(sub) + '</div>' +
+      '<div class="sa-mc-semanas">' + semanas + '</div>' +
       '</div>';
   }
 

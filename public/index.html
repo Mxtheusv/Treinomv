@@ -4404,8 +4404,9 @@ function startApp() {
   // Sem nome exato no mapa: búlgaro, afundo/passada e qualquer agachamento caem na animação mais próxima.
   function animMusculosPorPadrao(nome) {
     var n = nome.normalize ? nome.normalize("NFD").replace(/[\u0300-\u036f]/g, "") : nome;
-    if (/SALTO|SALTIT|POTENCIA|PLIOMETR|MOBILIDADE|ALONGAMENTO|ISOMETR|PAREDE|\bLATERAL\b|COSSACO/.test(n)) return "";
     var a = "/exercicios/anim-";
+    if (/(AGACH|SQUAT|AFUNDO|AVANCO|LUNGE)[A-Z ]*\bLATERAL\b|COSSACO/.test(n) && !/SALTO|POTENCIA|PLIOMETR|MINI-BAND|SUPER-BAND|ELASTIC/.test(n)) return a + "agach-lateral.mp4";
+    if (/SALTO|SALTIT|POTENCIA|PLIOMETR|MOBILIDADE|ALONGAMENTO|ISOMETR|PAREDE|\bLATERAL\b/.test(n)) return "";
     if (/BULGAR/.test(n)) return a + "bulgaro.mp4";
     if (/AGACH|SQUAT/.test(n)) {
       if (/HACK/.test(n)) return a + "hack.mp4";

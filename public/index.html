@@ -2692,6 +2692,12 @@ function startApp() {
     upsert("POTÊNCIA HANG POWER SNATCH", { grupoMuscular: "Corpo todo", tipoExercicio: "Elevação", equipamento: "Barra", video: "/exercicios/hang-power-snatch.mp4", exec: "Partindo com a barra abaixo dos joelhos, faça extensão explosiva de quadril e joelhos e receba a barra com os braços estendidos acima da cabeça." });
     upsert("POTÊNCIA KETTLEBELL SQUAT CLEAN", { grupoMuscular: "Corpo todo", tipoExercicio: "Elevação", equipamento: "Kettlebell", video: "/exercicios/kettlebell-squat-clean.mp4", exec: "Do agachamento, leve o kettlebell até o ombro com impulso de quadril, recebendo com o cotovelo sob o peso e voltando ao agachamento." });
     upsert("POTÊNCIA MEDICINE BALL CLEAN", { grupoMuscular: "Corpo todo", tipoExercicio: "Elevação", equipamento: "Bolinha", video: "/exercicios/medicine-ball-clean.mp4", exec: "Com a medicine ball nas mãos, impulsione quadril e joelhos e receba a bola no peito, flexionando levemente os joelhos para absorver." });
+    // Introdução ao LPO (levantamento olímpico): exercícios da progressão do clean e do snatch.
+    upsert("POTÊNCIA HANG POWER CLEAN", { grupoMuscular: "Corpo todo", tipoExercicio: "Elevação", equipamento: "Barra", exec: "Barra na altura dos joelhos (posição suspensa), tronco inclinado e braços estendidos. Faça a extensão tripla explosiva (tornozelo, joelho e quadril), encolha os ombros e encaixe embaixo da barra, recebendo-a nos ombros com os cotovelos altos, em meio agachamento. Fique em pé para terminar." });
+    upsert("POTÊNCIA POWER CLEAN", { grupoMuscular: "Corpo todo", tipoExercicio: "Elevação", equipamento: "Barra", exec: "Barra no chão sobre o meio do pé, mesma posição inicial do terra. Tire a barra do chão controlando (1ª puxada), acelere quando ela passar dos joelhos, faça a extensão tripla e receba a barra nos ombros em meio agachamento. Só depois de dominar o hang power clean." });
+    upsert("POTÊNCIA PUSH PRESS", { grupoMuscular: "Corpo todo", tipoExercicio: "Desenvolvimento", equipamento: "Barra", exec: "Barra apoiada na frente dos ombros. Flexione um pouco os joelhos com o tronco reto (dip) e estenda as pernas com força, usando esse impulso para empurrar a barra até travar os braços acima da cabeça. Desça controlando de volta aos ombros." });
+    upsert("COXA AGACHAMENTO FRONTAL BARRA", { grupoMuscular: "Coxa (quadríceps)", tipoExercicio: "Agachar", equipamento: "Barra", exec: "Barra apoiada na frente dos ombros com os cotovelos altos. Agache mantendo o tronco o mais vertical possível e os cotovelos apontando para a frente. É a posição de recepção do clean." });
+    upsert("COXA AGACHAMENTO OVERHEAD BARRA", { grupoMuscular: "Coxa (quadríceps)", tipoExercicio: "Agachar", equipamento: "Barra", exec: "Pegada aberta, barra travada acima da cabeça e alinhada sobre o meio do pé. Agache mantendo os braços estendidos e o tronco firme. Comece com bastão ou barra vazia: é a posição de recepção do snatch." });
     upsert("POTÊNCIA ARREMESSO ROTACIONAL", { grupoMuscular: "Corpo todo", tipoExercicio: "Outro", equipamento: "Bolinha", video: "/exercicios/arremesso-rotacional.mp4", exec: "Com a bola de lado, gire o tronco e arremesse contra a parede, transferindo a força do quadril para os braços." });
     upsert("BÍCEPS ROSCA MARTELO CORDA POLIA", { grupoMuscular: "Bíceps", tipoExercicio: "Flexão", equipamento: "Polia/Cabo", exec: "Em pé de frente para a polia baixa, corda com pegada neutra (palmas uma de frente para a outra). Suba com os cotovelos fixos ao lado do corpo e desça controlando." });
     upsert("TRÍCEPS MERGULHO BANCO", { grupoMuscular: "Tríceps", tipoExercicio: "Extensão", equipamento: "Peso corporal", exec: "Apoie as mãos na borda de um banco atrás de você, pernas estendidas ou dobradas. Desça dobrando os cotovelos até cerca de 90°, mantendo-os apontando para trás, e suba estendendo os braços." });
@@ -3854,6 +3860,20 @@ function startApp() {
         { nome: "TREINO B — DIA DE PERNA", blocos: [
           { t: "PERNAS E GLÚTEO", ex: [["COXA LEG PRESS HORIZONTAL", 2, "12", "60s"], ["COXA CADEIRA ADUTORA MÁQUINA", 2, "15", "45s"], ["GLÚTEO ELEVAÇÃO PESO CORPORAL PONTE", 2, "12", "45s"]] }
         ] }
+      ] },
+    { nome: "Introdução ao LPO (Levantamento Olímpico)", nivel: "Intermediário", freq: "2x/semana (A e B), junto com o treino de força",
+      desc: "Ensina o clean (arremesso) e o snatch (arranque) por partes: posição de recepção, puxada e o movimento completo. Cargas leves, foco em técnica e velocidade da barra. Dá para começar com bastão ou barra vazia.",
+      dias: [
+        { nome: "TREINO A — CLEAN (ARREMESSO)", blocos: [
+          { t: "TÉCNICA", ex: [["COXA AGACHAMENTO FRONTAL BARRA", 3, "5", "2min", "Cotovelos altos: é a posição em que você vai receber a barra no clean."], ["POTÊNCIA CLEAN PULL", 4, "3", "2min", "Da posição suspensa: extensão tripla e encolhe os ombros. Os braços só seguram."], ["POTÊNCIA HANG POWER CLEAN", 5, "3", "2min", "Explode o quadril e recebe a barra nos ombros em meio agachamento. Carga leve."]] },
+          { t: "FORÇA", ex: [["POTÊNCIA PUSH PRESS", 4, "5", "2min", "Joelhos flexionam pouco e empurram a barra; trave os braços acima da cabeça."], ["POSTERIOR DE COXA STIFF BARRA", 3, "8", "90s"]] },
+          { t: "CORE", ex: [["ABDÔMEN CORE PRANCHA", 3, "40s", "45s"]] }
+        ] },
+        { nome: "TREINO B — SNATCH (ARRANQUE)", blocos: [
+          { t: "TÉCNICA", ex: [["COXA AGACHAMENTO OVERHEAD BARRA", 3, "5", "90s", "Comece com bastão. Barra travada acima da cabeça, sobre o meio do pé."], ["POTÊNCIA HANG POWER SNATCH", 5, "3", "2min", "Pegada aberta; puxe alto e encaixe embaixo da barra com os braços travados."]] },
+          { t: "FORÇA", ex: [["POSTERIOR DE COXA TERRA BARRA", 4, "4", "2min30", "Mesma posição inicial do power clean."], ["POTÊNCIA POWER CLEAN", 4, "2", "2min", "Só depois de dominar o hang power clean."]] },
+          { t: "CORE", ex: [["ABDÔMEN CORE ANTI-FLEXÃO PRANCHA LATERAL COMPLETA", 3, "30s", "30s", "Cada lado."]] }
+        ] }
       ] }
   ];
   window.__modelosInfo = function () {
@@ -4444,12 +4464,26 @@ function startApp() {
     "PEITO SUPINO HALTERES UNILATERAL": "/exercicios/anim-supino-halteres.mp4",
     "COXA EXTENSÃO MÁQUINA ARTICULADA": "/exercicios/anim-extensora.mp4",
     "PANTURRILHA MÁQUINA HACK INVERTIDO": "/exercicios/anim-panturrilha.mp4",
-    "GLÚTEO PUXADA ENTRE AS PERNAS NA POLIA": "/exercicios/anim-swing.mp4"
+    "GLÚTEO PUXADA ENTRE AS PERNAS NA POLIA": "/exercicios/anim-swing.mp4",
+    // LPO
+    "POTÊNCIA CLEAN PULL": "/exercicios/anim-clean-pull.mp4",
+    "POTÊNCIA HANG POWER CLEAN": "/exercicios/anim-hang-clean.mp4",
+    "POTÊNCIA POWER CLEAN": "/exercicios/anim-power-clean.mp4",
+    "POTÊNCIA PUSH PRESS": "/exercicios/anim-push-press.mp4",
+    "POTÊNCIA HANG POWER SNATCH": "/exercicios/anim-hang-snatch.mp4",
+    "COXA AGACHAMENTO OVERHEAD BARRA": "/exercicios/anim-agach-overhead.mp4",
+    "COXA AGACHAMENTO FRONTAL BARRA": "/exercicios/anim-agach-frontal.mp4"
   };
   // Sem nome exato no mapa: búlgaro, afundo/passada e qualquer agachamento caem na animação mais próxima.
   function animMusculosPorPadrao(nome) {
     var n = nome.normalize ? nome.normalize("NFD").replace(/[\u0300-\u036f]/g, "") : nome;
     var a = "/exercicios/anim-";
+    if (/HANG (POWER )?CLEAN/.test(n)) return a + "hang-clean.mp4";
+    if (/POWER CLEAN|\bCLEAN\b.*BARRA|ARREMESSO.*BARRA/.test(n) && !/PULL|KETTLEBELL|MEDICINE|BOLA/.test(n)) return a + "power-clean.mp4";
+    if (/CLEAN PULL|SNATCH PULL|PUXADA ALTA/.test(n)) return a + "clean-pull.mp4";
+    if (/PUSH PRESS|PUSH JERK/.test(n)) return a + "push-press.mp4";
+    if (/SNATCH|ARRANQUE/.test(n) && !/KETTLEBELL|HALTER/.test(n)) return a + "hang-snatch.mp4";
+    if (/AGACH.*(OVERHEAD|ACIMA DA CABECA)|OVERHEAD SQUAT/.test(n)) return a + "agach-overhead.mp4";
     if (/PRANCHA LATERAL/.test(n)) return a + "prancha-lateral.mp4";
     if (/FAZENDEIRO|MARCHA COM KETTLEBELL/.test(n)) return a + "fazendeiro.mp4";
     if (/ROLL-?OUT|RODINHA/.test(n)) return a + "rodinha.mp4";

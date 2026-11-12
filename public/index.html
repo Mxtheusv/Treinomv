@@ -2771,7 +2771,9 @@ function startApp() {
     // SENTADO" (updates its video), while the closed/neutral-grip one is a
     // genuinely new variant, cataloged separately.
     upsert("PEITO SUPINO BARRA", { video: "/exercicios/peito-supino-barra.mp4", exec: "Deitado no banco reto, barra na altura do peito com pegada um pouco mais aberta que os ombros. Desça controlando até a barra quase tocar o peito e empurre até quase estender o cotovelo." });
-    upsert("OMBRO DESENVOLVIMENTO HALTERES SENTADO", { video: "/exercicios/ombro-desenvolvimento-halter-sentado.mp4" });
+    // O clipe novo (ombro-desenvolvimento-halter-sentado.mp4) ficou cortado só na preparação, sem a subida:
+    // volta para o vídeo completo até chegar o corte certo.
+    upsert("OMBRO DESENVOLVIMENTO HALTERES SENTADO", { video: "/exercicios/ombro-desenvolvimento-sentado.mp4" });
     upsert("OMBRO DESENVOLVIMENTO HALTERES FECHADO", { grupoMuscular: "Ombro", tipoExercicio: "Desenvolvimento", equipamento: "Halteres", video: "/exercicios/ombro-desenvolvimento-fechado.mp4", exec: "Sentado com apoio nas costas, halteres partindo próximos aos ombros com pegada neutra. Empurre para cima aproximando as extremidades dos halteres no topo, sem travar o cotovelo, e desça controlando." });
     upsert("BÍCEPS ROSCA HALTERES BANCO INCLINADO", { grupoMuscular: "Bíceps", tipoExercicio: "Flexão", equipamento: "Halteres", video: "/exercicios/biceps-rosca-inclinado.mp4", exec: "Sentado no banco inclinado, halteres com os braços estendidos ao lado do corpo. Flexione o cotovelo trazendo o halter até o ombro, girando levemente o punho, e desça controlando sem balançar o tronco." });
     upsert("BÍCEPS ROSCA MARTELO BANCO INCLINADO", { grupoMuscular: "Bíceps", tipoExercicio: "Flexão", equipamento: "Halteres", video: "/exercicios/biceps-rosca-martelo-inclinado.mp4", exec: "Sentado no banco inclinado, halteres com pegada neutra (martelo) ao lado do corpo. Flexione o cotovelo trazendo o halter até o ombro sem girar o punho e desça controlando sem balançar o tronco." });
@@ -2782,12 +2784,20 @@ function startApp() {
     // targets it directly rather than creating a new entry.
     upsert("COXA AGACHAMENTO PESO CORPORAL UNILATERAL PROGRESSIVO", { grupoMuscular: "Coxa (quadríceps)", tipoExercicio: "Agachar", equipamento: "Peso corporal", video: "/exercicios/coxa-agachamento-unilateral-progressivo.mp4", exec: "Pé de trás apoiado num banco atrás do corpo, desça o agachamento com a perna da frente até quase 90° de joelho e suba controlando, sem apoiar o pé de trás no chão." });
     // Novos exercícios (GIFs do Matheus, convertidos em mp4 em /exercicios/)
-    upsert("OMBRO REMADA ALTA HALTERES", { grupoMuscular: "Ombro", tipoExercicio: "Remada", equipamento: "Halteres", video: "/exercicios/ombro-remada-alta-halteres.mp4", exec: "Halteres na frente das coxas, pegada na largura dos ombros. Puxe os cotovelos para cima e para fora até a altura dos ombros, mantendo os halteres próximos ao corpo, e desça controlando." });
-    upsert("PEITO PULL OVER HALTERES", { grupoMuscular: "Peito", tipoExercicio: "Outro", equipamento: "Halteres", video: "/exercicios/peito-pull-over-halteres.mp4", exec: "Deitado no banco com um halter segurado com as duas mãos sobre o peito. Leve o halter para trás da cabeça com os cotovelos levemente flexionados, sentindo o peitoral alongar, e volte contraindo o peito." });
-    upsert("ABDÔMEN CORE SUPRA BANCO DECLINADO", { grupoMuscular: "Abdômen/Core", tipoExercicio: "Core", equipamento: "Outro", video: "/exercicios/abdominal-supra-banco-declinado.mp4", exec: "Deitado no banco declinado com os pés presos, segure a barra acima da cabeça. Suba o tronco contraindo o abdômen, sem puxar o pescoço com as mãos, e desça controlando." });
-    upsert("POSTERIOR DE COXA BOM DIA", { grupoMuscular: "Posterior de coxa", tipoExercicio: "Outro", equipamento: "Barra", video: "/exercicios/posterior-coxa-bom-dia.mp4", exec: "Barra apoiada nas costas, pés na largura do quadril e joelhos levemente flexionados. Incline o tronco à frente pelo quadril mantendo a coluna neutra, e volte estendendo o quadril." });
-    upsert("COSTAS REMADA INVERTIDA", { grupoMuscular: "Costas", tipoExercicio: "Remada", equipamento: "Máquina", video: "/exercicios/costas-remada-invertida.mp4", exec: "Deitado sob a barra da máquina Smith, pegada um pouco mais larga que os ombros, corpo reto apoiado nos calcanhares. Puxe o peito até a barra contraindo as escápulas, e desça controlando sem perder a linha do corpo." });
+    upsert("OMBRO REMADA ALTA HALTERES", { grupoMuscular: "Ombro", tipoExercicio: "Remada", equipamento: "Halteres", exec: "Halteres na frente das coxas, pegada na largura dos ombros. Puxe os cotovelos para cima e para fora até a altura dos ombros, mantendo os halteres próximos ao corpo, e desça controlando." });
+    upsert("PEITO PULL OVER HALTERES", { grupoMuscular: "Peito", tipoExercicio: "Outro", equipamento: "Halteres", exec: "Deitado no banco com um halter segurado com as duas mãos sobre o peito. Leve o halter para trás da cabeça com os cotovelos levemente flexionados, sentindo o peitoral alongar, e volte contraindo o peito." });
+    upsert("ABDÔMEN CORE SUPRA BANCO DECLINADO", { grupoMuscular: "Abdômen/Core", tipoExercicio: "Core", equipamento: "Outro", exec: "Deitado no banco declinado com os pés presos, segure a barra acima da cabeça. Suba o tronco contraindo o abdômen, sem puxar o pescoço com as mãos, e desça controlando." });
+    upsert("POSTERIOR DE COXA BOM DIA", { grupoMuscular: "Posterior de coxa", tipoExercicio: "Outro", equipamento: "Barra", exec: "Barra apoiada nas costas, pés na largura do quadril e joelhos levemente flexionados. Incline o tronco à frente pelo quadril mantendo a coluna neutra, e volte estendendo o quadril." });
+    upsert("COSTAS REMADA INVERTIDA", { grupoMuscular: "Costas", tipoExercicio: "Remada", equipamento: "Máquina", exec: "Deitado sob a barra da máquina Smith, pegada um pouco mais larga que os ombros, corpo reto apoiado nos calcanhares. Puxe o peito até a barra contraindo as escápulas, e desça controlando sem perder a linha do corpo." });
 
+    // Vídeos citados acima que nunca chegaram ao site (o arquivo não existe): limpa o caminho para o
+    // app não mostrar um vídeo quebrado -- cai na animação/referência até o arquivo ser enviado.
+    (function () {
+      var semArquivo = ["/exercicios/peito-pull-over-halteres.mp4", "/exercicios/ombro-remada-alta-halteres.mp4", "/exercicios/abdominal-supra-banco-declinado.mp4", "/exercicios/posterior-coxa-bom-dia.mp4", "/exercicios/costas-remada-invertida.mp4", "/exercicios/ombro-desenvolvimento-halter-sentado.mp4"];
+      for (var i = 0; i < CATALOG.length; i++) {
+        if (CATALOG[i].video && semArquivo.indexOf(CATALOG[i].video) >= 0) { CATALOG[i].video = ""; changed = true; }
+      }
+    })();
     // Limpeza de tags faltantes -- a partir da lista exportada do acervo
     // (trainer flagged it as "muito ruim": vários itens já têm grupo
     // muscular mas ficaram sem tipo de exercício e/ou equipamento, o que
@@ -5344,7 +5354,8 @@ function startApp() {
         });
       });
     });
-    if (infoAbaPedida === "musc") {
+    // Sem vídeo filmado: abre direto nos músculos em vez de "Ainda sem vídeo".
+    if (infoAbaPedida === "musc" || (!vidUrl && !fotoRef)) {
       infoAbaPedida = "";
       var abaM = document.querySelector('#detailModal .anim-aba[data-aba="musc"]');
       if (abaM) abaM.click();

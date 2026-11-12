@@ -1355,6 +1355,7 @@
   .sa-ex-badges { margin-top: 6px; line-height: 1; }
   .sa-video-btn { display: flex; align-items: center; justify-content: center; gap: 9px; width: 100%; margin-top: 12px; padding: 11px 14px; background: rgba(var(--sa-gold-rgb),.12); border: 1.5px solid var(--sa-accent); border-radius: 12px; color: var(--sa-accent-text); font-family: "Barlow", sans-serif; font-weight: 700; font-size: 14px; cursor: pointer; }
   .sa-video-btn:active { background: rgba(var(--sa-gold-rgb),.24); }
+  .sa-video-btn.sa-musc-btn { margin-top: 8px; background: transparent; border-style: dashed; }
   .sa-video-play { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: var(--sa-accent); color: #1a1300; font-size: 10px; padding-left: 2px; box-sizing: border-box; }
   .sa-ex-meta { color: var(--sa-text-muted); font-size: 13px; font-weight: 500; margin-top: 6px; }
   .sa-ex-stats { display: flex; gap: 20px; margin-top: 10px; flex-wrap: wrap; }
@@ -3028,6 +3029,11 @@ function startApp() {
       texto: "Nos exercícios com técnica, o treino agora mostra o esquema direitinho. No drop set, cada série tem um campo para a carga de cada queda (ex.: 40 → 30 → 20 kg). Na pirâmide, cada série mostra as repetições (S1 · 12). Toque em 'Como fazer' para ver o passo a passo."
     },
     {
+      versao: 19,
+      titulo: "Veja os músculos trabalhando 💪",
+      texto: "Quase 70 exercícios agora têm uma animação que mostra quais músculos trabalham e em que fase do movimento eles acendem. No card do exercício, toque em \"💪 Ver músculos que trabalham\" (ou na aba Músculos, dentro do vídeo)."
+    },
+    {
       versao: 18,
       titulo: "Lembretes para te ajudar a treinar 🔔",
       texto: "Com os avisos ligados no celular, o app agora te lembra de treinar: no seu dia de treino, quando faltar pouco para a meta da semana, quando o seu 🔥 do mês estiver por um fio e se você ficar uns dias sem aparecer. Você também recebe parabéns ao bater a meta. É no máximo um aviso por dia. Ative em 'Avisos no celular'."
@@ -4367,7 +4373,33 @@ function startApp() {
     "POSTERIOR DE COXA KETTLEBELL SWING": "/exercicios/anim-swing.mp4",
     "COXA AGACHAMENTO HACK": "/exercicios/anim-hack.mp4",
     "COXA AGACHAMENTO HACK INVERTIDO": "/exercicios/anim-hack.mp4",
-    "GLÚTEO COICE NA POLIA": "/exercicios/anim-coice.mp4"
+    "GLÚTEO COICE NA POLIA": "/exercicios/anim-coice.mp4",
+    // leva 4
+    "GLÚTEO ELEVAÇÃO PESO CORPORAL PONTE": "/exercicios/anim-ponte.mp4",
+    "POSTERIOR DE COXA FLEXÃO NÓRDICA": "/exercicios/anim-nordica.mp4",
+    "PEITO PULL OVER HALTERES": "/exercicios/anim-pullover.mp4",
+    "COSTAS REMADA BAIXA COM HALTER": "/exercicios/anim-serrote.mp4",
+    "TRÍCEPS MERGULHO PARALELAS": "/exercicios/anim-mergulho.mp4",
+    "TRÍCEPS MERGULHO BANCO": "/exercicios/anim-mergulho-banco.mp4",
+    "TRÍCEPS ROSCA CORDA POLIA FRANCESA": "/exercicios/anim-francesa.mp4",
+    "TRÍCEPS ROSCA BARRA POLIA FRANCESA": "/exercicios/anim-francesa.mp4",
+    "BÍCEPS ROSCA SCOTT HALTERES": "/exercicios/anim-scott.mp4",
+    "BÍCEPS ROSCA SCOTT BARRA W": "/exercicios/anim-scott.mp4",
+    "OMBRO ENCOLHIMENTO HALTERES": "/exercicios/anim-encolhimento.mp4",
+    "OMBRO REMADA ALTA BARRA": "/exercicios/anim-remada-alta.mp4",
+    "OMBRO REMADA ALTA HALTERES": "/exercicios/anim-remada-alta.mp4",
+    "OMBRO DESENVOLVIMENTO HALTERES SENTADO": "/exercicios/anim-desenv-halteres.mp4",
+    "OMBRO DESENVOLVIMENTO HALTERES SEM APOIO": "/exercicios/anim-desenv-halteres.mp4",
+    "OMBRO DESENVOLVIMENTO HALTERES FECHADO": "/exercicios/anim-desenv-halteres.mp4",
+    "OMBRO DESENVOLVIMENTO MÁQUINA": "/exercicios/anim-desenv-halteres.mp4",
+    "PANTURRILHA SENTADO MÁQUINA": "/exercicios/anim-panturrilha-sentado.mp4",
+    "COXA LEG PRESS HORIZONTAL": "/exercicios/anim-legpress-h.mp4",
+    "COXA LEG PRESS ARTICULADO": "/exercicios/anim-legpress-h.mp4",
+    "COXA AGACHAMENTO HALTERES": "/exercicios/anim-agach-halteres.mp4",
+    "COXA AGACHAMENTO MÁQUINA GUIADA": "/exercicios/anim-agachamento.mp4",
+    "COXA AGACHAMENTO TERRA COM BARRA": "/exercicios/anim-terra.mp4",
+    "PEITO SUPINO INCLINADO MÁQUINA": "/exercicios/anim-supino-inclinado.mp4",
+    "ABDÔMEN CORE SUPRA BANCO DECLINADO": "/exercicios/anim-abdominal.mp4"
   };
   function animMusculosDe(ex) {
     if (!ex || !ex.nome) return "";
@@ -5285,9 +5317,20 @@ function startApp() {
         });
       });
     });
+    if (infoAbaPedida === "musc") {
+      infoAbaPedida = "";
+      var abaM = document.querySelector('#detailModal .anim-aba[data-aba="musc"]');
+      if (abaM) abaM.click();
+    }
   }
   // Botão de vídeo/"como fazer" por delegação: funciona mesmo que a ligação direta dos botões
   // (feita a cada desenho da tela) tenha falhado, e mostra o erro na tela em vez de ficar mudo.
+  // Botão "💪 Ver músculos": guarda a aba pedida antes de qualquer handler abrir o modal.
+  var infoAbaPedida = "";
+  document.addEventListener("click", function (e) {
+    var b = e.target && e.target.closest ? e.target.closest("[data-info]") : null;
+    infoAbaPedida = b ? (b.getAttribute("data-info-aba") || "") : "";
+  }, true);
   document.addEventListener("click", function (e) {
     var b = e.target && e.target.closest ? e.target.closest("[data-info]") : null;
     if (!b) return;
@@ -11036,8 +11079,9 @@ function startApp() {
       var c = findCatalog(ex.nome), has = !!(c && videoDe(c)), ref = has && !(c.video || "").trim();
       var how = !!(c && (c.exec || mobInfo(c) || execPadrao(c.nome)));
       var attrs = ' data-info="' + escapeAttr(ex.nome) + '" data-info-equip="' + escapeAttr(effectiveEquip(ex)) + '"';
-      if (has) return '<button type="button" class="sa-video-btn"' + attrs + '><span class="sa-video-play">▶</span> ' + (ref ? "Ver animação de como fazer" : "Ver vídeo de como fazer") + '</button>';
-      if (how) return '<button type="button" class="sa-video-btn sa-howto-btn"' + attrs + '><span class="sa-video-play">📝</span> Ver como fazer</button>';
+      var musc = animMusculosDe({ nome: ex.nome }) ? '<button type="button" class="sa-video-btn sa-musc-btn" data-info-aba="musc" data-info="' + escapeAttr(ex.nome) + '" data-info-equip="' + escapeAttr(effectiveEquip(ex)) + '"><span class="sa-video-play">💪</span> Ver músculos que trabalham</button>' : "";
+      if (has) return '<button type="button" class="sa-video-btn"' + attrs + '><span class="sa-video-play">▶</span> ' + (ref ? "Ver animação de como fazer" : "Ver vídeo de como fazer") + '</button>' + musc;
+      if (how) return '<button type="button" class="sa-video-btn sa-howto-btn"' + attrs + '><span class="sa-video-play">📝</span> Ver como fazer</button>' + musc;
       if (animMusculosDe({ nome: ex.nome })) return '<button type="button" class="sa-video-btn"' + attrs + '><span class="sa-video-play">💪</span> Ver músculos que trabalham</button>';
     } catch (e) {}
     return "";
@@ -11335,7 +11379,8 @@ function startApp() {
               '<button type="button" class="sa-video-btn sa-howto-btn" data-info="' + escapeAttr(ex.nome) + '" data-info-equip="' + escapeAttr(effectiveEquip(ex)) + '"><span class="sa-video-play">📝</span> Ver como fazer</button>' :
               (animMusculosDe({ nome: ex.nome }) ?
                 '<button type="button" class="sa-video-btn" data-info="' + escapeAttr(ex.nome) + '" data-info-equip="' + escapeAttr(effectiveEquip(ex)) + '"><span class="sa-video-play">💪</span> Ver músculos que trabalham</button>' :
-                '<div class="sa-no-video">🎬 Vídeo em breve</div>'));
+                '<div class="sa-no-video">🎬 Vídeo em breve</div>')) +
+            ((hasVideoClip || temComoFazer) && animMusculosDe({ nome: ex.nome }) ? '<button type="button" class="sa-video-btn sa-musc-btn" data-info-aba="musc" data-info="' + escapeAttr(ex.nome) + '" data-info-equip="' + escapeAttr(effectiveEquip(ex)) + '"><span class="sa-video-play">💪</span> Ver músculos que trabalham</button>' : "");
           // Same rest-timer countdown the trainer's table has next to
           // "Descanso" (openRestTimer/#detailModal) -- reused as-is here,
           // just triggered from the exercise's own ex.intervalo instead of

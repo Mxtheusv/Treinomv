@@ -4396,16 +4396,42 @@ function startApp() {
     "COXA LEG PRESS HORIZONTAL": "/exercicios/anim-legpress-h.mp4",
     "COXA LEG PRESS ARTICULADO": "/exercicios/anim-legpress-h.mp4",
     "COXA AGACHAMENTO HALTERES": "/exercicios/anim-agach-halteres.mp4",
-    "COXA AGACHAMENTO MÁQUINA GUIADA": "/exercicios/anim-agachamento.mp4",
+    "COXA AGACHAMENTO MÁQUINA GUIADA": "/exercicios/anim-agach-smith.mp4",
     "COXA AGACHAMENTO TERRA COM BARRA": "/exercicios/anim-terra.mp4",
     "PEITO SUPINO INCLINADO MÁQUINA": "/exercicios/anim-supino-inclinado.mp4",
     "ABDÔMEN CORE SUPRA BANCO DECLINADO": "/exercicios/anim-abdominal.mp4"
   };
+  // Sem nome exato no mapa: búlgaro, afundo/passada e qualquer agachamento caem na animação mais próxima.
+  function animMusculosPorPadrao(nome) {
+    var n = nome.normalize ? nome.normalize("NFD").replace(/[\u0300-\u036f]/g, "") : nome;
+    if (/SALTO|SALTIT|POTENCIA|PLIOMETR|MOBILIDADE|ALONGAMENTO|ISOMETR|PAREDE|\bLATERAL\b|COSSACO/.test(n)) return "";
+    var a = "/exercicios/anim-";
+    if (/BULGAR/.test(n)) return a + "bulgaro.mp4";
+    if (/AGACH|SQUAT/.test(n)) {
+      if (/HACK/.test(n)) return a + "hack.mp4";
+      if (/TERRA/.test(n)) return a + "terra.mp4";
+      if (/UNILATERAL|PISTOL|UMA PERNA/.test(n)) return a + "agach-unilateral.mp4";
+      if (/SUMO/.test(n)) return a + "agach-sumo.mp4";
+      if (/GOBLET|TACA/.test(n)) return a + "agach-goblet.mp4";
+      if (/FRONTAL|FRONT/.test(n)) return a + "agach-frontal.mp4";
+      if (/SMITH|GUIAD/.test(n)) return a + "agach-smith.mp4";
+      if (/HALTER|KETTLEBELL|\bKB\b|ANILHA|BOLA/.test(n)) return a + "agach-halteres.mp4";
+      if (/BARRA|LIVRE COM|COSTAS/.test(n) && !/PESO CORPORAL|SEM CARGA/.test(n)) return a + "agachamento.mp4";
+      return a + "agach-peso.mp4";
+    }
+    if (/AFUNDO|AVANCO|PASSADA|LUNGE/.test(n)) return a + "afundo.mp4";
+    return "";
+  }
+  var animCache = {};
   function animMusculosDe(ex) {
     if (!ex || !ex.nome) return "";
     var alvo = normNome(ex.nome);
-    for (var k in ANIM_MUSCULOS) { if (normNome(k) === alvo) return ANIM_MUSCULOS[k]; }
-    return "";
+    if (animCache.hasOwnProperty(alvo)) return animCache[alvo];
+    var r = "";
+    for (var k in ANIM_MUSCULOS) { if (normNome(k) === alvo) { r = ANIM_MUSCULOS[k]; break; } }
+    if (!r) r = animMusculosPorPadrao(alvo);
+    animCache[alvo] = r;
+    return r;
   }
   function videoDe(ex) {
     if (!ex) return "";

@@ -3041,7 +3041,7 @@ function startApp() {
     {
       versao: 19,
       titulo: "Veja os músculos trabalhando 💪",
-      texto: "Quase 70 exercícios agora têm uma animação que mostra quais músculos trabalham e em que fase do movimento eles acendem. No card do exercício, toque em \"💪 Ver músculos que trabalham\" (ou na aba Músculos, dentro do vídeo)."
+      texto: "Mais de 140 exercícios agora têm uma animação que mostra quais músculos trabalham e em que fase do movimento eles acendem. No card do exercício, toque em \"💪 Ver músculos que trabalham\" (ou na aba Músculos, dentro do vídeo)."
     },
     {
       versao: 18,
@@ -4409,12 +4409,57 @@ function startApp() {
     "COXA AGACHAMENTO MÁQUINA GUIADA": "/exercicios/anim-agach-smith.mp4",
     "COXA AGACHAMENTO TERRA COM BARRA": "/exercicios/anim-terra.mp4",
     "PEITO SUPINO INCLINADO MÁQUINA": "/exercicios/anim-supino-inclinado.mp4",
-    "ABDÔMEN CORE SUPRA BANCO DECLINADO": "/exercicios/anim-abdominal.mp4"
+    "ABDÔMEN CORE SUPRA BANCO DECLINADO": "/exercicios/anim-abdominal.mp4",
+    // leva 5
+    "OMBRO ELEVAÇÃO LATERAL COM HALTER": "/exercicios/anim-elevacao-lateral.mp4",
+    "OMBRO ELEVAÇÃO LATERAL MÁQUINA": "/exercicios/anim-elevacao-lateral.mp4",
+    "PEITO CRUCIFIXO COM HALTER": "/exercicios/anim-crucifixo.mp4",
+    "PEITO CRUCIFIXO INCLINADO HALTER": "/exercicios/anim-crucifixo.mp4",
+    "PEITO CRUCIFIXO MÁQUINA PECK DECK": "/exercicios/anim-crucifixo.mp4",
+    "COSTAS CRUCIFIXO INVERSO HALTERES": "/exercicios/anim-crucifixo-inverso.mp4",
+    "GLÚTEO MÁQUINA ABDUTORA": "/exercicios/anim-abdutora.mp4",
+    "GLÚTEO MÁQUINA ABDUTORA ARTICULADA": "/exercicios/anim-abdutora.mp4",
+    "COXA CADEIRA ADUTORA MÁQUINA": "/exercicios/anim-adutora.mp4",
+    "TRÍCEPS COICE HALTERES": "/exercicios/anim-coice-triceps.mp4",
+    "TRÍCEPS COICE POLIA": "/exercicios/anim-coice-triceps.mp4",
+    "ABDÔMEN CORE ANTI-HIPEREXTENSÃO RODINHA ABDOMINAL": "/exercicios/anim-rodinha.mp4",
+    "ABDÔMEN CORE ANTI-HIPEREXTENSÃO ROLL-OUT NA BOLA JOELHO NO CHÃO": "/exercicios/anim-rodinha.mp4",
+    "COSTAS REMADA SUPINADA COM A BARRA": "/exercicios/anim-remada.mp4",
+    "COSTAS REMADA SERROTE HALTER": "/exercicios/anim-serrote.mp4",
+    "COSTAS REMADA INCLINADA COM HALTER": "/exercicios/anim-serrote.mp4",
+    "COSTAS REMADA ABERTA MÁQUINA ARTICULADA": "/exercicios/anim-remada-baixa.mp4",
+    "COSTAS REMADA FECHADA MÁQUINA ARTICULADA": "/exercicios/anim-remada-baixa.mp4",
+    "COSTAS REMADA ABERTA SENTADA BARRA": "/exercicios/anim-remada-baixa.mp4",
+    "COSTAS REMADA SUPINADA SENTADO": "/exercicios/anim-remada-baixa.mp4",
+    "BÍCEPS ROSCA CONCENTRADA HALTERES": "/exercicios/anim-scott.mp4",
+    "BÍCEPS ROSCA INVERSA BARRA": "/exercicios/anim-rosca-barra.mp4",
+    "BÍCEPS ROSCA CORDA POLIA": "/exercicios/anim-rosca-halteres.mp4",
+    "BÍCEPS ROSCA MARTELO CORDA POLIA": "/exercicios/anim-rosca-halteres.mp4",
+    "BÍCEPS ROSCA HALTERES BANCO INCLINADO": "/exercicios/anim-rosca-halteres.mp4",
+    "BÍCEPS ROSCA MARTELO BANCO INCLINADO": "/exercicios/anim-rosca-halteres.mp4",
+    "TRÍCEPS TESTA BARRA POLIA": "/exercicios/anim-triceps-testa.mp4",
+    "TRÍCEPS TESTA CORDA POLIA": "/exercicios/anim-triceps-testa.mp4",
+    "TRÍCEPS SUPINO HALTERES": "/exercicios/anim-supino-halteres.mp4",
+    "OMBRO DESENVOLVIMENTO ARNOLD HALTERES": "/exercicios/anim-desenv-halteres.mp4",
+    "PEITO SUPINO HALTERES UNILATERAL": "/exercicios/anim-supino-halteres.mp4",
+    "COXA EXTENSÃO MÁQUINA ARTICULADA": "/exercicios/anim-extensora.mp4",
+    "PANTURRILHA MÁQUINA HACK INVERTIDO": "/exercicios/anim-panturrilha.mp4",
+    "GLÚTEO PUXADA ENTRE AS PERNAS NA POLIA": "/exercicios/anim-swing.mp4"
   };
   // Sem nome exato no mapa: búlgaro, afundo/passada e qualquer agachamento caem na animação mais próxima.
   function animMusculosPorPadrao(nome) {
     var n = nome.normalize ? nome.normalize("NFD").replace(/[\u0300-\u036f]/g, "") : nome;
     var a = "/exercicios/anim-";
+    if (/PRANCHA LATERAL/.test(n)) return a + "prancha-lateral.mp4";
+    if (/FAZENDEIRO|MARCHA COM KETTLEBELL/.test(n)) return a + "fazendeiro.mp4";
+    if (/ROLL-?OUT|RODINHA/.test(n)) return a + "rodinha.mp4";
+    if (/PRANCHA/.test(n) && !/SALTO|POLICHINELO/.test(n)) return a + "prancha.mp4";
+    if (/ELEVACAO LATERAL/.test(n)) return a + "elevacao-lateral.mp4";
+    if (/CRUCIFIXO INVERS|VOADOR INVERS|PECK DECK INVERS/.test(n)) return a + "crucifixo-inverso.mp4";
+    if (/CRUCIFIXO|PECK DECK|VOADOR|CROSS ?OVER/.test(n)) return a + "crucifixo.mp4";
+    if (/ABDUTORA/.test(n)) return a + "abdutora.mp4";
+    if (/ADUTORA/.test(n)) return a + "adutora.mp4";
+    if (/TRICEPS.*COICE|COICE.*TRICEPS/.test(n)) return a + "coice-triceps.mp4";
     if (/(AGACH|SQUAT|AFUNDO|AVANCO|LUNGE)[A-Z ]*\bLATERAL\b|COSSACO/.test(n) && !/SALTO|POTENCIA|PLIOMETR|MINI-BAND|SUPER-BAND|ELASTIC/.test(n)) return a + "agach-lateral.mp4";
     if (/SALTO|SALTIT|POTENCIA|PLIOMETR|MOBILIDADE|ALONGAMENTO|ISOMETR|PAREDE|\bLATERAL\b/.test(n)) return "";
     if (/BULGAR/.test(n)) return a + "bulgaro.mp4";

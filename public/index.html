@@ -6868,7 +6868,7 @@ function startApp() {
     }
 
     Array.prototype.forEach.call(document.querySelectorAll("[data-info]"), function (btn) {
-      btn.addEventListener("click", function () { openInfo(btn.getAttribute("data-info"), btn.getAttribute("data-info-equip")); });
+      btn.addEventListener("click", function () { infoAbaPedida = btn.getAttribute("data-info-aba") || ""; openInfo(btn.getAttribute("data-info"), btn.getAttribute("data-info-equip")); });
     });
 
     wireAllExerciseNameAutocompletes();
@@ -15728,7 +15728,7 @@ function startApp() {
     Array.prototype.forEach.call(document.querySelectorAll("[data-info]"), function (btn) {
       btn.addEventListener("click", function (e) {
         e.stopPropagation();
-        openInfo(btn.getAttribute("data-info"), btn.getAttribute("data-info-equip"));
+        infoAbaPedida = btn.getAttribute("data-info-aba") || ""; openInfo(btn.getAttribute("data-info"), btn.getAttribute("data-info-equip"));
       });
     });
 
@@ -17323,7 +17323,7 @@ function startApp() {
     };
 
     Array.prototype.forEach.call(document.querySelectorAll("[data-info]"), function (btn) {
-      btn.addEventListener("click", function () { openInfo(btn.getAttribute("data-info"), btn.getAttribute("data-info-equip")); });
+      btn.addEventListener("click", function () { infoAbaPedida = btn.getAttribute("data-info-aba") || ""; openInfo(btn.getAttribute("data-info"), btn.getAttribute("data-info-equip")); });
     });
 
     var delComp = document.querySelector('.panel[data-comp-panel] [data-del-comp]');
@@ -18618,7 +18618,7 @@ function startApp() {
       return { id: id, nome: nome, series: series, reps: reps, intervalo: "90s", equipamento: "", obs: "", obsAluno: "", cargas: { s1: carga, s2: carga, s3: carga } };
     };
     var treinos = [
-      { id: "dA", nome: "Treino A · Peito e costas", blocos: [{ id: "dAb", bloco: "A", titulo: "", exercicios: [ex("dA1", "PEITO SUPINO RETO", "3", "10", "50"), ex("dA2", "COSTAS PUXADA POLIA/CABO PEGADA FECHADA", "3", "12", "45")] }], aerobicos: [] },
+      { id: "dA", nome: "Treino A · Peito e costas", blocos: [{ id: "dAb", bloco: "A", titulo: "", exercicios: [ex("dA1", "PEITO SUPINO BARRA", "3", "10", "50"), ex("dA2", "COSTAS PUXADA POLIA/CABO PEGADA FECHADA", "3", "12", "45")] }], aerobicos: [] },
       { id: "dB", nome: "Treino B · Pernas", blocos: [{ id: "dBb", bloco: "B", titulo: "", exercicios: [ex("dB1", "COXA AGACHAMENTO HACK", "4", "10", "120"), ex("dB2", "GLÚTEO MÁQUINA ABDUTORA", "3", "15", "60")] }], aerobicos: [] },
       { id: "dC", nome: "Treino C · Ombros e core", blocos: [{ id: "dCb", bloco: "C", titulo: "", exercicios: [ex("dC1", "OMBRO DESENVOLVIMENTO HALTERES SENTADO", "3", "10", "16"), ex("dC2", "COSTAS REMADA HALTERES PRANCHA", "3", "12", "14")] }], aerobicos: [] }
     ];
@@ -18628,6 +18628,10 @@ function startApp() {
       return { id: "demo" + h[0], date: diasAtras(h[0]), ts: Date.now() - h[0] * 86400000, inicio: Date.now() - h[0] * 86400000 - 3e6, kind: "treino", treinoId: t.id, nome: t.nome,
         duracaoSeg: 2400 + h[0] * 30, seriesTotal: h[2], seriesLogadas: h[2], volumeKg: h[3], pse: 7, cargasLog: [], obsLog: [], seriesPorEx: [] };
     });
+    // Último treino A com cargas e repetições sobrando: mostra a sugestão de carga na demonstração.
+    sessoes[0].cargasLog = ["S1", "S2", "S3"].map(function (sr) { return { exercicio: "PEITO SUPINO BARRA", serie: sr, valor: "50" }; });
+    sessoes[0].seriesPorEx = [{ exercicio: "PEITO SUPINO BARRA", n: 3 }];
+    sessoes[0].rirLog = [{ exercicio: "PEITO SUPINO BARRA", rir: "3" }];
     sessoes.push({ id: "demoC5", date: diasAtras(5), ts: Date.now() - 5 * 86400000, kind: "corrida", nome: "Corrida leve", duracaoSeg: 1620, distanciaM: 5000 });
     var aluna = { nome: "Ana Exemplo", plans: [{ id: "dp1", label: "Plano 1", createdAt: Date.now() - 18 * 86400000, archived: false, microciclo: "Microciclo 1", startDate: null, endDate: null, rotationIdx: 0, complementarHidden: true,
       treinos: treinos, complementar: { nome: "VELOCIDADE, AGILIDADE E POTÊNCIA", protocolos: [], grupos: [], nota: "" } }],

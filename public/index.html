@@ -2257,6 +2257,22 @@
   .sa-pse-desc { min-height: 62px; margin: 10px 0 2px; padding: 11px 13px; border-radius: 12px; background: rgba(var(--sa-tint-rgb),.10); border: 1px solid var(--sa-border-soft); font-size: 13.5px; line-height: 1.45; color: var(--sa-text-muted); display: flex; flex-direction: column; gap: 3px; }
   .sa-pse-desc b { color: var(--sa-accent-text); font-size: 14.5px; }
   .sa-post-modal { display: flex; flex-direction: column; gap: 10px; }
+  .sa-mc .sa-week { margin-top: 8px; }
+  .sa-mc-dias-t { margin-top: 14px; font-size: 12.5px; color: var(--sa-text-muted); }
+  .sa-mc-dias-t b { color: var(--sa-text); }
+  .sa-rir { margin-top: 10px; }
+  .sa-rir-t { font-size: 12.5px; color: var(--sa-text-muted); margin-bottom: 6px; }
+  .sa-rir-t b { color: var(--sa-text); }
+  .sa-rir-op { display: flex; gap: 6px; }
+  .sa-rir-b { flex: 1; min-width: 0; height: 36px; border-radius: 10px; border: 1px solid var(--sa-border); background: var(--sa-panel-2); color: var(--sa-text); font: 700 14px "Barlow", sans-serif; cursor: pointer; }
+  .sa-rir-b.on { background: var(--sa-accent); border-color: var(--sa-accent); color: #1a1300; }
+  .mg-nums { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 6px 0 4px; }
+  .mg-num { text-align: center; }
+  .mg-num b { display: block; font-size: 24px; line-height: 1.1; }
+  .mg-num span { font-size: 11.5px; opacity: .8; }
+  .mg-sub { font-size: 12.5px; opacity: .85; margin: 10px 0 6px; }
+  .mg-det { margin-top: 8px; font-size: 13px; }
+  .mg-det summary { cursor: pointer; opacity: .85; }
   .sa-pf-sec { border: 1px solid var(--sa-border); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 10px; background: var(--sa-panel-2); }
   .sa-pf-tit { font: 800 15px "Barlow", sans-serif; color: var(--sa-text); text-align: left; }
   .sa-pf-tog { display: flex; justify-content: space-between; align-items: center; width: 100%; background: transparent; border: 0; padding: 0; cursor: pointer; }
@@ -3057,6 +3073,11 @@ function startApp() {
       versao: 17,
       titulo: "Técnicas com a carga de cada queda ⚡",
       texto: "Nos exercícios com técnica, o treino agora mostra o esquema direitinho. No drop set, cada série tem um campo para a carga de cada queda (ex.: 40 → 30 → 20 kg). Na pirâmide, cada série mostra as repetições (S1 · 12). Toque em 'Como fazer' para ver o passo a passo."
+    },
+    {
+      versao: 20,
+      titulo: "O app agora sugere sua carga 💡",
+      texto: "No treino, embaixo das séries, toque em quantas repetições ainda daria pra fazer na última série (0, 1, 2, 3 ou 4+). Na próxima vez, o app usa isso pra sugerir a carga certa: se sobrou muito, ele manda subir; se foi no limite, manter. E o treino do dia agora aparece logo no começo da tela."
     },
     {
       versao: 19,
@@ -6976,6 +6997,42 @@ function startApp() {
     ov.addEventListener("click", function (e) { if (e.target === ov || e.target.id === "trBellX") fecha(); });
   }
 
+  // ---------- Painel do mês grátis: quem está no teste, quem está acabando, quem renovou ----------
+  // "Renovou" = tem um plano que começa pelo menos 2 semanas depois do início do mês grátis
+  // (ou, sem data de início, criado 20+ dias depois dele). Quem tem o plano vencido sem plano novo = não renovou.
+  function mgStatus(s) {
+    if (!s || !s.mesGratisEm) return null;
+    var ini = new Date(s.mesGratisEm + "T00:00:00").getTime();
+    var renovou = (s.plans || []).some(function (p) {
+      return p.startDate ? p.startDate > addDiasIso(s.mesGratisEm, 14) : !!(p.createdAt && p.createdAt > ini + 20 * 864e5);
+    });
+    if (renovou) return { k: "renovou" };
+    var plan = activePlan(s);
+    if (plan && plan.endDate && !isPlanExpired(plan)) {
+      var d = diasAteVencimentoPlano(plan);
+      return { k: d !== null && d <= 7 ? "acabando" : "teste", dias: d };
+    }
+    return { k: "nao" };
+  }
+  function mgPainelHtml(allStudents) {
+    var g = { teste: [], acabando: [], renovou: [], nao: [] };
+    allStudents.forEach(function (x) { var st = mgStatus(x.s); if (st) g[st.k].push({ slug: x.slug, s: x.s, dias: st.dias }); });
+    var total = g.teste.length + g.acabando.length + g.renovou.length + g.nao.length;
+    if (!total) return "";
+    var fechados = g.renovou.length + g.nao.length, taxa = fechados ? Math.round(g.renovou.length / fechados * 100) : null;
+    var chip = function (x, sub) {
+      return '<button type="button" class="tr-alert-chip" data-open="' + escapeAttr(x.slug) + '">' +
+        '<span class="sa-avatar" style="background:hsl(' + avatarHue(x.slug) + ',65%,45%)">' + escapeHtml(initialsOf(x.s.nome)) + '</span>' +
+        '<span><span class="tr-alert-chip-name">' + escapeHtml(x.s.nome) + '</span><br><span class="tr-alert-chip-sub">' + escapeHtml(sub) + '</span></span></button>';
+    };
+    g.acabando.sort(function (a, b) { return (a.dias || 0) - (b.dias || 0); });
+    var num = function (n, t, cor) { return '<div class="mg-num"><b style="color:' + cor + '">' + n + '</b><span>' + t + '</span></div>'; };
+    return '<div class="tr-alert-panel mg-painel"><div class="tr-alert-title"><span class="sa-dot"></span>🎁 MÊS GRÁTIS' + (taxa !== null ? ' · ' + taxa + '% RENOVARAM' : '') + '</div>' +
+      '<div class="mg-nums">' + num(g.teste.length, "no teste", "#8fb3ff") + num(g.acabando.length, "acabando (7 dias)", "#ffc247") + num(g.renovou.length, "renovaram", "#34d399") + num(g.nao.length, "não renovaram", "#f87171") + '</div>' +
+      (g.acabando.length ? '<div class="mg-sub">Fale com eles agora, antes de acabar:</div><div class="tr-alert-chips">' + g.acabando.map(function (x) { return chip(x, x.dias === 0 ? "acaba hoje" : (x.dias === 1 ? "acaba amanhã" : "acaba em " + x.dias + " dias")); }).join("") + '</div>' : '') +
+      (g.nao.length ? '<details class="mg-det"><summary>Não renovaram (' + g.nao.length + ')</summary><div class="tr-alert-chips">' + g.nao.map(function (x) { return chip(x, "plano vencido"); }).join("") + '</div></details>' : '') +
+      '</div>';
+  }
   function renderRoster() {
     document.body.classList.add("sa-active");
     document.getElementById("tabs").hidden = true;
@@ -7113,6 +7170,7 @@ function startApp() {
       vencimentoAlertHtml +
       turmaHtml +
       leadsHtml +
+      mgPainelHtml(allStudents) +
       rosterSelBarraHtml() + '<div class="tr-search-row">' +
       '<input type="text" class="tr-search-input" id="trSearchInput" placeholder="Buscar aluno..." autocomplete="off" value="' + escapeAttr(state.rosterSearch || "") + '">' +
       '<div class="tr-filter-tabs" id="trFilterTabs">' +
@@ -7955,7 +8013,6 @@ function startApp() {
     if (!ultima) return "";
     var pseRaw = ultima.pse;
     var pse = (pseRaw === null || pseRaw === undefined || pseRaw === "") ? NaN : parseFloat(pseRaw);
-    if (isNaN(pse)) return "";
     var maxVal = 0, feitas = 0;
     ultima.cargasLog.forEach(function (c) {
       if (normNome(c.exercicio) !== k) return;
@@ -7967,6 +8024,17 @@ function startApp() {
     if (!feitas) feitas = ultima.cargasLog.filter(function (c) { return normNome(c.exercicio) === k; }).length;
     var planejadas = saExSetCount(ex);
     var txt;
+    var rirE = (ultima.rirLog || []).filter(function (r) { return normNome(r.exercicio) === k; })[0];
+    var rir = rirE ? parseInt(String(rirE.rir), 10) : NaN;
+    if (!isNaN(rir) && !(planejadas && feitas < planejadas)) {
+      var passo = maxVal >= 60 ? 5 : 2.5;
+      if (rir >= 4) txt = '💡 Sugestão: <strong>' + fmtKgNum(maxVal + passo) + ' kg</strong> <span class="ex-load-when">· na última vez sobraram 4+ repetições com ' + fmtKgNum(maxVal) + ' kg</span>';
+      else if (rir === 3) txt = '💡 Sugestão: <strong>' + fmtKgNum(maxVal + 2.5) + ' kg</strong> <span class="ex-load-when">· na última vez sobraram 3 repetições com ' + fmtKgNum(maxVal) + ' kg</span>';
+      else if (rir >= 1) txt = '💡 Sugestão: manter <strong>' + fmtKgNum(maxVal) + ' kg</strong> <span class="ex-load-when">· sobraram ' + rir + ' na última vez: carga no ponto certo</span>';
+      else txt = '💡 Sugestão: manter <strong>' + fmtKgNum(maxVal) + ' kg</strong> <span class="ex-load-when">· na última vez foi até a falha</span>';
+      return '<div class="ex-load-note ex-load-sugestao">' + txt + '</div>';
+    }
+    if (isNaN(pse)) return "";
     if (planejadas && feitas < planejadas) {
       txt = 'Sugestão: manter <strong>' + fmtKgNum(maxVal) + ' kg</strong> <span class="ex-load-when">· faltaram séries na última vez</span>';
     } else if (pse > 8) {
@@ -10224,6 +10292,9 @@ function startApp() {
         var piece = (o.exercicio ? o.exercicio + ": " : "") + o.nota;
         row.obs = (row.obs ? row.obs + " / " : "") + piece;
       });
+      (ses.rirLog || []).forEach(function (r) {
+        row.obs = (row.obs ? row.obs + " / " : "") + (r.exercicio || "") + ": sobraram " + r.rir + " reps";
+      });
     });
     (s.feedback || []).forEach(function (f) {
       var row = dayRow(f.date);
@@ -10765,7 +10836,7 @@ function startApp() {
     var n = (plan && plan.treinos ? plan.treinos.length : 0) || 3;
     return Math.max(2, Math.min(6, n));
   }
-  function microcicloBarHtml(s, plan) {
+  function microcicloBarHtml(s, plan, extra) {
     if (!plan) return "";
     var m = saMicrocicloInfo(s, plan), meta = saMetaSemanal(plan);
     var semAtual = m.concluido ? 4 : Math.floor((m.dia - 1) / 7);
@@ -10800,6 +10871,7 @@ function startApp() {
       '<div class="sa-mc-frase">' + frase + '</div>' +
       '<div class="sa-mc-sub">' + escapeHtml(sub) + '</div>' +
       '<div class="sa-mc-semanas">' + semanas + '</div>' +
+      (extra || '') +
       '</div>';
   }
 
@@ -11109,18 +11181,20 @@ function startApp() {
     return '<div class="sa-body">' +
       '<div class="sa-greeting sa-display">OLÁ, ' + escapeHtml(((s.nome || "").split(/\s+/)[0] || "ALUNO").toUpperCase()) + '</div>' +
       '<div class="sa-subtitle">' + escapeHtml(plan.microciclo || "") + '</div>' +
-      microcicloBarHtml(s, plan) +
+      // Ordem pensada para o aluno: o treino de hoje logo no começo; progresso (meta da semana com
+      // os dias + fogo do mês) num bloco só, depois; avisos e dicas por último.
       saMesGratisAvisoHtml(s, plan) +
-      pushBoxHtml(true) +
-      saFotoDicaHtml(s) +
       reavCardAlunoHtml(s, plan) +
       novidadeHtml +
-      saInstallCardHtml() +
-      streakHtml +
-      weekCardHtml +
+      treinosHtml + moodHtml +
       corridaHojeCardHtml(s) +
-      moodHtml + treinosHtml + atividadeLivreHtml + compHtml +
+      microcicloBarHtml(s, plan, '<div class="sa-mc-dias-t">Dias treinados nesta semana: <b>' + trainedDaysCount + '</b></div><div class="sa-week">' + weekHtml + '</div>') +
+      streakHtml +
+      atividadeLivreHtml + compHtml +
       cmHojeCardHtml(s) +
+      pushBoxHtml(true) +
+      saFotoDicaHtml(s) +
+      saInstallCardHtml() +
       '</div>';
   }
 
@@ -11504,13 +11578,13 @@ function startApp() {
           var videoEhRef = hasVideoClip && !(catForVideo.video || "").trim();
           var temComoFazer = !!(catForVideo && (catForVideo.exec || mobInfo(catForVideo) || execPadrao(catForVideo.nome)));
           var infoHtml = hasVideoClip || temComoFazer ? "" : infoBtnHtml(ex);
-          var videoBtnHtml = hasVideoClip ?
+          var videoBtnHtml = (hasVideoClip ?
             '<button type="button" class="sa-video-btn" data-info="' + escapeAttr(ex.nome) + '" data-info-equip="' + escapeAttr(effectiveEquip(ex)) + '"><span class="sa-video-play">▶</span> ' + (videoEhRef ? "Ver animação de como fazer" : "Ver vídeo de como fazer") + '</button>' :
             (temComoFazer ?
               '<button type="button" class="sa-video-btn sa-howto-btn" data-info="' + escapeAttr(ex.nome) + '" data-info-equip="' + escapeAttr(effectiveEquip(ex)) + '"><span class="sa-video-play">📝</span> Ver como fazer</button>' :
               (animMusculosDe({ nome: ex.nome }) ?
                 '<button type="button" class="sa-video-btn" data-info="' + escapeAttr(ex.nome) + '" data-info-equip="' + escapeAttr(effectiveEquip(ex)) + '"><span class="sa-video-play">💪</span> Ver músculos que trabalham</button>' :
-                '<div class="sa-no-video">🎬 Vídeo em breve</div>')) +
+                '<div class="sa-no-video">🎬 Vídeo em breve</div>'))) +
             ((hasVideoClip || temComoFazer) && animMusculosDe({ nome: ex.nome }) ? '<button type="button" class="sa-video-btn sa-musc-btn" data-info-aba="musc" data-info="' + escapeAttr(ex.nome) + '" data-info-equip="' + escapeAttr(effectiveEquip(ex)) + '"><span class="sa-video-play">💪</span> Ver músculos que trabalham</button>' : "");
           // Same rest-timer countdown the trainer's table has next to
           // "Descanso" (openRestTimer/#detailModal) -- reused as-is here,
@@ -11545,6 +11619,10 @@ function startApp() {
           // when the treino is finished, so it reads like a note about
           // today's set rather than a stale label that never goes away.
           var obsAlunoHtml = '<textarea class="sa-ex-obs-input" rows="1" placeholder="Deixe uma observação sobre esse exercício hoje (opcional)" data-obs-ex="' + escapeAttr(ex.id) + '">' + escapeHtml(ex.obsAluno || "") + '</textarea>';
+          // Repetições sobrando (RIR) na última série: 1 toque, opcional. Alimenta a sugestão de carga da próxima vez.
+          var rirHtml = (setCount && !data.isComp) ? '<div class="sa-rir"><div class="sa-rir-t">Na última série, quantas repetições <b>ainda daria</b> pra fazer?</div><div class="sa-rir-op">' +
+            ["0", "1", "2", "3", "4+"].map(function (v) { return '<button type="button" class="sa-rir-b' + (ex.rirAluno === v ? " on" : "") + '" data-rir-ex="' + escapeAttr(ex.id) + '" data-rir="' + v + '">' + v + '</button>'; }).join("") +
+            '</div></div>' : '';
           cardsHtml.push('<div class="sa-ex-card">' +
             '<div class="sa-ex-head"><span class="sa-ex-name">' + escapeHtml(ex.nome || "(exercício)") + '</span><div class="sa-ex-actions"><span class="sa-info-slot">' + infoHtml + timerHtml + '</span>' + checkBtnHtml + '</div></div>' +
             (chainBadgeHtml || badgesHtml ? '<div class="sa-ex-badges">' + chainBadgeHtml + badgesHtml + '</div>' : '') +
@@ -11557,6 +11635,7 @@ function startApp() {
             (setCount && tecDropN(ex) && !data.isComp ? '<div class="sa-drop-leg">↓ cada queda: tire ~' + escapeHtml(String(tecNum(tecCfg(ex).pct, 20))) + '% da carga e continue, sem descansar</div>' : '') +
             (setCount ? '<div class="sa-sets-row' + (tecDropN(ex) && !data.isComp ? " sa-sets-drops" : "") + '">' + setsHtml + '</div>' : '') +
             (ex.obs ? '<div class="sa-ex-note"><span class="sa-ex-note-label">📝 Observação do treinador</span>' + escapeHtml(ex.obs) + '</div>' : '') +
+            rirHtml +
             obsAlunoHtml +
             '</div>');
         }
@@ -12432,6 +12511,7 @@ function startApp() {
         // cleared off the exercise itself so it reads as "today's note",
         // not a label that quietly keeps showing up forever.
         var obsLog = [];
+        var rirLog = [];
         var seriesPorEx = [];
         (data ? data.sections : []).forEach(function (sec) {
           sec.exercicios.forEach(function (ex) {
@@ -12479,13 +12559,14 @@ function startApp() {
               obsLog.push({ exercicio: ex.nome || "", nota: ex.obsAluno.trim() });
               ex.obsAluno = "";
             }
+            if (ex.rirAluno) { rirLog.push({ exercicio: ex.nome || "", rir: ex.rirAluno }); ex.rirAluno = ""; }
           });
         });
         var novaSessao = {
           id: uid("ses"), date: todayISO(), ts: Date.now(),
           kind: sess.kind, treinoId: sess.treinoId || null, nome: data ? data.titulo : "Treino",
           duracaoSeg: durationSec, seriesTotal: seriesTotal, seriesLogadas: seriesLogadas,
-          pse: pse, cargasLog: cargasLog, obsLog: obsLog, seriesPorEx: seriesPorEx,
+          pse: pse, cargasLog: cargasLog, obsLog: obsLog, rirLog: rirLog, seriesPorEx: seriesPorEx,
           inicio: sess.startedAt, volumeKg: Math.round(volumeKg * 10) / 10
         };
         s.sessoes.push(novaSessao);
@@ -12721,6 +12802,8 @@ function startApp() {
         '<div class="sa-hist-obs">' + ses.obsLog.map(function (o) {
           return '<div><strong>' + escapeHtml(o.exercicio) + ':</strong> ' + escapeHtml(o.nota) + '</div>';
         }).join("") + '</div>' : '';
+      if (ses.rirLog && ses.rirLog.length) obsHtml += '<div class="sa-hist-obs"><div><strong>Repetições sobrando:</strong> ' +
+        ses.rirLog.map(function (r) { return escapeHtml(feedNomeEx(r.exercicio)) + ' ' + escapeHtml(r.rir); }).join(" · ") + '</div></div>';
       return { ts: ses.ts || 0, html: '<div class="sa-hist-item">' +
         '<div class="sa-hist-date"><span class="num">' + dm.day + '</span><span class="mon">' + String(dm.mon).toUpperCase() + '</span></div>' +
         '<div class="sa-hist-body"><div class="sa-hist-title">' + escapeHtml(String(ses.nome || "Treino").toUpperCase()) + '</div>' +
@@ -14098,6 +14181,8 @@ function startApp() {
   function cmHojeCardHtml(s) {
     if (state.atendimento) return "";
     var r = cmResumo(s);
+    // Só o card "Na turma hoje" (já tem o botão para a turma); o resumo da comunidade repetia a meta da semana.
+    if (true) return '<div id="tmHojeBox">' + tmHojeInner(s) + '</div>';
     return '<div class="sa-card cm-teaser"><div class="sa-card-inner"><div class="sa-mood-label">👥 COMUNIDADE</div>' +
       '<div class="cm-teaser-t">' + (r.semana ? 'Você treinou <b>' + r.semana + (r.semana === 1 ? " dia" : " dias") + '</b> nesta semana' : 'Veja quem já treinou nesta semana') + ' · ' + r.dias + ' no mês ' + (r.emojis || "") + '</div>' +
       '<button type="button" class="sa-cta-ghost" data-sa-tab="comunidade" style="width:100%;margin-top:10px">Abrir a comunidade</button></div></div>' +
@@ -15621,6 +15706,13 @@ function startApp() {
     // Student's own free-text note per exercise ("doeu no ombro", "hoje foi
     // fácil"...) -- autosaves the same way cargas do, and grows with the
     // text so a longer note doesn't get clipped inside its little box.
+    Array.prototype.forEach.call(document.querySelectorAll("[data-rir-ex]"), function (b) {
+      b.addEventListener("click", function () {
+        var entry = saCurrentExMap[b.getAttribute("data-rir-ex")]; if (!entry) return;
+        var v = b.getAttribute("data-rir"); entry.ex.rirAluno = entry.ex.rirAluno === v ? "" : v; scheduleSave();
+        Array.prototype.forEach.call(b.parentNode.querySelectorAll("[data-rir]"), function (o) { o.classList.toggle("on", o.getAttribute("data-rir") === entry.ex.rirAluno); });
+      });
+    });
     Array.prototype.forEach.call(document.querySelectorAll("[data-obs-ex]"), function (ta) {
       var autoGrow = function () { ta.style.height = "auto"; ta.style.height = ta.scrollHeight + "px"; };
       autoGrow();

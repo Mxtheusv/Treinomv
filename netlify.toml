@@ -1,5 +1,8 @@
 [build]
   publish = "public"
+  # Minifica o JS/CSS do app só na hora de publicar (o arquivo do repositório fica legível).
+  # Se falhar, publica o arquivo original mesmo -- nunca derruba o site.
+  command = "node scripts/minificar.mjs || echo 'minificar falhou: publicando sem minificar'"
   functions = "netlify/functions"
 
 # O service worker nunca pode ficar em cache do navegador: senão uma versão nova do app

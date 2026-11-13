@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "dependencies": {
-    "@netlify/blobs": "10.7.13"
+    "@netlify/blobs": "10.7.13",
+    "terser": "5.31.0",
+    "csso": "5.0.5"
   }
 }

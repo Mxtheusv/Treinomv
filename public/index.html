@@ -2257,6 +2257,20 @@
   .sa-pse-desc { min-height: 62px; margin: 10px 0 2px; padding: 11px 13px; border-radius: 12px; background: rgba(var(--sa-tint-rgb),.10); border: 1px solid var(--sa-border-soft); font-size: 13.5px; line-height: 1.45; color: var(--sa-text-muted); display: flex; flex-direction: column; gap: 3px; }
   .sa-pse-desc b { color: var(--sa-accent-text); font-size: 14.5px; }
   .sa-post-modal { display: flex; flex-direction: column; gap: 10px; }
+  .sa-pf-sec { border: 1px solid var(--sa-border); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 10px; background: var(--sa-panel-2); }
+  .sa-pf-tit { font: 800 15px "Barlow", sans-serif; color: var(--sa-text); text-align: left; }
+  .sa-pf-tog { display: flex; justify-content: space-between; align-items: center; width: 100%; background: transparent; border: 0; padding: 0; cursor: pointer; }
+  .sa-pf-tog span { color: var(--sa-text-muted); font-size: 12px; }
+  .sa-pf-linha { display: flex; gap: 10px; align-items: stretch; }
+  .sa-pf-foto { position: relative; flex: 0 0 84px; height: 84px; border-radius: 12px; overflow: hidden; background: #000; }
+  .sa-pf-foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .sa-pf-foto-add { display: flex; flex-direction: column; align-items: center; justify-content: center; background: transparent; border: 1.5px dashed var(--sa-border); color: var(--sa-text-muted); font: 700 12.5px "Barlow", sans-serif; text-align: center; line-height: 1.2; cursor: pointer; }
+  .sa-pf-foto-add span { font-size: 22px; margin-bottom: 2px; }
+  .sa-pf-foto-add small { font-weight: 500; font-size: 11px; }
+  .sa-pf-x { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; border-radius: 50%; border: 0; background: rgba(0,0,0,.65); color: #fff; font-size: 12px; cursor: pointer; }
+  .sa-post-in.sa-pf-leg { height: 84px; padding: 10px 12px; resize: none; flex: 1; min-width: 0; }
+  .sa-pf-chk { display: flex; gap: 8px; align-items: center; font-size: 13.5px; color: var(--sa-text); }
+  .sa-pf-chk input { width: 18px; height: 18px; accent-color: var(--sa-accent); flex: 0 0 auto; }
   .sa-post-modal .sa-cta, .sa-post-modal .sa-cta-ghost { width: 100%; text-align: center; margin-top: 0; box-sizing: border-box; display: block; }
   .sa-post-modal label.sa-cta, .sa-post-modal label.sa-cta-ghost { cursor: pointer; }
   .sa-post-skip { background: transparent; border: 0; color: var(--sa-text-muted); font: 600 13px "Barlow", sans-serif; padding: 8px; cursor: pointer; text-decoration: underline; }
@@ -13282,7 +13296,7 @@ function startApp() {
       var pac = saFeedPacote(s, nova, recs, modo === "dia");
       var passo = SA_POST.blob ? fotoEnviar(SA_POST.blob, state.slug) : Promise.resolve("");
       passo.then(function (foto) {
-        var base = modo === "dia" ? "Mais um treino feito 💪" : (legenda ? legenda + " · " + linha : linha);
+        var base = modo === "dia" ? (legenda || "Mais um treino feito 💪") : (legenda ? legenda + " · " + linha : linha);
         var texto = base + (pac.marco ? " · " + pac.marco : "");
         return feedPostar(s, "treino", texto, foto, pac.extra).then(function (res) {
           if (!res.ok) throw new Error("x");
@@ -13299,31 +13313,43 @@ function startApp() {
         showToast(b && b.skipped === "ja_postado" ? "O treino de hoje já está no feed" : "Publicado para a turma 🙌");
       }).catch(function () { SA_POST.busy = false; desenha(); showToast("Não consegui publicar agora", true); });
     }
+    // Tela única e simples: 1) avisar a turma (um botão só; foto e legenda opcionais) 2) Stories (cartão).
+    var postNome = true, postLegenda = "", stOpen = !podeFeed;
     function desenha() {
       var pr = recs && recs.length ? '<div class="sa-post-pr">🏆 Novo recorde de carga: <b>' + escapeHtml(feedNomeEx(recs[0].nome)) + ' — ' + escapeHtml(feedFmtNum(recs[0].v)) + ' kg</b>' + (recs.length > 1 ? " e mais " + (recs.length - 1) : "") + '. Vai junto no feed se você postar.</div>' : "";
-      if (SA_POST.url) {
-        ov.innerHTML = '<div class="sa-modal sa-post-modal"><h3 class="sa-display">PUBLICAR COM FOTO</h3>' +
-          '<div class="sa-post-prev"><img alt="" src="' + escapeAttr(SA_POST.url) + '"></div>' +
-          '<input type="text" id="saPostLegenda" class="sa-post-in" maxlength="80" placeholder="Legenda (opcional)">' + pr +
-          '<button type="button" class="sa-cta" data-post="foto-ok"' + (SA_POST.busy ? " disabled" : "") + '>' + (SA_POST.busy ? "PUBLICANDO…" : "PUBLICAR") + '</button>' +
-          '<label class="sa-cta-ghost sa-post-troca" for="saPostFoto">Escolher outra foto</label><input type="file" id="saPostFoto" accept="image/*" hidden>' +
-          '<button type="button" class="sa-post-skip" data-post="voltar">← Voltar</button></div>';
-      } else {
-        ov.innerHTML = '<div class="sa-modal sa-post-modal"><h3 class="sa-display">TREINO CONCLUÍDO! 💪</h3>' +
-          '<p class="sa-modal-sub">' + (podeFeed ? "Mostre o treino de hoje no Stories ou avise a turma." : "Mostre o treino de hoje no Stories. Quem vê também fica com vontade de treinar.") + '</p>' +
-          '<div class="sa-post-cartao" id="saPostCartao" style="width:240px;max-width:72%;margin:0 auto 14px"></div>' +
-          '<div class="sa-post-estilos" style="display:flex;flex-wrap:wrap;gap:6px;margin:-4px 0 12px">' + ["Escuro", "Sem fundo", "Dourado", "Só embaixo"].map(function (nomeE, n) { return '<button type="button" class="' + (n === estiloPost ? "sa-cta" : "sa-cta-ghost") + '" data-estilo-post="' + n + '" style="flex:1;padding:8px 4px;font-size:13px">' + nomeE + '</button>'; }).join("") + '</div>' +
-          '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:-4px 0 12px">' + saCartaoChipsOpcoes(nova.kind === "corrida") + '</div>' +
-          '<button type="button" class="sa-cta" data-post="stories">📤 Compartilhar no Stories</button>' +
-          (estiloPost === 1 ? '<button type="button" class="sa-cta-ghost" data-post="copiar">📋 Copiar para colar na foto</button>' + '<div class="sa-novidade-text" style="font-size:12.5px;text-align:center;margin:-4px 0 12px">Sem fundo: copie e cole por cima da sua foto no Instagram ou no Stories.</div>' : '') +
-          (podeFeed ? pr +
-          '<label class="sa-cta-ghost" for="saPostFoto">📷 Postar com foto</label><input type="file" id="saPostFoto" accept="image/*" hidden>' +
-          '<button type="button" class="sa-cta-ghost" data-post="nome"' + (SA_POST.busy ? " disabled" : "") + '>💪 Treinei: <b>' + escapeHtml(nome) + '</b></button>' +
-          '<button type="button" class="sa-cta-ghost" data-post="dia"' + (SA_POST.busy ? " disabled" : "") + '>✅ Só avisar que treinei hoje</button>' : "") +
-          '<button type="button" class="sa-post-skip" data-post="nao">Agora não</button></div>';
-        var caixaCartao = document.getElementById("saPostCartao"); if (caixaCartao) caixaCartao.appendChild(cartaoCv);
-      }
+      var turma = !podeFeed ? "" :
+        '<div class="sa-pf-sec">' +
+          '<div class="sa-pf-tit">👥 Avisar a turma</div>' +
+          '<div class="sa-pf-linha">' +
+            (SA_POST.url ?
+              '<div class="sa-pf-foto"><img alt="" src="' + escapeAttr(SA_POST.url) + '"><button type="button" class="sa-pf-x" data-post="tira-foto" aria-label="Tirar foto">✕</button></div>' :
+              '<label class="sa-pf-foto sa-pf-foto-add" for="saPostFoto"><span>📷</span>Foto<br><small>opcional</small></label>') +
+            '<input type="file" id="saPostFoto" accept="image/*" hidden>' +
+            '<textarea id="saPostLegenda" class="sa-post-in sa-pf-leg" maxlength="80" rows="3" placeholder="Escreva algo (opcional)">' + escapeHtml(postLegenda) + '</textarea>' +
+          '</div>' +
+          '<label class="sa-pf-chk"><input type="checkbox" data-post-nome' + (postNome ? " checked" : "") + '> Mostrar o treino: <b>' + escapeHtml(linha) + '</b></label>' +
+          pr +
+          '<button type="button" class="sa-cta" data-post="enviar"' + (SA_POST.busy ? " disabled" : "") + '>' + (SA_POST.busy ? "ENVIANDO…" : "ENVIAR PARA A TURMA") + '</button>' +
+        '</div>';
+      var stories =
+        '<div class="sa-pf-sec">' +
+          '<button type="button" class="sa-pf-tit sa-pf-tog" data-post="st-tog" aria-expanded="' + (stOpen ? "true" : "false") + '">📸 Postar no seu Stories <span>' + (stOpen ? "▲" : "▼") + '</span></button>' +
+          (stOpen ?
+            '<div class="sa-post-cartao" id="saPostCartao" style="width:200px;max-width:64%;margin:4px auto 10px"></div>' +
+            '<div class="sa-post-estilos" style="display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px">' + ["Escuro", "Sem fundo", "Dourado", "Só embaixo"].map(function (nomeE, n) { return '<button type="button" class="' + (n === estiloPost ? "sa-cta" : "sa-cta-ghost") + '" data-estilo-post="' + n + '" style="flex:1;min-width:0;padding:7px 4px;font-size:12.5px;margin:0">' + nomeE + '</button>'; }).join("") + '</div>' +
+            '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px">' + saCartaoChipsOpcoes(nova.kind === "corrida") + '</div>' +
+            '<button type="button" class="' + (podeFeed ? "sa-cta-ghost" : "sa-cta") + '" data-post="stories">📤 Compartilhar no Stories</button>' +
+            (estiloPost === 1 ? '<button type="button" class="sa-cta-ghost" data-post="copiar" style="margin-top:8px">📋 Copiar para colar na foto</button>' : "")
+          : '') +
+        '</div>';
+      ov.innerHTML = '<div class="sa-modal sa-post-modal"><h3 class="sa-display">TREINO CONCLUÍDO! 💪</h3>' +
+        '<p class="sa-modal-sub" style="margin:0">' + escapeHtml(linha) + (nova.seriesLogadas ? " · " + nova.seriesLogadas + " séries" : "") + '</p>' +
+        turma + stories +
+        '<button type="button" class="sa-post-skip" data-post="nao">' + (podeFeed ? "Agora não" : "Fechar") + '</button></div>';
+      var caixaCartao = document.getElementById("saPostCartao"); if (caixaCartao) caixaCartao.appendChild(cartaoCv);
     }
+    ov.addEventListener("input", function (e) { if (e.target.id === "saPostLegenda") postLegenda = e.target.value; });
+    ov.addEventListener("change", function (e) { if (e.target.hasAttribute && e.target.hasAttribute("data-post-nome")) postNome = !!e.target.checked; });
     ov.addEventListener("click", function (e) {
       var b = e.target.closest && e.target.closest("[data-opc]"); if (!b) return;
       var op = saCartaoOpcoes(), k = b.getAttribute("data-opc"); op[k] = !op[k]; saCartaoOpcoesSalvar(op);
@@ -13339,10 +13365,10 @@ function startApp() {
       var a = t.getAttribute("data-post");
       if (a === "stories") { compartilhaCartao(); return; }
       if (a === "copiar") { saCartaoCopiarPng(cartaoCv); return; }
+      if (a === "st-tog") { stOpen = !stOpen; desenha(); return; }
       if (a === "nao") { fecha(); saFeedSequencia(s); return; } // o fogo do mês aparece mesmo sem postar o treino
-      if (a === "nome" || a === "dia") { publica(a, ""); return; }
-      if (a === "voltar") { if (SA_POST.url) URL.revokeObjectURL(SA_POST.url); SA_POST.url = ""; SA_POST.blob = null; desenha(); return; }
-      if (a === "foto-ok") { var inp = document.getElementById("saPostLegenda"); publica("nome", inp ? inp.value.trim() : ""); return; }
+      if (a === "tira-foto") { if (SA_POST.url) URL.revokeObjectURL(SA_POST.url); SA_POST.url = ""; SA_POST.blob = null; desenha(); return; }
+      if (a === "enviar") { publica(postNome ? "nome" : "dia", postLegenda.trim()); return; }
     });
     ov.addEventListener("change", function (e) {
       if (e.target.id !== "saPostFoto") return;

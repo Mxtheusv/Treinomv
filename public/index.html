@@ -20,8 +20,10 @@
     if (r === "light" || r === "dark") el.setAttribute("data-theme", r); else el.removeAttribute("data-theme");
   }
   window.__temaLer = ler;
-  window.__temaAplicar = function (p) { try { if (p) localStorage.setItem(K, p); else localStorage.removeItem(K); } catch (e) {} pinta(p); };
-  pinta(ler());
+  window.__temaAplicar = function (p) { try { if (p) localStorage.setItem(K, p); else localStorage.removeItem(K); } catch (e) {} pinta(p || "dark"); };
+  // Sem escolha salva, o padrão é o escuro em todas as telas (antes o painel do personal seguia o
+  // celular e ficava claro enquanto a lista de alunos e o app do aluno eram escuros).
+  pinta(ler() || "dark");
   try { var mq = window.matchMedia("(prefers-color-scheme: light)"); var f = function () { if (ler() === "auto") pinta("auto"); }; if (mq.addEventListener) mq.addEventListener("change", f); else if (mq.addListener) mq.addListener(f); } catch (e) {}
 })();
 </script>
@@ -269,6 +271,15 @@
   .plan-field select:focus { background: rgba(255,255,255,0.22); }
   .plan-field select option { color: var(--ink); }
   .plan-field .micro { min-width: 130px; font-weight: 500; }
+  .plan-field input.micro { background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 9px 12px; border-radius: 10px; font-size: 13.5px; outline: none; }
+  .plan-field input.micro::placeholder { color: #cfe0ff; }
+  .plan-field input.micro:disabled { opacity: .8; }
+  /* Escuro: mesmo cabeçalho azul-marinho da lista de alunos (antes era o gradiente azul do tema claro). */
+  :root[data-theme="dark"] header.top {
+    background: #0a1126;
+    background-image: radial-gradient(700px 300px at 85% -40%, rgba(46,107,255,.38), transparent 70%), linear-gradient(180deg, #0e1838 0%, #0a1126 100%);
+    box-shadow: 0 1px 0 rgba(140,165,225,.18);
+  }
   .plan-field .btn-secondary {
     background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.3); color: #fff;
   }

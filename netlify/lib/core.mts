@@ -1544,7 +1544,7 @@ async function postEstima(req: Request, deps: Deps, now: number): Promise<Respon
           headers: { "x-api-key": deps.iaKey, "anthropic-version": "2023-06-01", "content-type": "application/json" },
           body: JSON.stringify(corpo),
         });
-      } catch (e) { ultimoErro = "rede: " + String(e).slice(0, 200); console.error("[estima]", ultimoErro); resp = null; break; }
+      } catch (e) { const c: any = (e as any)?.cause; ultimoErro = "rede: " + String(e).slice(0, 150) + (c ? " | " + String(c.code || c.message || c).slice(0, 150) : ""); console.error("[estima]", ultimoErro); resp = null; break; }
       if (resp.ok) break;
       const det = await resp.text().catch(() => "");
       ultimoErro = resp.status + " " + det.slice(0, 400);
@@ -1556,7 +1556,7 @@ async function postEstima(req: Request, deps: Deps, now: number): Promise<Respon
     if (resp && resp.ok) break;
     if (resp && (resp.status === 401 || resp.status === 403 || resp.status === 429 || resp.status >= 500)) break;
   }
-  if (!resp) return reply(502, { error: "ia_indisponivel", detalhe: ultimoErro });
+  if (!resp) return reply(502, { error: "ia_indisponivel", detalhe: ultimoErro.replace(/sk-ant-[\w-]+/g, "***") });
   if (!resp.ok) {
     const tipo = resp.status === 401 || resp.status === 403 ? "ia_chave" : resp.status === 429 ? "ia_limite" : /credit|balance|billing/i.test(ultimoErro) ? "ia_credito" : "ia_erro";
     return reply(502, { error: tipo, status: resp.status, detalhe: ultimoErro.replace(/sk-ant-[\w-]+/g, "***").slice(0, 300) });
@@ -1565,7 +1565,7 @@ async function postEstima(req: Request, deps: Deps, now: number): Promise<Respon
   const texto = String(((j && j.content) || []).map((c: any) => c && c.text || "").join("")).trim();
   const m = texto.match(/\{[\s\S]*\}/);
   let r: any = null; try { r = m ? JSON.parse(m[0]) : null; } catch (e) { r = null; }
-  if (!r) return reply(502, { error: "ia_resposta" });
+  if (!r) { console.error("[estima] resposta sem JSON:", texto.slice(0, 300)); return reply(502, { error: "ia_resposta", detalhe: texto.slice(0, 200) }); }
   uso.total = (uso.total || 0) + 1; uso.por = uso.por || {}; uso.por[slug] = (uso.por[slug] || 0) + 1;
   await deps.kv.set(IA_STORE, IA_KEY, uso);
   if (r.erro) return reply(200, { ok: false, erro: String(r.erro).slice(0, 160) });

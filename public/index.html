@@ -9922,6 +9922,13 @@ function startApp() {
       '<div class="av-graf-x"><span>' + escapeHtml(formatDateBR(pri.d)) + '</span><span>' + escapeHtml(formatDateBR(ult.d)) + '</span></div></div>';
   }
   // ---------- estimativa do % de gordura pela foto (IA) ----------
+  // Proteção: aluno com IMC abaixo de 18,5 não vê o número estimado pela IA (o personal continua vendo).
+  function avIaOcultaAluno(lista) {
+    if (isTrainerRole() || state.atendimento || state.trainerPreview) return false;
+    var ult = function (k) { for (var i = lista.length - 1; i >= 0; i--) { var v = avNum(lista[i][k]); if (v) return v; } return null; };
+    var peso = ult("peso"), alt = ult("altura");
+    return !!(peso && alt && peso / Math.pow(alt / 100, 2) < 18.5);
+  }
   function avIaBlocoHtml(a) {
     if (a.ia && isFinite(a.ia.min)) {
       return '<div class="av-ia"><div class="av-ia-t">🤖 % de gordura estimado pela IA <small>(fotos de ' + escapeHtml(formatDateBR(a.date)) + ')</small></div>' +
@@ -9979,17 +9986,19 @@ function startApp() {
       var m = met(x[0]), u = ultimos(m); return u[1] ? [x[1], u[1].v, m[3], x[2], u[0] ? avDifHtml(m, u[0].v, u[1].v) : ""] : null;
     }).filter(Boolean);
     var fotoUlt = lista.filter(function (a) { return avFotosDe(a); }).slice(-1)[0];
+    var ocultaIa = avIaOcultaAluno(lista);
     var linhas = AV_METRICAS.map(function (m) {
+      if (ocultaIa && m[0] === "ia") return "";
       var u = ultimos(m); if (!u[0] || !u[1]) return "";
       return '<tr><td>' + escapeHtml(m[1]) + '</td><td>' + avFmt(u[0].v, m[3]) + '</td><td><b>' + avFmt(u[1].v, m[3]) + '</b></td><td>' + avDifHtml(m, u[0].v, u[1].v) + '</td></tr>';
     }).join("");
-    var grafs = lista.length > 1 ? ["pg", "ia", "peso", "soma", "cintura", "bracoC", "coxa", "mm"].map(function (k) { return avGraficoHtml(lista, AV_METRICAS.filter(function (m) { return m[0] === k; })[0]); }).join("") : "";
+    var grafs = lista.length > 1 ? ["pg", "ia", "peso", "soma", "cintura", "bracoC", "coxa", "mm"].filter(function (k) { return !(ocultaIa && k === "ia"); }).map(function (k) { return avGraficoHtml(lista, AV_METRICAS.filter(function (m) { return m[0] === k; })[0]); }).join("") : "";
     return '<div class="av-ult"><div class="av-ult-top"><div><div class="av-eyebrow">ÚLTIMA AVALIAÇÃO · ' + escapeHtml(formatDateBR(ult.date)) + (ult.por === "aluno" ? " · registrada pelo aluno" : "") + '</div></div>' +
       (edita ? '<button type="button" class="av-btn-mini" data-av="editar" data-av-id="' + escapeAttr(ult.id) + '">✏️ Editar</button>' : '') + '</div>' +
       (destaques.length ? '<div class="av-dest">' + destaques.map(function (x) { return '<div class="av-dest-i"><b>' + avFmt(x[1], x[2]) + '<small>' + x[3] + '</small></b><span>' + x[0] + '</span>' + (x[4] ? '<em>' + x[4] + '</em>' : '') + '</div>'; }).join("") + '</div>' : '') +
       (fotoUlt ? '<div class="av-fotos-mini">' + AV_POSES.map(function (p) { var u = (fotoUlt.fotos || {})[p[0]]; return u ? '<img src="' + escapeAttr(u) + '" alt="' + escapeAttr(p[1]) + '" loading="lazy">' : ''; }).join("") + '</div>' + (fotoUlt !== ult ? '<div class="av-ajuda" style="margin:4px 0 0">Fotos de ' + escapeHtml(formatDateBR(fotoUlt.date)) + '</div>' : '') : '') +
       '</div>' +
-      (fotoUlt ? avIaBlocoHtml(fotoUlt) : '') +
+      (fotoUlt ? (ocultaIa ? '<div class="av-ia"><div class="av-ia-n">🤖 A estimativa por IA desta avaliação fica com seu treinador. Converse com ele sobre sua evolução.</div></div>' : avIaBlocoHtml(fotoUlt)) : '') +
       (comFotos.length >= 2 ? '<button type="button" class="av-cta2" data-av="comparar">📸 Comparar fotos (antes e agora)</button>' : '') +
       (linhas ? '<div class="av-sec-t">ANTES E AGORA (ÚLTIMOS DOIS REGISTROS DE CADA MEDIDA)</div><div class="av-tab-wrap"><table class="av-tab"><thead><tr><th></th><th>Antes</th><th>Agora</th><th>Diferença</th></tr></thead><tbody>' + linhas + '</tbody></table></div>' : '') +
       (grafs ? '<div class="av-sec-t">EVOLUÇÃO</div><div class="av-grafs">' + grafs + '</div>' : '') +

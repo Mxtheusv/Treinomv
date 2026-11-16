@@ -7221,16 +7221,15 @@ function startApp() {
         trStreakChipHtml(s) + '</div>' +
         '<div class="tr-rr-mid">' +
         '<div class="tr-roster-checkin' + (statusKey === "sumido" ? " warn" : "") + '">último check-in<strong>' + (statusKey === "semacesso" ? "Nunca entrou" : (lastCheckin || "—")) + '</strong></div>' +
-        // À vista só o principal: Abrir treino e WhatsApp (e Atender para presencial). O resto fica no "⋯".
+        // À vista só o principal: Atender, Abrir treino e WhatsApp. O resto fica no "⋯".
         '<div class="tr-roster-actions">' +
-        (s.presencial ? '<button type="button" class="sa-cta tr-atender" style="width:auto;margin-top:0;padding:10px 12px" data-atender="' + escapeAttr(slug) + '">▶ Atender</button>' : '') +
-        '<button type="button" class="' + (s.presencial ? 'sa-cta-ghost' : 'sa-cta') + '" style="width:auto;margin-top:0;padding:10px 12px" data-open="' + escapeAttr(slug) + '">Abrir treino</button>' +
+        '<button type="button" class="sa-cta tr-atender" style="width:auto;margin-top:0;padding:10px 12px" data-atender="' + escapeAttr(slug) + '">▶ Atender</button>' +
+        '<button type="button" class="sa-cta-ghost" style="width:auto;margin-top:0;padding:10px 12px" data-open="' + escapeAttr(slug) + '">Abrir treino</button>' +
         whatsBotaoHtml(slug).replace("📲 Chamar no WhatsApp", "📲 WhatsApp") +
         '<div class="tr-more-wrap"><button type="button" class="tr-more-btn" data-more-toggle="' + escapeAttr(slug) + '" aria-label="Mais ações">⋯</button>' +
         (state.rosterOpenMenu === slug ?
           '<div class="tr-more-menu">' +
           '<button type="button" class="tr-resumo-btn" data-resumo="' + escapeAttr(slug) + '" aria-expanded="' + (aberto ? "true" : "false") + '">' + (aberto ? "📊 Fechar resumo" : "📊 Ver resumo") + '</button>' +
-          (!s.presencial ? '<button type="button" data-atender="' + escapeAttr(slug) + '">▶ Atender agora</button>' : '') +
           (statusKey === "sumido" ? chamarBotaoHtml(slug).replace(/ class="sa-cta-ghost" style="[^"]*"/, "") : "") +
           '<button type="button" data-copy="' + escapeAttr(slug) + '">📋 Copiar convite</button>' +
           '<button type="button" data-metas-de="' + escapeAttr(slug) + '">🎯 Metas do aluno</button>' +
@@ -7372,6 +7371,8 @@ function startApp() {
     if (state.rosterOpenMenu) {
       document.addEventListener("click", function closeMenuOnce() {
         state.rosterOpenMenu = null;
+        // Um item do menu pode ter saído da lista (Atender, Metas...): só redesenha se ainda estiver nela.
+        if (state.atendimento || state.slug || trTabAtual() !== "alunos") return;
         renderRoster();
         document.removeEventListener("click", closeMenuOnce);
       }, { once: true });

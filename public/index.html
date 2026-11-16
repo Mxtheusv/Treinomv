@@ -273,6 +273,10 @@
   .plan-field .micro { min-width: 130px; font-weight: 500; }
   .plan-field input.micro { background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 9px 12px; border-radius: 10px; font-size: 13.5px; outline: none; }
   .plan-field input.micro::placeholder { color: #cfe0ff; }
+  .plan-field .micro-lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: #cfe0ff; font-weight: 700; cursor: pointer; }
+  .plan-field .micro-lbl span { font-size: 12px; }
+  .plan-field .micro-grp { display: inline-flex; align-items: center; gap: 8px; }
+  @media (max-width: 640px) { .plan-field .micro-grp { flex: 1 1 100%; } .plan-field .micro-grp input { flex: 1; min-width: 0; } }
   .plan-field input.micro:disabled { opacity: .8; }
   /* Escuro: mesmo cabeçalho azul-marinho da lista de alunos (antes era o gradiente azul do tema claro). */
   :root[data-theme="dark"] header.top {
@@ -17307,7 +17311,9 @@ function startApp() {
       '<div class="plan-field">' +
       '<label for="planSelect">Plano</label>' +
       '<select id="planSelect">' + planOptionsHtml(s, plan) + '</select>' +
-      '<input id="microInput" class="micro" placeholder="Microciclo 1" value="' + escapeAttr(plan.microciclo) + '" ' + (microLocked ? "disabled" : "") + '>' +
+      // Nome do microciclo com rótulo e lápis: antes era uma caixa solta e passava despercebida.
+      '<span class="micro-grp"><label class="micro-lbl" for="microInput">Microciclo' + (microLocked ? '' : ' <span aria-hidden="true">✏️</span>') + '</label>' +
+      '<input id="microInput" class="micro" placeholder="Ex.: Microciclo 2 · Hipertrofia" title="Toque para mudar o nome do microciclo" value="' + escapeAttr(plan.microciclo) + '" ' + (microLocked ? "disabled" : "") + '></span>' +
       '</div>' +
       (datasLocked ? (plan.startDate || plan.endDate ?
         '<span class="plan-validity">' + (plan.startDate ? 'Início ' + escapeHtml(formatDateBR(plan.startDate)) + ' · ' : '') + (plan.endDate ? 'Válido até ' + escapeHtml(formatDateBR(plan.endDate)) : 'Sem data de término') + '</span>' : '') :

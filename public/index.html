@@ -2288,6 +2288,102 @@
   .mg-sub { font-size: 12.5px; opacity: .85; margin: 10px 0 6px; }
   .mg-det { margin-top: 8px; font-size: 13px; }
   .mg-det summary { cursor: pointer; opacity: .85; }
+  /* ---- avaliação física ---- */
+  .av-panel { --av-cor: #ffc220; }
+  .av-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .av-head h2 { margin: 0; }
+  .av-ajuda { font-size: 13px; color: var(--ink-soft); line-height: 1.45; margin: 8px 0 12px; }
+  .av-vazio { padding: 16px; border: 1px dashed var(--line); border-radius: 12px; color: var(--ink-soft); font-size: 14px; line-height: 1.45; }
+  .av-ult { border: 1px solid var(--line); border-radius: 14px; padding: 14px; background: var(--surface); }
+  .av-ult-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .av-eyebrow { font: 800 11.5px "Barlow", sans-serif; letter-spacing: .1em; color: #c58f00; }
+  .av-dest { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin-top: 12px; }
+  .av-dest-i b { display: block; font-size: 24px; line-height: 1.1; color: var(--ink); }
+  .av-dest-i b small { font-size: 13px; margin-left: 2px; color: var(--ink-soft); font-weight: 600; }
+  .av-dest-i span { font-size: 12px; color: var(--ink-soft); }
+  .av-dest-i em { display: block; font-style: normal; }
+  .av-fotos-mini { display: flex; gap: 8px; margin-top: 12px; }
+  .av-fotos-mini img { width: 30%; max-width: 120px; aspect-ratio: 3/4; object-fit: cover; border-radius: 10px; background: #000; }
+  .av-cta2 { margin-top: 12px; width: 100%; padding: 12px; border-radius: 12px; border: 1.5px solid #e6b800; background: rgba(255,194,32,.12); color: var(--ink); font: 700 14px inherit; font-family: inherit; cursor: pointer; }
+  .av-sec-t { margin: 16px 0 8px; font: 800 11.5px "Barlow", sans-serif; letter-spacing: .1em; color: var(--ink-soft); }
+  .av-tab-wrap { overflow-x: auto; }
+  .av-tab { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  .av-tab th { text-align: right; font-size: 11.5px; color: var(--ink-soft); font-weight: 700; padding: 4px 6px; }
+  .av-tab td { padding: 6px; border-top: 1px solid var(--line); text-align: right; white-space: nowrap; color: var(--ink); }
+  .av-tab td:first-child, .av-tab th:first-child { text-align: left; white-space: normal; }
+  .av-dif { font-size: 12.5px; font-weight: 700; color: var(--ink-soft); }
+  .av-dif.bom { color: #16a34a; } .av-dif.ruim { color: #dc2626; }
+  :root[data-theme="dark"] .av-dif.bom { color: #34d399; } :root[data-theme="dark"] .av-dif.ruim { color: #f87171; }
+  .av-grafs { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+  .av-graf { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px 6px; background: var(--surface); }
+  .av-graf-t { font-size: 13px; color: var(--ink-soft); }
+  .av-graf-t b { color: var(--ink); }
+  .av-graf svg { width: 100%; height: 90px; display: block; margin-top: 4px; }
+  .av-graf-x { display: flex; justify-content: space-between; font-size: 11px; color: var(--ink-soft); }
+  .av-hist { display: flex; flex-direction: column; gap: 6px; }
+  .av-hist-i { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13.5px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; color: var(--ink); }
+  .av-btn-mini { border: 1px solid var(--line); background: transparent; color: var(--ink); border-radius: 999px; padding: 6px 12px; font: 700 12.5px inherit; font-family: inherit; cursor: pointer; white-space: nowrap; }
+  .av-card { --av-cor: var(--sa-accent, #ffc220); }
+  .av-card .av-ult, .av-card .av-graf, .av-card .av-hist-i { background: rgba(255,255,255,.03); }
+  .av-acoes { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+  .av-acoes .sa-cta, .av-acoes .sa-cta-ghost { width: 100%; text-align: center; margin: 0; box-sizing: border-box; }
+  .av-ov { position: fixed; inset: 0; z-index: 9000; background: rgba(4,8,20,.66); display: flex; align-items: flex-end; justify-content: center; }
+  @media (min-width: 700px) { .av-ov { align-items: center; } }
+  .av-modal { width: min(640px, 100%); max-height: 94vh; display: flex; flex-direction: column; background: var(--paper, #0b1226); color: var(--ink); border: 1px solid var(--line); border-radius: 18px 18px 0 0; box-shadow: 0 -10px 40px rgba(0,0,0,.4); }
+  @media (min-width: 700px) { .av-modal { border-radius: 18px; } }
+  .av-m-head { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+  .av-m-head h3 { margin: 0; font-size: 18px; }
+  .av-x { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; font-size: 15px; }
+  .av-m-body { padding: 14px 16px; overflow-y: auto; }
+  .av-m-foot { display: flex; justify-content: space-between; gap: 10px; padding: 12px 16px; border-top: 1px solid var(--line); }
+  .av-salvar { padding: 12px 26px; border-radius: 999px; border: 0; background: #ffc220; color: #1a1300; font: 800 15px inherit; font-family: inherit; cursor: pointer; }
+  .av-del { padding: 10px 14px; border-radius: 999px; border: 1px solid #f3c0bb; background: transparent; color: #dc2626; font: 700 13px inherit; font-family: inherit; cursor: pointer; }
+  .av-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 10px; }
+  .av-f { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 700; color: var(--ink-soft); }
+  .av-f i { font-style: normal; font-weight: 500; }
+  .av-f input, .av-f select, .av-f textarea { width: 100%; box-sizing: border-box; padding: 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: 600 16px inherit; font-family: inherit; }
+  .av-obs { margin-top: 14px; }
+  .av-prot { display: flex; gap: 16px; flex-wrap: wrap; font-size: 14px; margin-bottom: 10px; color: var(--ink); }
+  .av-res { margin-top: 16px; display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; padding: 12px; border-radius: 12px; background: rgba(255,194,32,.1); border: 1px solid rgba(255,194,32,.4); }
+  .av-res div { display: flex; flex-direction: column; font-size: 12px; color: var(--ink-soft); }
+  .av-res b { font-size: 17px; color: var(--ink); }
+  .av-slots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .av-slot { display: flex; flex-direction: column; gap: 6px; align-items: center; }
+  .av-slot img, .av-slot-v { width: 100%; aspect-ratio: 3/4; border-radius: 10px; object-fit: cover; background: rgba(127,140,180,.12); }
+  .av-slot-v { display: flex; align-items: center; justify-content: center; color: var(--ink-soft); }
+  .av-silh.mini { width: 46%; opacity: .55; }
+  .av-cam { position: fixed; inset: 0; z-index: 9500; background: #000; color: #fff; display: flex; flex-direction: column; }
+  .av-cam-top { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; }
+  .av-cam-top .av-x { color: #fff; border-color: rgba(255,255,255,.4); }
+  .av-cam-view { position: relative; flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .av-cam-view video { height: 100%; width: 100%; object-fit: cover; }
+  .av-cam-view video.espelho { transform: scaleX(-1); }
+  .av-cam-view .av-silh { position: absolute; height: 86%; color: #ffc220; opacity: .9; pointer-events: none; }
+  .av-cam-msg { position: absolute; left: 16px; right: 16px; text-align: center; font-size: 15px; }
+  .av-cam-cont { position: absolute; font: 900 120px "Barlow Condensed", sans-serif; color: #ffc220; text-shadow: 0 4px 30px rgba(0,0,0,.6); }
+  .av-cam-dica { padding: 8px 16px; font-size: 13px; text-align: center; opacity: .85; }
+  .av-cam-b { display: flex; gap: 8px; padding: 8px 14px 4px; }
+  .av-cam-b button { flex: 1; padding: 13px 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,.35); background: rgba(255,255,255,.08); color: #fff; font: 700 14px inherit; font-family: inherit; cursor: pointer; }
+  .av-cam-b .av-cam-dispara { flex: 1.4; background: #ffc220; color: #1a1300; border-color: #ffc220; }
+  .av-cam-gal { display: block; text-align: center; padding: 10px 0 calc(14px + env(safe-area-inset-bottom, 0px)); font-size: 13px; text-decoration: underline; cursor: pointer; opacity: .85; }
+  .av-cmp-sel { display: flex; gap: 10px; }
+  .av-cmp-sel label { flex: 1; display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 700; color: var(--ink-soft); }
+  .av-cmp-sel select { padding: 9px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: 600 15px inherit; font-family: inherit; }
+  .av-cmp-poses { display: flex; gap: 6px; margin: 12px 0; }
+  .av-cmp-poses button { flex: 1; padding: 8px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--ink); font: 700 13px inherit; font-family: inherit; cursor: pointer; }
+  .av-cmp-poses button.on { background: #ffc220; color: #1a1300; border-color: #ffc220; }
+  .av-cmp-poses button:disabled { opacity: .35; }
+  .av-cmp { position: relative; width: 100%; max-width: 420px; margin: 0 auto; aspect-ratio: 3/4; border-radius: 14px; overflow: hidden; background: #000; }
+  .av-cmp > img, .av-cmp-a img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .av-cmp-a { position: absolute; inset: 0; clip-path: inset(0 calc(100% - var(--pos)) 0 0); }
+  .av-cmp-l { position: absolute; top: 0; bottom: 0; left: var(--pos); width: 3px; margin-left: -1.5px; background: #ffc220; box-shadow: 0 0 10px rgba(0,0,0,.5); pointer-events: none; }
+  .av-cmp-t { position: absolute; top: 10px; padding: 3px 9px; border-radius: 999px; background: rgba(0,0,0,.6); color: #fff; font: 800 11px "Barlow", sans-serif; letter-spacing: .08em; }
+  .av-cmp-t.l { left: 10px; } .av-cmp-t.r { right: 10px; }
+  .av-cmp input[type=range] { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: ew-resize; margin: 0; }
+  .av-cmp-lado { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+  .av-cmp-lado figure { margin: 0; }
+  .av-cmp-lado img { width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 10px; background: #000; }
+  .av-cmp-lado figcaption { text-align: center; font-size: 12px; color: var(--ink-soft); margin-top: 4px; }
   /* ---- montagem de treino compacta ---- */
   .ex-card { padding: 10px 12px; }
   .ex-card.ex-sem-obs .ex-obs-input, .ex-card.ex-sem-tec .ex-tec-row, .ex-card.ex-eq-padrao .ex-meta-equip, .ex-card.ex-cargas-fechadas .ex-cargas-row { display: none; }
@@ -8760,6 +8856,7 @@ function startApp() {
     html += '<button class="tab' + (state.activeTab === "corrida" ? " active" : "") + '" data-tab="corrida">🏃 Corrida' + (s.corrida ? "" : "") + '</button>';
     if (!isStudentView()) {
       html += '<button class="tab' + (state.activeTab === "volume" ? " active" : "") + '" data-tab="volume">📈 Volume</button>';
+      html += '<button class="tab' + (state.activeTab === "avaliacao" ? " active" : "") + '" data-tab="avaliacao">📏 Avaliação</button>';
       html += '<button class="tab' + (state.activeTab === "notas" ? " active" : "") + '" data-tab="notas">📝 Notas</button>';
     }
     if (!structLocked()) html += '<button class="tab add" id="addTreino">+ Treino</button>';
@@ -9739,6 +9836,331 @@ function startApp() {
         return '<div class="ana-card"><div class="ana-t">' + escapeHtml(r.nome) + '</div>' + anaChip(r) + anaCorpoHtml(r) + '</div>';
       }).join("") + lista + '</div>';
   }
+  // ======================= AVALIAÇÃO FÍSICA (antropometria + fotos de evolução) =======================
+  // s.avaliacoes = [{ id, date, por: "personal"|"aluno", sexo, idade, peso, altura, circ: {...}, prot: "jp3"|"jp7",
+  //   dobras: {...}, fotos: { frente, lado, costas }, obs }]. As fotos usam o mesmo envio do app (/api/img), com
+  // link impossível de adivinhar, e nunca aparecem no feed: só o aluno e o personal (pelo registro do aluno) veem.
+  var AV_CIRC = [["cintura", "Cintura"], ["abdomen", "Abdômen"], ["quadril", "Quadril"], ["peito", "Peito"], ["bracoR", "Braço relaxado"], ["bracoC", "Braço contraído"], ["coxa", "Coxa"], ["panturrilha", "Panturrilha"]];
+  var AV_DOBRAS = { peitoral: "Peitoral", axilar: "Axilar média", triceps: "Tríceps", subescapular: "Subescapular", abdominal: "Abdominal", suprailiaca: "Suprailíaca", coxa: "Coxa" };
+  var AV_POSES = [["frente", "Frente"], ["lado", "Lado"], ["costas", "Costas"]];
+  var AV = { draft: null, abaPose: "frente", cmpA: "", cmpB: "", cmpPose: "frente", cmpPos: 50 };
+  function avNum(v) { var n = parseFloat(String(v === undefined || v === null ? "" : v).replace(",", ".")); return isNaN(n) ? null : n; }
+  function avFmt(v, d) { if (v === null || v === undefined || isNaN(v)) return "—"; return (Math.round(v * Math.pow(10, d || 0)) / Math.pow(10, d || 0)).toFixed(d || 0).replace(".", ","); }
+  function avSitios(sexo, prot) { return prot === "jp7" ? ["peitoral", "axilar", "triceps", "subescapular", "abdominal", "suprailiaca", "coxa"] : (sexo === "F" ? ["triceps", "suprailiaca", "coxa"] : ["peitoral", "abdominal", "coxa"]); }
+  function avLista(s) { return ((s && s.avaliacoes) || []).slice().sort(function (a, b) { return a.date < b.date ? -1 : (a.date > b.date ? 1 : (a.ts || 0) - (b.ts || 0)); }); }
+  // Jackson & Pollock (3 ou 7 dobras) + Siri. Só calcula o que tiver dado suficiente.
+  function avCalc(a) {
+    var r = { imc: null, rcq: null, rce: null, soma: null, pg: null, mg: null, mm: null };
+    if (!a) return r;
+    var peso = avNum(a.peso), alt = avNum(a.altura), c = a.circ || {};
+    if (peso && alt) r.imc = peso / Math.pow(alt / 100, 2);
+    var cin = avNum(c.cintura), qua = avNum(c.quadril);
+    if (cin && qua) r.rcq = cin / qua;
+    if (cin && alt) r.rce = cin / alt;
+    var sit = avSitios(a.sexo, a.prot), d = a.dobras || {}, soma = 0, ok = true;
+    sit.forEach(function (k) { var v = avNum(d[k]); if (v === null) ok = false; else soma += v; });
+    if (ok) {
+      r.soma = soma;
+      var idade = avNum(a.idade);
+      if (idade !== null && (a.sexo === "M" || a.sexo === "F")) {
+        var D;
+        if (a.prot === "jp7") D = a.sexo === "F" ? 1.097 - 0.00046971 * soma + 0.00000056 * soma * soma - 0.00012828 * idade : 1.112 - 0.00043499 * soma + 0.00000055 * soma * soma - 0.00028826 * idade;
+        else D = a.sexo === "F" ? 1.0994921 - 0.0009929 * soma + 0.0000023 * soma * soma - 0.0001392 * idade : 1.10938 - 0.0008267 * soma + 0.0000016 * soma * soma - 0.0002574 * idade;
+        r.pg = 495 / D - 450;
+        if (peso) { r.mg = peso * r.pg / 100; r.mm = peso - r.mg; }
+      }
+    }
+    return r;
+  }
+  // Valor de uma métrica numa avaliação (para tabela, diferença e gráfico). melhor: +1 subir é bom, -1 descer é bom, 0 neutro.
+  var AV_METRICAS = [
+    ["peso", "Peso", "kg", 1, 0, function (a) { return avNum(a.peso); }],
+    ["pg", "% de gordura", "%", 1, -1, function (a) { return avCalc(a).pg; }],
+    ["mm", "Massa magra", "kg", 1, 1, function (a) { return avCalc(a).mm; }],
+    ["mg", "Massa gorda", "kg", 1, -1, function (a) { return avCalc(a).mg; }],
+    ["soma", "Soma das dobras", "mm", 0, -1, function (a) { return avCalc(a).soma; }]
+  ].concat(AV_CIRC.map(function (c) { return [c[0], c[1], "cm", 1, (c[0] === "cintura" || c[0] === "abdomen") ? -1 : (c[0] === "quadril" ? 0 : 1), function (a) { return avNum((a.circ || {})[c[0]]); }]; }))
+   .concat([["imc", "IMC", "", 1, 0, function (a) { return avCalc(a).imc; }], ["rcq", "Cintura / quadril", "", 2, -1, function (a) { return avCalc(a).rcq; }], ["rce", "Cintura / altura", "", 2, -1, function (a) { return avCalc(a).rce; }]]);
+  function avDifHtml(m, antes, agora) {
+    if (antes === null || agora === null) return "";
+    var d = agora - antes; if (Math.abs(d) < Math.pow(10, -(m[3] || 0)) / 2) return '<span class="av-dif">=</span>';
+    var bom = m[4] === 0 ? 0 : (d > 0 ? m[4] : -m[4]);
+    return '<span class="av-dif ' + (bom > 0 ? "bom" : (bom < 0 ? "ruim" : "")) + '">' + (d > 0 ? "+" : "−") + avFmt(Math.abs(d), m[3]) + (m[2] ? " " + m[2] : "") + '</span>';
+  }
+  // Gráfico de linha simples (SVG) para uma métrica ao longo das avaliações.
+  function avGraficoHtml(lista, m) {
+    var pts = lista.map(function (a) { return { d: a.date, v: m[5](a) }; }).filter(function (p) { return p.v !== null && !isNaN(p.v); });
+    if (pts.length < 2) return "";
+    var W = 300, H = 110, pad = 18, min = Math.min.apply(null, pts.map(function (p) { return p.v; })), max = Math.max.apply(null, pts.map(function (p) { return p.v; }));
+    if (max - min < 0.001) { max += 1; min -= 1; }
+    var xy = pts.map(function (p, i) { return [pad + i * (W - 2 * pad) / (pts.length - 1), H - pad - (p.v - min) / (max - min) * (H - 2 * pad - 10)]; });
+    var ult = pts[pts.length - 1], pri = pts[0];
+    return '<div class="av-graf"><div class="av-graf-t">' + escapeHtml(m[1]) + ' <b>' + avFmt(ult.v, m[3]) + (m[2] ? " " + m[2] : "") + '</b> ' + avDifHtml(m, pri.v, ult.v) + '</div>' +
+      '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" aria-hidden="true"><polyline fill="none" stroke="var(--av-cor,#ffc220)" stroke-width="3" stroke-linejoin="round" points="' + xy.map(function (p) { return p[0].toFixed(1) + "," + p[1].toFixed(1); }).join(" ") + '"/>' +
+      xy.map(function (p) { return '<circle cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="4" fill="var(--av-cor,#ffc220)"/>'; }).join("") + '</svg>' +
+      '<div class="av-graf-x"><span>' + escapeHtml(formatDateBR(pri.d)) + '</span><span>' + escapeHtml(formatDateBR(ult.d)) + '</span></div></div>';
+  }
+  function avFotosDe(a) { var f = (a && a.fotos) || {}; return AV_POSES.filter(function (p) { return f[p[0]]; }).length; }
+  // Bloco completo (usado na aba "Avaliação" do personal e no card do aluno). edita: mostra os botões de editar.
+  function avResumoHtml(s, edita) {
+    var lista = avLista(s), ult = lista[lista.length - 1];
+    var comFotos = lista.filter(function (a) { return avFotosDe(a); });
+    if (!ult) return '<div class="av-vazio">Nenhuma avaliação ainda.' + (edita ? ' Toque em <b>+ Nova avaliação</b> para registrar peso, medidas, dobras e as fotos de evolução.' : ' Tire as fotos de evolução para acompanhar suas mudanças.') + '</div>';
+    // Cada medida usa o valor mais recente que existir (o aluno pode registrar só fotos, ou só peso e cintura).
+    var ultimos = function (m) { var vs = lista.map(function (a) { return { v: m[5](a), d: a.date }; }).filter(function (x) { return x.v !== null && !isNaN(x.v); }); return [vs[vs.length - 2] || null, vs[vs.length - 1] || null]; };
+    var met = function (k) { return AV_METRICAS.filter(function (m) { return m[0] === k; })[0]; };
+    var destaques = [["pg", "% de gordura", "%"], ["peso", "Peso", "kg"], ["mm", "Massa magra", "kg"], ["soma", "Soma das dobras", "mm"], ["cintura", "Cintura", "cm"]].map(function (x) {
+      var m = met(x[0]), u = ultimos(m); return u[1] ? [x[1], u[1].v, m[3], x[2], u[0] ? avDifHtml(m, u[0].v, u[1].v) : ""] : null;
+    }).filter(Boolean);
+    var fotoUlt = lista.filter(function (a) { return avFotosDe(a); }).slice(-1)[0];
+    var linhas = AV_METRICAS.map(function (m) {
+      var u = ultimos(m); if (!u[0] || !u[1]) return "";
+      return '<tr><td>' + escapeHtml(m[1]) + '</td><td>' + avFmt(u[0].v, m[3]) + '</td><td><b>' + avFmt(u[1].v, m[3]) + '</b></td><td>' + avDifHtml(m, u[0].v, u[1].v) + '</td></tr>';
+    }).join("");
+    var grafs = lista.length > 1 ? ["pg", "peso", "soma", "cintura", "bracoC", "coxa", "mm"].map(function (k) { return avGraficoHtml(lista, AV_METRICAS.filter(function (m) { return m[0] === k; })[0]); }).join("") : "";
+    return '<div class="av-ult"><div class="av-ult-top"><div><div class="av-eyebrow">ÚLTIMA AVALIAÇÃO · ' + escapeHtml(formatDateBR(ult.date)) + (ult.por === "aluno" ? " · registrada pelo aluno" : "") + '</div></div>' +
+      (edita ? '<button type="button" class="av-btn-mini" data-av="editar" data-av-id="' + escapeAttr(ult.id) + '">✏️ Editar</button>' : '') + '</div>' +
+      (destaques.length ? '<div class="av-dest">' + destaques.map(function (x) { return '<div class="av-dest-i"><b>' + avFmt(x[1], x[2]) + '<small>' + x[3] + '</small></b><span>' + x[0] + '</span>' + (x[4] ? '<em>' + x[4] + '</em>' : '') + '</div>'; }).join("") + '</div>' : '') +
+      (fotoUlt ? '<div class="av-fotos-mini">' + AV_POSES.map(function (p) { var u = (fotoUlt.fotos || {})[p[0]]; return u ? '<img src="' + escapeAttr(u) + '" alt="' + escapeAttr(p[1]) + '" loading="lazy">' : ''; }).join("") + '</div>' + (fotoUlt !== ult ? '<div class="av-ajuda" style="margin:4px 0 0">Fotos de ' + escapeHtml(formatDateBR(fotoUlt.date)) + '</div>' : '') : '') +
+      '</div>' +
+      (comFotos.length >= 2 ? '<button type="button" class="av-cta2" data-av="comparar">📸 Comparar fotos (antes e agora)</button>' : '') +
+      (linhas ? '<div class="av-sec-t">ANTES E AGORA (ÚLTIMOS DOIS REGISTROS DE CADA MEDIDA)</div><div class="av-tab-wrap"><table class="av-tab"><thead><tr><th></th><th>Antes</th><th>Agora</th><th>Diferença</th></tr></thead><tbody>' + linhas + '</tbody></table></div>' : '') +
+      (grafs ? '<div class="av-sec-t">EVOLUÇÃO</div><div class="av-grafs">' + grafs + '</div>' : '') +
+      (lista.length > 1 ? '<div class="av-sec-t">HISTÓRICO</div><div class="av-hist">' + lista.slice().reverse().map(function (a) {
+        var rr = avCalc(a);
+        return '<div class="av-hist-i"><span><b>' + escapeHtml(formatDateBR(a.date)) + '</b> · ' + (a.por === "aluno" ? "aluno" : "avaliação") + (avNum(a.peso) !== null ? " · " + avFmt(avNum(a.peso), 1) + " kg" : "") + (rr.pg !== null ? " · " + avFmt(rr.pg, 1) + "% G" : "") + (avFotosDe(a) ? " · 📸" : "") + '</span>' +
+          (edita ? '<button type="button" class="av-btn-mini" data-av="editar" data-av-id="' + escapeAttr(a.id) + '">Abrir</button>' : '') + '</div>';
+      }).join("") + '</div>' : '');
+  }
+  // Aba "📏 Avaliação" na tela do aluno (personal).
+  function avTabHtml(s) {
+    return '<div class="panel av-panel"><div class="av-head"><h2>📏 Avaliação física</h2><div class="av-head-b">' +
+      '<button type="button" class="cta" data-av="nova">+ Nova avaliação</button></div></div>' +
+      '<p class="av-ajuda">Medidas, dobras (Jackson & Pollock) e fotos de evolução. Para comparar bem: mesma hora, em jejum, antes de treinar e com a mesma roupa.</p>' +
+      avResumoHtml(s, true) + '</div>';
+  }
+  // Card no Histórico do app do aluno (e no atendimento presencial, com a avaliação completa).
+  function avAlunoHtml(s) {
+    var podeCompleta = !!(state.atendimento || state.trainerPreview);
+    return '<div class="sa-card av-card"><div class="sa-card-inner"><div class="sa-mood-label">📏 MINHA EVOLUÇÃO</div>' +
+      avResumoHtml(s, podeCompleta) +
+      '<div class="av-acoes">' +
+      (podeCompleta ? '<button type="button" class="sa-cta" data-av="nova">+ Avaliação completa</button>' : '') +
+      '<button type="button" class="' + (podeCompleta ? 'sa-cta-ghost' : 'sa-cta') + '" data-av="fotos">📸 Tirar fotos de evolução</button>' +
+      '<button type="button" class="sa-cta-ghost" data-av="medidas">⚖️ Registrar peso e cintura</button>' +
+      '</div></div></div>';
+  }
+  function avSalvar() { try { scheduleSave(); } catch (e) {} }
+  function avRedesenha() { try { render(); } catch (e) {} }
+  function avStudent() { return (state.slug && state.data && state.data.students) ? state.data.students[state.slug] : null; }
+  // ---------- formulário ----------
+  function avFormAbrir(modo, id) {
+    var s = avStudent(); if (!s) return;
+    var lista = avLista(s), ult = lista[lista.length - 1] || {};
+    var base = id ? JSON.parse(JSON.stringify((s.avaliacoes || []).filter(function (a) { return a.id === id; })[0] || {})) : null;
+    AV.draft = base || { id: "", date: todayISO(), por: modo === "nova" ? "personal" : "aluno", sexo: ult.sexo || "", idade: ult.idade || "", peso: "", altura: ult.altura || "", circ: {}, prot: ult.prot || "jp3", dobras: {}, fotos: {}, obs: "" };
+    AV.modo = base ? "nova" : modo; // editar só aparece para o personal: sempre o formulário completo
+    avFormDesenha();
+  }
+  function avOv() {
+    var ov = document.getElementById("avOv");
+    if (!ov) { ov = document.createElement("div"); ov.id = "avOv"; ov.className = "av-ov"; document.body.appendChild(ov); }
+    return ov;
+  }
+  function avFecha() { var ov = document.getElementById("avOv"); if (ov) ov.remove(); AV.draft = null; avCamPara(); }
+  function avCampo(rot, chave, val, un, larg) {
+    return '<label class="av-f"' + (larg ? ' style="grid-column:span ' + larg + '"' : '') + '><span>' + rot + (un ? ' <i>(' + un + ')</i>' : '') + '</span><input inputmode="decimal" data-avf="' + chave + '" value="' + escapeAttr(val === undefined || val === null ? "" : val) + '"></label>';
+  }
+  function avFotosSlotsHtml(d) {
+    return '<div class="av-slots">' + AV_POSES.map(function (p) {
+      var u = (d.fotos || {})[p[0]];
+      return '<div class="av-slot">' + (u ? '<img src="' + escapeAttr(u) + '" alt="">' : '<div class="av-slot-v">' + avSilhuetaSvg(p[0], true) + '</div>') +
+        '<button type="button" class="av-btn-mini" data-av="foto" data-av-pose="' + p[0] + '">' + (u ? "🔄 " : "📷 ") + p[1] + '</button></div>';
+    }).join("") + '</div>';
+  }
+  function avFormDesenha() {
+    var d = AV.draft; if (!d) return;
+    var ov = avOv(), completo = AV.modo === "nova", soFotos = AV.modo === "fotos";
+    var r = avCalc(d), sit = avSitios(d.sexo, d.prot);
+    var titulo = completo ? (d.id ? "Editar avaliação" : "Nova avaliação") : (soFotos ? "Fotos de evolução" : "Peso e cintura");
+    ov.innerHTML = '<div class="av-modal" role="dialog" aria-label="' + escapeAttr(titulo) + '"><div class="av-m-head"><h3>' + titulo + '</h3><button type="button" class="av-x" data-av="fechar" aria-label="Fechar">✕</button></div>' +
+      '<div class="av-m-body">' +
+      '<div class="av-grid">' + '<label class="av-f"><span>Data</span><input type="date" data-avf="date" value="' + escapeAttr(d.date) + '"></label>' +
+      (completo ? '<label class="av-f"><span>Sexo</span><select data-avf="sexo"><option value="">—</option><option value="M"' + (d.sexo === "M" ? " selected" : "") + '>Masculino</option><option value="F"' + (d.sexo === "F" ? " selected" : "") + '>Feminino</option></select></label>' + avCampo("Idade", "idade", d.idade, "anos") : '') +
+      (!soFotos ? avCampo("Peso", "peso", d.peso, "kg") : '') +
+      (completo ? avCampo("Altura", "altura", d.altura, "cm") : '') +
+      (!soFotos && !completo ? avCampo("Cintura", "circ.cintura", (d.circ || {}).cintura, "cm") + avCampo("Abdômen", "circ.abdomen", (d.circ || {}).abdomen, "cm") : '') +
+      '</div>' +
+      (!soFotos && !completo ? '<p class="av-ajuda">Cintura: na parte mais fina do tronco, entre a última costela e o umbigo, no fim de uma expiração normal. Abdômen: na altura do umbigo.</p>' : '') +
+      (completo ? '<div class="av-sec-t">CIRCUNFERÊNCIAS (cm)</div><div class="av-grid">' + AV_CIRC.map(function (c) { return avCampo(c[1], "circ." + c[0], (d.circ || {})[c[0]], ""); }).join("") + '</div>' +
+        '<div class="av-sec-t">DOBRAS CUTÂNEAS (mm)</div><div class="av-prot"><label><input type="radio" name="avProt" data-avf="prot" value="jp3"' + (d.prot !== "jp7" ? " checked" : "") + '> 3 dobras (J&P)</label><label><input type="radio" name="avProt" data-avf="prot" value="jp7"' + (d.prot === "jp7" ? " checked" : "") + '> 7 dobras (J&P)</label></div>' +
+        (d.sexo || d.prot === "jp7" ? '<div class="av-grid">' + sit.map(function (k) { return avCampo(AV_DOBRAS[k], "dobras." + k, (d.dobras || {})[k], ""); }).join("") + '</div>' : '<p class="av-ajuda">Escolha o sexo para ver as dobras do protocolo de 3 dobras.</p>') : '') +
+      (completo || soFotos ? '<div class="av-sec-t">FOTOS DE EVOLUÇÃO</div><p class="av-ajuda">Mesma hora, mesma luz e mesma roupa. Fique de corpo inteiro dentro da silhueta.</p>' + avFotosSlotsHtml(d) : '') +
+      (completo ? '<label class="av-f av-obs"><span>Observações</span><textarea data-avf="obs" rows="2">' + escapeHtml(d.obs || "") + '</textarea></label>' : '') +
+      (completo ? '<div class="av-res" id="avRes">' + avResHtml(r) + '</div>' : '') +
+      '</div><div class="av-m-foot">' +
+      (d.id ? '<button type="button" class="av-del" data-av="excluir">Excluir</button>' : '<span></span>') +
+      '<button type="button" class="av-salvar" data-av="salvar">Salvar</button></div></div>';
+  }
+  function avResHtml(r) {
+    var it = [["IMC", r.imc, 1, ""], ["Cintura/altura", r.rce, 2, ""], ["Cintura/quadril", r.rcq, 2, ""], ["Soma das dobras", r.soma, 0, "mm"], ["% de gordura", r.pg, 1, "%"], ["Massa gorda", r.mg, 1, "kg"], ["Massa magra", r.mm, 1, "kg"]];
+    return it.map(function (x) { return '<div><span>' + x[0] + '</span><b>' + avFmt(x[1], x[2]) + (x[1] !== null && x[3] ? " " + x[3] : "") + '</b></div>'; }).join("");
+  }
+  function avSetCampo(chave, val) {
+    var d = AV.draft; if (!d) return;
+    var p = chave.split(".");
+    if (p.length === 2) { d[p[0]] = d[p[0]] || {}; d[p[0]][p[1]] = val; } else d[chave] = val;
+  }
+  function avSalvaDraft() {
+    var s = avStudent(), d = AV.draft; if (!s || !d) return;
+    var tem = avNum(d.peso) !== null || avFotosDe(d) || Object.keys(d.circ || {}).some(function (k) { return avNum(d.circ[k]) !== null; }) || Object.keys(d.dobras || {}).some(function (k) { return avNum(d.dobras[k]) !== null; });
+    if (!tem) { showToast("Preencha pelo menos uma medida ou foto", true); return; }
+    if (!s.avaliacoes) s.avaliacoes = [];
+    d.ts = Date.now();
+    if (d.id) { s.avaliacoes = s.avaliacoes.map(function (a) { return a.id === d.id ? d : a; }); }
+    else { d.id = uid("av"); s.avaliacoes.push(d); }
+    avFecha(); avSalvar(); avRedesenha(); showToast("Avaliação salva ✅");
+  }
+  // ---------- câmera com silhueta ----------
+  function avSilhuetaSvg(pose, mini) {
+    var corpo = pose === "lado"
+      ? '<ellipse cx="100" cy="38" rx="17" ry="20"/><path d="M92 58 C82 70 80 92 84 120 C86 150 80 175 84 205 L88 300 C88 330 86 360 90 392 L104 392 C106 360 108 330 108 300 L110 220 C120 190 122 160 118 130 C116 100 118 75 108 58 Z"/><path d="M96 70 C92 100 92 140 98 178 L106 176 C104 140 104 104 106 72 Z"/>'
+      : '<ellipse cx="100" cy="36" rx="18" ry="21"/><path d="M80 60 C66 64 58 72 56 90 L48 160 C46 175 50 190 54 205 L62 204 C62 188 64 172 68 160 L72 120 L74 170 C72 200 74 220 78 240 L80 300 C80 330 78 360 82 392 L96 392 C96 360 98 330 98 300 L100 250 L102 300 C102 330 104 360 104 392 L118 392 C122 360 120 330 120 300 L122 240 C126 220 128 200 126 170 L128 120 L132 160 C136 172 138 188 138 204 L146 205 C150 190 154 175 152 160 L144 90 C142 72 134 64 120 60 Z"/>';
+    return '<svg class="av-silh' + (mini ? ' mini' : '') + '" viewBox="0 0 200 400" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="' + (mini ? 6 : 3) + '" stroke-dasharray="' + (mini ? "0" : "10 7") + '" stroke-linejoin="round">' + corpo + '</g></svg>';
+  }
+  var AV_CAM = { stream: null, facing: "user", pose: "frente", timer: 0, tique: null };
+  function avCamPara() {
+    if (AV_CAM.tique) { clearInterval(AV_CAM.tique); AV_CAM.tique = null; }
+    if (AV_CAM.stream) { try { AV_CAM.stream.getTracks().forEach(function (t) { t.stop(); }); } catch (e) {} AV_CAM.stream = null; }
+    var c = document.getElementById("avCam"); if (c) c.remove();
+  }
+  function avCamAbrir(pose) {
+    avCamPara(); AV_CAM.pose = pose;
+    var el = document.createElement("div"); el.id = "avCam"; el.className = "av-cam";
+    var nome = (AV_POSES.filter(function (p) { return p[0] === pose; })[0] || [0, ""])[1];
+    el.innerHTML = '<div class="av-cam-top"><b>Foto: ' + nome + '</b><button type="button" class="av-x" data-avc="fechar" aria-label="Fechar">✕</button></div>' +
+      '<div class="av-cam-view"><video playsinline muted autoplay></video>' + avSilhuetaSvg(pose) + '<div class="av-cam-cont" hidden></div><div class="av-cam-msg">Abrindo a câmera…</div></div>' +
+      '<div class="av-cam-dica">' + (pose === "lado" ? "De lado, braços soltos ao lado do corpo." : (pose === "costas" ? "De costas, braços soltos e um pouco afastados." : "De frente, braços soltos e um pouco afastados.")) + ' Apoie o celular na altura do umbigo, a uns 2,5 m.</div>' +
+      '<div class="av-cam-b"><button type="button" data-avc="virar">🔁 Câmera</button><button type="button" class="av-cam-dispara" data-avc="timer">⏱️ Tirar em 10 s</button><button type="button" data-avc="agora">📸 Agora</button></div>' +
+      '<label class="av-cam-gal">ou escolha uma foto da galeria<input type="file" accept="image/*" data-avc="galeria" hidden></label>';
+    document.body.appendChild(el);
+    avCamLiga();
+  }
+  function avCamLiga() {
+    var el = document.getElementById("avCam"); if (!el) return;
+    var v = el.querySelector("video"), msg = el.querySelector(".av-cam-msg");
+    if (AV_CAM.stream) { try { AV_CAM.stream.getTracks().forEach(function (t) { t.stop(); }); } catch (e) {} AV_CAM.stream = null; }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { msg.textContent = "Câmera indisponível aqui: escolha uma foto da galeria."; return; }
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: AV_CAM.facing, width: { ideal: 1280 }, height: { ideal: 1706 } }, audio: false }).then(function (st) {
+      AV_CAM.stream = st; v.srcObject = st; v.classList.toggle("espelho", AV_CAM.facing === "user"); msg.textContent = "";
+    }).catch(function () { msg.textContent = "Não consegui abrir a câmera. Libere o acesso ou escolha uma foto da galeria."; });
+  }
+  function avCamCaptura() {
+    var el = document.getElementById("avCam"); if (!el) return;
+    var v = el.querySelector("video"); if (!v || !v.videoWidth) { showToast("A câmera ainda não abriu", true); return; }
+    var W = 720, H = 960, cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+    var ctx = cv.getContext("2d"), vr = v.videoWidth / v.videoHeight, cr = W / H, sw, sh, sx, sy;
+    if (vr > cr) { sh = v.videoHeight; sw = sh * cr; sx = (v.videoWidth - sw) / 2; sy = 0; } else { sw = v.videoWidth; sh = sw / cr; sx = 0; sy = (v.videoHeight - sh) / 2; }
+    if (AV_CAM.facing === "user") { ctx.translate(W, 0); ctx.scale(-1, 1); }
+    ctx.drawImage(v, sx, sy, sw, sh, 0, 0, W, H);
+    cv.toBlob(function (b) { if (b) avFotoEnvia(b); }, "image/jpeg", 0.86);
+  }
+  function avFotoEnvia(blob) {
+    var pose = AV_CAM.pose, el = document.getElementById("avCam");
+    if (el) { var m = el.querySelector(".av-cam-msg"); if (m) m.textContent = "Enviando…"; }
+    fotoEnviar(blob, state.slug).then(function (url) {
+      if (!AV.draft) return;
+      AV.draft.fotos = AV.draft.fotos || {}; AV.draft.fotos[pose] = url;
+      avCamPara(); avFormDesenha();
+      var prox = AV_POSES.map(function (p) { return p[0]; }).filter(function (k) { return !AV.draft.fotos[k]; })[0];
+      if (prox) showToast("Foto salva. Falta: " + (AV_POSES.filter(function (p) { return p[0] === prox; })[0][1]));
+    }).catch(function (er) { showToast(er.message || "Não consegui enviar a foto", true); if (el) { var m2 = el.querySelector(".av-cam-msg"); if (m2) m2.textContent = ""; } });
+  }
+  // ---------- comparação de fotos (antes / agora com controle deslizante) ----------
+  function avCompararAbrir() {
+    var s = avStudent(); if (!s) return;
+    var com = avLista(s).filter(function (a) { return avFotosDe(a); });
+    if (com.length < 2) return;
+    if (!AV.cmpA || !com.some(function (a) { return a.id === AV.cmpA; })) AV.cmpA = com[0].id;
+    if (!AV.cmpB || !com.some(function (a) { return a.id === AV.cmpB; })) AV.cmpB = com[com.length - 1].id;
+    avCompararDesenha();
+  }
+  function avCompararDesenha() {
+    var s = avStudent(); if (!s) return;
+    var com = avLista(s).filter(function (a) { return avFotosDe(a); });
+    var A = com.filter(function (a) { return a.id === AV.cmpA; })[0], B = com.filter(function (a) { return a.id === AV.cmpB; })[0];
+    var poses = AV_POSES.filter(function (p) { return (A.fotos || {})[p[0]] && (B.fotos || {})[p[0]]; });
+    if (!poses.some(function (p) { return p[0] === AV.cmpPose; })) AV.cmpPose = poses.length ? poses[0][0] : "frente";
+    var ua = (A.fotos || {})[AV.cmpPose], ub = (B.fotos || {})[AV.cmpPose];
+    var sel = function (k, atual) { return '<select data-avcmp="' + k + '">' + com.map(function (a) { return '<option value="' + escapeAttr(a.id) + '"' + (a.id === atual ? " selected" : "") + '>' + escapeHtml(formatDateBR(a.date)) + '</option>'; }).join("") + '</select>'; };
+    var ov = avOv();
+    ov.innerHTML = '<div class="av-modal av-cmp-m"><div class="av-m-head"><h3>Antes e agora</h3><button type="button" class="av-x" data-av="fechar" aria-label="Fechar">✕</button></div><div class="av-m-body">' +
+      '<div class="av-cmp-sel"><label>Antes ' + sel("A", AV.cmpA) + '</label><label>Agora ' + sel("B", AV.cmpB) + '</label></div>' +
+      '<div class="av-cmp-poses">' + AV_POSES.map(function (p) { var ok = poses.some(function (x) { return x[0] === p[0]; }); return '<button type="button" class="' + (p[0] === AV.cmpPose ? "on" : "") + '" data-avcmp-pose="' + p[0] + '"' + (ok ? "" : " disabled") + '>' + p[1] + '</button>'; }).join("") + '</div>' +
+      (ua && ub ? '<div class="av-cmp" style="--pos:' + AV.cmpPos + '%"><img src="' + escapeAttr(ub) + '" alt="Agora"><div class="av-cmp-a"><img src="' + escapeAttr(ua) + '" alt="Antes"></div><div class="av-cmp-l"></div><span class="av-cmp-t l">ANTES</span><span class="av-cmp-t r">AGORA</span>' +
+        '<input type="range" min="0" max="100" value="' + AV.cmpPos + '" data-avcmp="pos" aria-label="Arraste para comparar"></div>' +
+        '<div class="av-cmp-lado"><figure><img src="' + escapeAttr(ua) + '" alt=""><figcaption>' + escapeHtml(formatDateBR(A.date)) + '</figcaption></figure><figure><img src="' + escapeAttr(ub) + '" alt=""><figcaption>' + escapeHtml(formatDateBR(B.date)) + '</figcaption></figure></div>'
+        : '<p class="av-ajuda">Essas duas datas não têm a mesma pose. Escolha outras datas.</p>') +
+      '</div></div>';
+  }
+  // ---------- eventos (delegados: funcionam na tela do personal e no app do aluno) ----------
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest("[data-av]");
+    if (b) {
+      var a = b.getAttribute("data-av");
+      if (a === "nova" || a === "fotos" || a === "medidas") { avFormAbrir(a); return; }
+      if (a === "editar") { avFormAbrir(null, b.getAttribute("data-av-id")); return; }
+      if (a === "fechar") { avFecha(); return; }
+      if (a === "salvar") { avSalvaDraft(); return; }
+      if (a === "foto") { avCamAbrir(b.getAttribute("data-av-pose")); return; }
+      if (a === "comparar") { avCompararAbrir(); return; }
+      if (a === "excluir") {
+        if (!b.classList.contains("confirma")) { b.classList.add("confirma"); b.textContent = "Toque de novo para excluir"; return; }
+        var s = avStudent(), d = AV.draft;
+        if (s && d && d.id) { s.avaliacoes = (s.avaliacoes || []).filter(function (x) { return x.id !== d.id; }); avFecha(); avSalvar(); avRedesenha(); showToast("Avaliação excluída"); }
+        return;
+      }
+    }
+    var c = e.target.closest && e.target.closest("[data-avc]");
+    if (c) {
+      var k = c.getAttribute("data-avc");
+      if (k === "fechar") { avCamPara(); return; }
+      if (k === "virar") { AV_CAM.facing = AV_CAM.facing === "user" ? "environment" : "user"; avCamLiga(); return; }
+      if (k === "agora") { avCamCaptura(); return; }
+      if (k === "timer") {
+        if (AV_CAM.tique) return;
+        var el = document.getElementById("avCam"), cont = el && el.querySelector(".av-cam-cont"), n = 10;
+        if (!cont) return; cont.hidden = false; cont.textContent = n;
+        AV_CAM.tique = setInterval(function () { n--; if (n <= 0) { clearInterval(AV_CAM.tique); AV_CAM.tique = null; cont.hidden = true; avCamCaptura(); } else cont.textContent = n; }, 1000);
+        return;
+      }
+    }
+    var p = e.target.closest && e.target.closest("[data-avcmp-pose]");
+    if (p && !p.disabled) { AV.cmpPose = p.getAttribute("data-avcmp-pose"); avCompararDesenha(); return; }
+    var ov = document.getElementById("avOv");
+    if (ov && e.target === ov) avFecha();
+  });
+  document.addEventListener("input", function (e) {
+    var t = e.target;
+    if (t.getAttribute && t.getAttribute("data-avcmp") === "pos") { AV.cmpPos = Number(t.value); var box = t.closest(".av-cmp"); if (box) box.style.setProperty("--pos", AV.cmpPos + "%"); return; }
+    var k = t.getAttribute && t.getAttribute("data-avf"); if (!k || !AV.draft) return;
+    if (k === "prot" || k === "sexo") return;
+    avSetCampo(k, t.value);
+    var res = document.getElementById("avRes"); if (res) res.innerHTML = avResHtml(avCalc(AV.draft));
+  });
+  document.addEventListener("change", function (e) {
+    var t = e.target;
+    var cmp = t.getAttribute && t.getAttribute("data-avcmp");
+    if (cmp === "A" || cmp === "B") { AV["cmp" + cmp] = t.value; avCompararDesenha(); return; }
+    if (t.getAttribute && t.getAttribute("data-avc") === "galeria") {
+      var f = t.files && t.files[0]; if (!f) return;
+      fotoComprimir(f, 960, false).then(function (b) { avFotoEnvia(b); }).catch(function (er) { showToast(er.message || "Não consegui usar essa foto", true); });
+      return;
+    }
+    var k = t.getAttribute && t.getAttribute("data-avf"); if (!k || !AV.draft) return;
+    if (k === "prot" || k === "sexo") { avSetCampo(k, t.value); avFormDesenha(); }
+  });
+
   // ---------- Último treino do aluno (no topo da tela do aluno, só para o personal) ----------
   // Junta o que o aluno registrou na última sessão: PSE, comentário, observações por exercício,
   // repetições sobrando e cargas que subiram em relação ao melhor anterior.
@@ -12949,7 +13371,7 @@ function startApp() {
   function renderAbaHistorico(s) {
     var sessoes = (s.sessoes || []).slice();
     var importadas = (s.atividadesImportadas || []).slice();
-    var evolutionHtml = saCalendarioHtml(s) + saVolumeCardHtml(s) + cargaEvolutionCardHtml(s);
+    var evolutionHtml = avAlunoHtml(s) + saCalendarioHtml(s) + saVolumeCardHtml(s) + cargaEvolutionCardHtml(s);
     var importBtn = '<button type="button" class="sa-cta-ghost" id="btnImportarRelogio" style="width:100%;text-align:center">⌚ Importar atividade do Garmin / relógio</button>' +
       '<button type="button" class="sa-cta-ghost" id="btnIntervalsHist" style="width:100%;text-align:center;margin-top:8px">🔄 Sincronizar com o Intervals.icu</button>' + corrIntervalsStatusHtml();
     if (!sessoes.length && !importadas.length) {
@@ -17288,7 +17710,7 @@ function startApp() {
     // state.activeTab for the *next* render, leaving main.innerHTML empty
     // right now. Resolve it to something that actually exists BEFORE
     // building the body, not after.
-    if (state.activeTab !== "comp" && state.activeTab !== "checkin" && state.activeTab !== "feedback" && state.activeTab !== "notas" && state.activeTab !== "corrida" && state.activeTab !== "volume") {
+    if (state.activeTab !== "comp" && state.activeTab !== "checkin" && state.activeTab !== "feedback" && state.activeTab !== "notas" && state.activeTab !== "corrida" && state.activeTab !== "volume" && state.activeTab !== "avaliacao") {
       var activeTabExists = plan.treinos.some(function (x) { return x.id === state.activeTab; });
       if (!activeTabExists) state.activeTab = defaultTabFor(plan);
     }
@@ -17300,7 +17722,7 @@ function startApp() {
     var microLocked = state.readOnly || isStudentView();
     // As datas do plano podem ser corrigidas também nos arquivados (como o nome); só o aluno e os links somente leitura não editam.
     var datasLocked = state.readOnly || isStudentView();
-    var onDataTab =state.activeTab !== "checkin" && state.activeTab !== "feedback" && state.activeTab !== "notas" && state.activeTab !== "corrida" && state.activeTab !== "volume";
+    var onDataTab =state.activeTab !== "checkin" && state.activeTab !== "feedback" && state.activeTab !== "notas" && state.activeTab !== "corrida" && state.activeTab !== "volume" && state.activeTab !== "avaliacao";
 
     document.getElementById("headerControls").innerHTML = trBellHtml(state.slug) +
       (state.cameFromRoster ? '<a href="#" id="backToRoster" class="link-btn">← Meus alunos</a>' : '') +
@@ -17366,6 +17788,8 @@ function startApp() {
       bodyHtml = renderCorrida(s);
     } else if (state.activeTab === "volume") {
       bodyHtml = volHtml(s, plan);
+    } else if (state.activeTab === "avaliacao") {
+      bodyHtml = avTabHtml(s);
     } else {
       var t = plan.treinos.filter(function (x) { return x.id === state.activeTab; })[0];
       if (!t) { t = plan.treinos[0]; state.activeTab = t ? t.id : defaultTabFor(plan); }
@@ -17447,7 +17871,7 @@ function startApp() {
       var newPlan = viewedPlan(s);
       var tabStillValid = newPlan.treinos.some(function (t) { return t.id === state.activeTab; }) ||
         (state.activeTab === "comp" && !newPlan.complementarHidden) ||
-        state.activeTab === "checkin" || state.activeTab === "feedback" || state.activeTab === "notas" || state.activeTab === "corrida" || state.activeTab === "volume";
+        state.activeTab === "checkin" || state.activeTab === "feedback" || state.activeTab === "notas" || state.activeTab === "corrida" || state.activeTab === "volume" || state.activeTab === "avaliacao";
       if (!tabStillValid) {
         state.activeTab = defaultTabFor(newPlan);
       }

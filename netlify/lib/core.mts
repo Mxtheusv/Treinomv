@@ -1531,15 +1531,36 @@ async function postEstima(req: Request, deps: Deps, now: number): Promise<Respon
     "Considere que é apenas uma estimativa para acompanhar tendência. Se as fotos não mostrarem o corpo com clareza (roupa larga, corpo cortado, escuro, mais de uma pessoa ou aparência de menor de idade), responda com erro. " +
     'Responda SOMENTE com JSON, sem texto fora dele, neste formato: {"min":número,"max":número,"confianca":"baixa"|"media"|"alta","obs":"frase curta e neutra em português sobre a qualidade das fotos"} ou {"erro":"motivo curto em português"}.';
   const fx = deps.fetch || fetch;
-  let resp: Response;
-  try {
-    resp = await fx("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: { "x-api-key": deps.iaKey, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-      body: JSON.stringify({ model: deps.iaModel || "claude-haiku-5-5", max_tokens: 300, temperature: 0, messages: [{ role: "user", content: imagens.concat([{ type: "text", text: pedido }]) }] }),
-    });
-  } catch (e) { return reply(502, { error: "ia_indisponivel" }); }
-  if (!resp.ok) return reply(502, { error: "ia_erro", status: resp.status });
+  const modelos = Array.from(new Set([deps.iaModel, "claude-haiku-5-5", "claude-sonnet-5-5"].filter(Boolean))) as string[];
+  let resp: Response | null = null;
+  let ultimoErro = "";
+  for (const modelo of modelos) {
+    for (const comTemp of [true, false]) {
+      const corpo: any = { model: modelo, max_tokens: 300, messages: [{ role: "user", content: imagens.concat([{ type: "text", text: pedido }]) }] };
+      if (comTemp) corpo.temperature = 0;
+      try {
+        resp = await fx("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: { "x-api-key": deps.iaKey, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+          body: JSON.stringify(corpo),
+        });
+      } catch (e) { ultimoErro = "rede: " + String(e).slice(0, 200); console.error("[estima]", ultimoErro); resp = null; break; }
+      if (resp.ok) break;
+      const det = await resp.text().catch(() => "");
+      ultimoErro = resp.status + " " + det.slice(0, 400);
+      console.error("[estima] modelo=" + modelo + " temp=" + comTemp + " ->", ultimoErro);
+      // 401/403 (chave), 429 (limite) e 529 (sobrecarga) não melhoram trocando modelo
+      if (resp.status === 401 || resp.status === 403 || resp.status === 429 || resp.status >= 500) break;
+      if (!(resp.status === 400 && /temperature/i.test(det))) break; // só tenta sem temperature se o erro falar dela
+    }
+    if (resp && resp.ok) break;
+    if (resp && (resp.status === 401 || resp.status === 403 || resp.status === 429 || resp.status >= 500)) break;
+  }
+  if (!resp) return reply(502, { error: "ia_indisponivel", detalhe: ultimoErro });
+  if (!resp.ok) {
+    const tipo = resp.status === 401 || resp.status === 403 ? "ia_chave" : resp.status === 429 ? "ia_limite" : /credit|balance|billing/i.test(ultimoErro) ? "ia_credito" : "ia_erro";
+    return reply(502, { error: tipo, status: resp.status, detalhe: ultimoErro.replace(/sk-ant-[\w-]+/g, "***").slice(0, 300) });
+  }
   const j: any = await resp.json().catch(() => null);
   const texto = String(((j && j.content) || []).map((c: any) => c && c.text || "").join("")).trim();
   const m = texto.match(/\{[\s\S]*\}/);

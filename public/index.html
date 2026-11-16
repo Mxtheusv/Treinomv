@@ -9949,7 +9949,10 @@ function startApp() {
         if (x.st === 503) { showToast("A estimativa por IA ainda não foi ativada no app", true); return; }
         if (x.st === 429) { showToast(b.error === "limite_aluno" ? "Você já usou as estimativas de hoje. Tente amanhã." : "Limite de estimativas de hoje atingido", true); return; }
         if (x.st === 400 && b.error === "menor") { showToast("A estimativa por IA é só para maiores de 18 anos", true); return; }
-        if (x.st !== 200) { showToast("Não consegui estimar agora. Tente de novo mais tarde.", true); return; }
+        if (b.error === "ia_chave") { showToast("A chave da IA foi recusada. Confira a ANTHROPIC_API_KEY no Netlify.", true); return; }
+        if (b.error === "ia_credito") { showToast("A conta da IA está sem crédito. Confira o saldo no Claude Console.", true); return; }
+        if (b.error === "ia_limite") { showToast("A IA está com muitos pedidos agora. Tente em 1 minuto.", true); return; }
+        if (x.st !== 200) { try { console.warn("[estima]", x.st, b); } catch (e) {} showToast("Não consegui estimar agora (" + (b.status || x.st) + "). Tente de novo mais tarde.", true); return; }
         if (!b.ok) { showToast("A IA não conseguiu estimar: " + (b.erro || "fotos pouco claras"), true); return; }
         a.ia = { min: b.min, max: b.max, centro: b.centro, confianca: b.confianca, obs: b.obs || "", ts: b.ts || Date.now() };
         avSalvar(); avRedesenha(); showToast("Estimativa pronta: " + avFmt(b.min, 0) + "–" + avFmt(b.max, 0) + "% 🤖");

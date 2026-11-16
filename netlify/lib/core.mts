@@ -1535,8 +1535,8 @@ async function postEstima(req: Request, deps: Deps, now: number): Promise<Respon
   let resp: Response | null = null;
   let ultimoErro = "";
   for (const modelo of modelos) {
-    for (const comTemp of [true, false]) {
-      const corpo: any = { model: modelo, max_tokens: 300, messages: [{ role: "user", content: imagens.concat([{ type: "text", text: pedido }]) }] };
+    for (const comTemp of [false]) {
+      const corpo: any = { model: modelo, max_tokens: 2048, messages: [{ role: "user", content: imagens.concat([{ type: "text", text: pedido }]) }] };
       if (comTemp) corpo.temperature = 0;
       try {
         resp = await fx("https://api.anthropic.com/v1/messages", {
@@ -1565,7 +1565,12 @@ async function postEstima(req: Request, deps: Deps, now: number): Promise<Respon
   const texto = String(((j && j.content) || []).map((c: any) => c && c.text || "").join("")).trim();
   const m = texto.match(/\{[\s\S]*\}/);
   let r: any = null; try { r = m ? JSON.parse(m[0]) : null; } catch (e) { r = null; }
-  if (!r) { console.error("[estima] resposta sem JSON:", texto.slice(0, 300)); return reply(502, { error: "ia_resposta", detalhe: texto.slice(0, 200) }); }
+  if (!r) {
+    const tipos = ((j && j.content) || []).map((c: any) => c && c.type).join(",");
+    console.error("[estima] resposta sem JSON: stop=" + (j && j.stop_reason) + " tipos=" + tipos + " texto=" + texto.slice(0, 300));
+    if (j && j.stop_reason === "refusal") return reply(200, { ok: false, erro: "A IA não quis analisar essas fotos. Tente fotos com roupa de treino, corpo inteiro e boa luz." });
+    return reply(502, { error: "ia_resposta", detalhe: "stop=" + (j && j.stop_reason) + " " + tipos + " " + texto.slice(0, 120) });
+  }
   uso.total = (uso.total || 0) + 1; uso.por = uso.por || {}; uso.por[slug] = (uso.por[slug] || 0) + 1;
   await deps.kv.set(IA_STORE, IA_KEY, uso);
   if (r.erro) return reply(200, { ok: false, erro: String(r.erro).slice(0, 160) });

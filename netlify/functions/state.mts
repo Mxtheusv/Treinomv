@@ -25,10 +25,11 @@ const blobs: Blobs = {
 };
 
 export default async (req: Request, context: Context) => {
-  const res = await handleApi(req, { kv, blobs, ip: context.ip || req.headers.get("x-nf-client-connection-ip") || "?" });
+  const env = (k: string) => { try { return (globalThis as any).Netlify?.env?.get(k) || process.env[k] || ""; } catch (e) { return ""; } };
+  const res = await handleApi(req, { kv, blobs, ip: context.ip || req.headers.get("x-nf-client-connection-ip") || "?", iaKey: env("ANTHROPIC_API_KEY"), iaModel: env("ANTHROPIC_MODEL") });
   return res || new Response("Not found", { status: 404 });
 };
 
 export const config: Config = {
-  path: ["/api/state", "/api/auth", "/api/lead", "/api/feed", "/api/comunidade", "/api/turma", "/api/push", "/api/img", "/api/img/:id"],
+  path: ["/api/state", "/api/auth", "/api/lead", "/api/feed", "/api/comunidade", "/api/turma", "/api/push", "/api/img", "/api/img/:id", "/api/estima"],
 };

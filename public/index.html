@@ -2304,6 +2304,16 @@
   .av-dest-i em { display: block; font-style: normal; }
   .av-fotos-mini { display: flex; gap: 8px; margin-top: 12px; }
   .av-fotos-mini img { width: 30%; max-width: 120px; aspect-ratio: 3/4; object-fit: cover; border-radius: 10px; background: #000; }
+  .av-ia { margin-top: 12px; padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(124,92,255,.45); background: rgba(124,92,255,.12); }
+  .av-ia-t { font-size: 13px; font-weight: 700; color: var(--ink); }
+  .av-ia-t small { font-weight: 500; color: var(--ink-soft); }
+  .av-ia-v { display: flex; align-items: baseline; gap: 10px; margin-top: 4px; }
+  .av-ia-v b { font-size: 26px; color: var(--ink); }
+  .av-ia-v span { font-size: 12.5px; color: var(--ink-soft); }
+  .av-ia-n { font-size: 12px; color: var(--ink-soft); margin-top: 4px; line-height: 1.4; }
+  .av-ia-btn { border-color: rgba(124,92,255,.7); background: rgba(124,92,255,.14); }
+  .av-consent { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; color: var(--ink); line-height: 1.4; margin-top: 8px; }
+  .av-consent input { width: 20px; height: 20px; flex: 0 0 auto; margin-top: 1px; }
   .av-cta2 { margin-top: 12px; width: 100%; padding: 12px; border-radius: 12px; border: 1.5px solid #e6b800; background: rgba(255,194,32,.12); color: var(--ink); font: 700 14px inherit; font-family: inherit; cursor: pointer; }
   .av-sec-t { margin: 16px 0 8px; font: 800 11.5px "Barlow", sans-serif; letter-spacing: .1em; color: var(--ink-soft); }
   .av-tab-wrap { overflow-x: auto; }
@@ -9883,7 +9893,8 @@ function startApp() {
     ["pg", "% de gordura", "%", 1, -1, function (a) { return avCalc(a).pg; }],
     ["mm", "Massa magra", "kg", 1, 1, function (a) { return avCalc(a).mm; }],
     ["mg", "Massa gorda", "kg", 1, -1, function (a) { return avCalc(a).mg; }],
-    ["soma", "Soma das dobras", "mm", 0, -1, function (a) { return avCalc(a).soma; }]
+    ["soma", "Soma das dobras", "mm", 0, -1, function (a) { return avCalc(a).soma; }],
+    ["ia", "% gordura estimado por IA", "%", 1, -1, function (a) { return a.ia && isFinite(a.ia.centro) ? a.ia.centro : null; }]
   ].concat(AV_CIRC.map(function (c) { return [c[0], c[1], "cm", 1, (c[0] === "cintura" || c[0] === "abdomen") ? -1 : (c[0] === "quadril" ? 0 : 1), function (a) { return avNum((a.circ || {})[c[0]]); }]; }))
    .concat([["imc", "IMC", "", 1, 0, function (a) { return avCalc(a).imc; }], ["rcq", "Cintura / quadril", "", 2, -1, function (a) { return avCalc(a).rcq; }], ["rce", "Cintura / altura", "", 2, -1, function (a) { return avCalc(a).rce; }]]);
   function avDifHtml(m, antes, agora) {
@@ -9905,6 +9916,48 @@ function startApp() {
       xy.map(function (p) { return '<circle cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="4" fill="var(--av-cor,#ffc220)"/>'; }).join("") + '</svg>' +
       '<div class="av-graf-x"><span>' + escapeHtml(formatDateBR(pri.d)) + '</span><span>' + escapeHtml(formatDateBR(ult.d)) + '</span></div></div>';
   }
+  // ---------- estimativa do % de gordura pela foto (IA) ----------
+  function avIaBlocoHtml(a) {
+    if (a.ia && isFinite(a.ia.min)) {
+      return '<div class="av-ia"><div class="av-ia-t">🤖 % de gordura estimado pela IA <small>(fotos de ' + escapeHtml(formatDateBR(a.date)) + ')</small></div>' +
+        '<div class="av-ia-v"><b>' + avFmt(a.ia.min, 0) + '–' + avFmt(a.ia.max, 0) + '%</b><span>confiança ' + escapeHtml(a.ia.confianca === "media" ? "média" : (a.ia.confianca || "baixa")) + '</span></div>' +
+        '<div class="av-ia-n">É só uma estimativa visual, boa para ver se a tendência é de subir ou descer. Para um número confiável, use as dobras.</div></div>';
+    }
+    return '<button type="button" class="av-cta2 av-ia-btn" data-av="ia" data-av-id="' + escapeAttr(a.id) + '">🤖 Estimar % de gordura pelas fotos (IA)</button>';
+  }
+  var AV_IA_BUSY = false;
+  function avIaPedir(id, confirmado) {
+    var s = avStudent(); if (!s || AV_IA_BUSY) return;
+    var a = (s.avaliacoes || []).filter(function (x) { return x.id === id; })[0]; if (!a) return;
+    var lista = avLista(s), ref = function (k) { var v = a[k]; if (v === undefined || v === null || v === "") { for (var i = lista.length - 1; i >= 0; i--) { if (lista[i][k] !== undefined && lista[i][k] !== null && lista[i][k] !== "") return lista[i][k]; } } return v; };
+    var idade = avNum(ref("idade"));
+    if (idade !== null && idade < 18) { showToast("A estimativa por IA é só para maiores de 18 anos", true); return; }
+    if (!s.iaConsentEm && !confirmado) { avIaConsent(id); return; }
+    var fotos = AV_POSES.map(function (p) { return (a.fotos || {})[p[0]]; }).filter(Boolean);
+    AV_IA_BUSY = true; showToast("Analisando as fotos… (leva alguns segundos)");
+    fetch("/api/estima", { method: "POST", headers: feedHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify({ slug: state.slug, fotos: fotos, sexo: ref("sexo") || "", idade: idade || "", altura: avNum(ref("altura")) || "", peso: avNum(ref("peso")) || "", cintura: avNum(((a.circ || {}).cintura)) || "" }) })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (b) { return { st: r.status, b: b }; }); })
+      .then(function (x) {
+        AV_IA_BUSY = false;
+        var b = x.b || {};
+        if (x.st === 503) { showToast("A estimativa por IA ainda não foi ativada no app", true); return; }
+        if (x.st === 429) { showToast(b.error === "limite_aluno" ? "Você já usou as estimativas de hoje. Tente amanhã." : "Limite de estimativas de hoje atingido", true); return; }
+        if (x.st === 400 && b.error === "menor") { showToast("A estimativa por IA é só para maiores de 18 anos", true); return; }
+        if (x.st !== 200) { showToast("Não consegui estimar agora. Tente de novo mais tarde.", true); return; }
+        if (!b.ok) { showToast("A IA não conseguiu estimar: " + (b.erro || "fotos pouco claras"), true); return; }
+        a.ia = { min: b.min, max: b.max, centro: b.centro, confianca: b.confianca, obs: b.obs || "", ts: b.ts || Date.now() };
+        avSalvar(); avRedesenha(); showToast("Estimativa pronta: " + avFmt(b.min, 0) + "–" + avFmt(b.max, 0) + "% 🤖");
+      }).catch(function () { AV_IA_BUSY = false; showToast("Sem conexão para estimar agora", true); });
+  }
+  function avIaConsent(id) {
+    var ov = avOv(), personal = !!(isTrainerRole && isTrainerRole());
+    ov.innerHTML = '<div class="av-modal"><div class="av-m-head"><h3>Estimativa por IA</h3><button type="button" class="av-x" data-av="fechar" aria-label="Fechar">✕</button></div><div class="av-m-body">' +
+      '<p class="av-ajuda" style="color:var(--ink)">As fotos de evolução são enviadas para uma inteligência artificial que estima o % de gordura <b>só pela aparência</b>. É uma estimativa para acompanhar a tendência, não um exame, e pode errar alguns pontos.</p>' +
+      '<p class="av-ajuda">As fotos são enviadas só para essa análise e não são usadas para treinar a IA. No app, continuam visíveis só para ' + (personal ? 'o aluno e você' : 'você e o seu treinador') + '.</p>' +
+      '<label class="av-consent"><input type="checkbox" id="avIaOk"> ' + (personal ? 'O aluno tem 18 anos ou mais e autorizou o uso das fotos para essa estimativa.' : 'Tenho 18 anos ou mais e autorizo o envio das minhas fotos para essa estimativa.') + '</label>' +
+      '</div><div class="av-m-foot"><button type="button" class="av-del" data-av="fechar" style="color:var(--ink-soft);border-color:var(--line)">Agora não</button><button type="button" class="av-salvar" data-av="ia-ok" data-av-id="' + escapeAttr(id) + '">Estimar</button></div></div>';
+  }
   function avFotosDe(a) { var f = (a && a.fotos) || {}; return AV_POSES.filter(function (p) { return f[p[0]]; }).length; }
   // Bloco completo (usado na aba "Avaliação" do personal e no card do aluno). edita: mostra os botões de editar.
   function avResumoHtml(s, edita) {
@@ -9922,12 +9975,13 @@ function startApp() {
       var u = ultimos(m); if (!u[0] || !u[1]) return "";
       return '<tr><td>' + escapeHtml(m[1]) + '</td><td>' + avFmt(u[0].v, m[3]) + '</td><td><b>' + avFmt(u[1].v, m[3]) + '</b></td><td>' + avDifHtml(m, u[0].v, u[1].v) + '</td></tr>';
     }).join("");
-    var grafs = lista.length > 1 ? ["pg", "peso", "soma", "cintura", "bracoC", "coxa", "mm"].map(function (k) { return avGraficoHtml(lista, AV_METRICAS.filter(function (m) { return m[0] === k; })[0]); }).join("") : "";
+    var grafs = lista.length > 1 ? ["pg", "ia", "peso", "soma", "cintura", "bracoC", "coxa", "mm"].map(function (k) { return avGraficoHtml(lista, AV_METRICAS.filter(function (m) { return m[0] === k; })[0]); }).join("") : "";
     return '<div class="av-ult"><div class="av-ult-top"><div><div class="av-eyebrow">ÚLTIMA AVALIAÇÃO · ' + escapeHtml(formatDateBR(ult.date)) + (ult.por === "aluno" ? " · registrada pelo aluno" : "") + '</div></div>' +
       (edita ? '<button type="button" class="av-btn-mini" data-av="editar" data-av-id="' + escapeAttr(ult.id) + '">✏️ Editar</button>' : '') + '</div>' +
       (destaques.length ? '<div class="av-dest">' + destaques.map(function (x) { return '<div class="av-dest-i"><b>' + avFmt(x[1], x[2]) + '<small>' + x[3] + '</small></b><span>' + x[0] + '</span>' + (x[4] ? '<em>' + x[4] + '</em>' : '') + '</div>'; }).join("") + '</div>' : '') +
       (fotoUlt ? '<div class="av-fotos-mini">' + AV_POSES.map(function (p) { var u = (fotoUlt.fotos || {})[p[0]]; return u ? '<img src="' + escapeAttr(u) + '" alt="' + escapeAttr(p[1]) + '" loading="lazy">' : ''; }).join("") + '</div>' + (fotoUlt !== ult ? '<div class="av-ajuda" style="margin:4px 0 0">Fotos de ' + escapeHtml(formatDateBR(fotoUlt.date)) + '</div>' : '') : '') +
       '</div>' +
+      (fotoUlt ? avIaBlocoHtml(fotoUlt) : '') +
       (comFotos.length >= 2 ? '<button type="button" class="av-cta2" data-av="comparar">📸 Comparar fotos (antes e agora)</button>' : '') +
       (linhas ? '<div class="av-sec-t">ANTES E AGORA (ÚLTIMOS DOIS REGISTROS DE CADA MEDIDA)</div><div class="av-tab-wrap"><table class="av-tab"><thead><tr><th></th><th>Antes</th><th>Agora</th><th>Diferença</th></tr></thead><tbody>' + linhas + '</tbody></table></div>' : '') +
       (grafs ? '<div class="av-sec-t">EVOLUÇÃO</div><div class="av-grafs">' + grafs + '</div>' : '') +
@@ -10119,6 +10173,13 @@ function startApp() {
       if (a === "salvar") { avSalvaDraft(); return; }
       if (a === "foto") { avCamAbrir(b.getAttribute("data-av-pose")); return; }
       if (a === "comparar") { avCompararAbrir(); return; }
+      if (a === "ia") { avIaPedir(b.getAttribute("data-av-id")); return; }
+      if (a === "ia-ok") {
+        var ok = document.getElementById("avIaOk");
+        if (!ok || !ok.checked) { showToast("Marque a autorização para continuar", true); return; }
+        var sx = avStudent(); if (sx) sx.iaConsentEm = todayISO();
+        var idIa = b.getAttribute("data-av-id"); avFecha(); avIaPedir(idIa, true); return;
+      }
       if (a === "excluir") {
         if (!b.classList.contains("confirma")) { b.classList.add("confirma"); b.textContent = "Toque de novo para excluir"; return; }
         var s = avStudent(), d = AV.draft;

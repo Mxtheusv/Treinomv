@@ -33,6 +33,9 @@ export interface Deps {
   admin?: boolean;
   /** Somente testes: com admin, exige a versão certa (409 igual ao personal). */
   strictAdmin?: boolean;
+  /** Chave e modelo da IA que estima o % de gordura pelas fotos (variáveis ANTHROPIC_API_KEY / ANTHROPIC_MODEL). */
+  iaKey?: string;
+  iaModel?: string;
 }
 
 const STATE_STORE = "treino-online";
@@ -211,6 +214,7 @@ export async function handleApi(req: Request, deps: Deps): Promise<Response | nu
     if (req.method === "POST") return postTurma(req, deps, now);
     return reply(405, { error: "method" });
   }
+  if (path === "/api/estima" && req.method === "POST") return postEstima(req, deps, now);
   if (path === "/api/img" && req.method === "POST") return postImg(req, deps, now);
   if (path.startsWith("/api/img/") && req.method === "GET") return getImg(path.slice("/api/img/".length), deps);
   return null;
@@ -1474,6 +1478,82 @@ async function postFeed(req: Request, deps: Deps, now: number): Promise<Response
     return reply(200, { ok: true });
   }
   return reply(400, { error: "acao_invalida" });
+}
+
+
+// ---------- estimativa do % de gordura pelas fotos (IA) ----------
+// Só uma ESTIMATIVA visual para ver tendência: o app mostra uma faixa (mín–máx), nunca um diagnóstico.
+// As fotos já estão no armazenamento do app; aqui são lidas e mandadas para a IA, que não guarda nada.
+const IA_STORE = "treino-online-ia";
+const IA_KEY = "uso";
+const IA_LIMITE_ALUNO = 4;   // por dia, por aluno
+const IA_LIMITE_TOTAL = 60;  // por dia, no app todo
+function b64Img(buf: ArrayBuffer): string {
+  const u = new Uint8Array(buf); let s = "";
+  for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, Array.from(u.subarray(i, i + 0x8000)));
+  return btoa(s);
+}
+async function postEstima(req: Request, deps: Deps, now: number): Promise<Response> {
+  const body = await readJson(req);
+  if (!body || typeof body !== "object") return reply(400, { error: "bad_json" });
+  const w = await who(req, deps, now, body.slug, body);
+  if (w.err) return w.err;
+  const slug = w.slug || (w.trainer && typeof body.slug === "string" && w.st?.data?.students?.[body.slug] ? body.slug : null);
+  if (!slug) return reply(400, { error: "aluno" });
+  if (!deps.iaKey) return reply(503, { error: "sem_chave" });
+  if (!deps.blobs) return reply(501, { error: "sem_armazenamento" });
+  const idade = Number(body.idade);
+  if (idade && idade < 18) return reply(400, { error: "menor" });
+  const urls: string[] = Array.isArray(body.fotos) ? body.fotos.filter((u: unknown) => typeof u === "string" && FOTO_URL.test(u as string)).slice(0, 3) : [];
+  if (!urls.length) return reply(400, { error: "sem_foto" });
+  // limite de uso por dia
+  const dia = new Date(now - 3 * 3600 * 1000).toISOString().slice(0, 10);
+  const uso: any = (await deps.kv.get(IA_STORE, IA_KEY)) || {};
+  if (uso.dia !== dia) { uso.dia = dia; uso.total = 0; uso.por = {}; }
+  if ((uso.total || 0) >= IA_LIMITE_TOTAL) return reply(429, { error: "limite_dia" });
+  if (!w.trainer && ((uso.por || {})[slug] || 0) >= IA_LIMITE_ALUNO) return reply(429, { error: "limite_aluno" });
+  const imagens: any[] = [];
+  for (const u of urls) {
+    const f = await deps.blobs.get(u.slice("/api/img/".length));
+    if (f) imagens.push({ type: "image", source: { type: "base64", media_type: f.type || "image/jpeg", data: b64Img(f.data) } });
+  }
+  if (!imagens.length) return reply(400, { error: "sem_foto" });
+  const dados = [
+    body.sexo === "F" ? "sexo feminino" : body.sexo === "M" ? "sexo masculino" : "",
+    idade ? idade + " anos" : "",
+    Number(body.altura) ? "altura " + Number(body.altura) + " cm" : "",
+    Number(body.peso) ? "peso " + Number(body.peso) + " kg" : "",
+    Number(body.cintura) ? "cintura " + Number(body.cintura) + " cm" : "",
+  ].filter(Boolean).join(", ");
+  const pedido = "Estas são fotos de corpo inteiro de um adulto (frente, lado e/ou costas), tiradas para acompanhar a evolução no treino." +
+    (dados ? " Dados informados: " + dados + "." : "") +
+    " Estime visualmente o percentual de gordura corporal como uma FAIXA estreita (no máximo 6 pontos entre mínimo e máximo). " +
+    "Considere que é apenas uma estimativa para acompanhar tendência. Se as fotos não mostrarem o corpo com clareza (roupa larga, corpo cortado, escuro, mais de uma pessoa ou aparência de menor de idade), responda com erro. " +
+    'Responda SOMENTE com JSON, sem texto fora dele, neste formato: {"min":número,"max":número,"confianca":"baixa"|"media"|"alta","obs":"frase curta e neutra em português sobre a qualidade das fotos"} ou {"erro":"motivo curto em português"}.';
+  const fx = deps.fetch || fetch;
+  let resp: Response;
+  try {
+    resp = await fx("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "x-api-key": deps.iaKey, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+      body: JSON.stringify({ model: deps.iaModel || "claude-haiku-5-5", max_tokens: 300, temperature: 0, messages: [{ role: "user", content: imagens.concat([{ type: "text", text: pedido }]) }] }),
+    });
+  } catch (e) { return reply(502, { error: "ia_indisponivel" }); }
+  if (!resp.ok) return reply(502, { error: "ia_erro", status: resp.status });
+  const j: any = await resp.json().catch(() => null);
+  const texto = String(((j && j.content) || []).map((c: any) => c && c.text || "").join("")).trim();
+  const m = texto.match(/\{[\s\S]*\}/);
+  let r: any = null; try { r = m ? JSON.parse(m[0]) : null; } catch (e) { r = null; }
+  if (!r) return reply(502, { error: "ia_resposta" });
+  uso.total = (uso.total || 0) + 1; uso.por = uso.por || {}; uso.por[slug] = (uso.por[slug] || 0) + 1;
+  await deps.kv.set(IA_STORE, IA_KEY, uso);
+  if (r.erro) return reply(200, { ok: false, erro: String(r.erro).slice(0, 160) });
+  let min = Number(r.min), max = Number(r.max);
+  if (!isFinite(min) || !isFinite(max)) return reply(502, { error: "ia_resposta" });
+  if (min > max) { const t = min; min = max; max = t; }
+  min = Math.max(3, Math.min(60, min)); max = Math.max(min, Math.min(60, max));
+  const conf = ["baixa", "media", "alta"].includes(r.confianca) ? r.confianca : "baixa";
+  return reply(200, { ok: true, min: Math.round(min * 10) / 10, max: Math.round(max * 10) / 10, centro: Math.round((min + max) * 5) / 10, confianca: conf, obs: String(r.obs || "").slice(0, 160), ts: now });
 }
 
 function detectaImagem(u: Uint8Array): string | null {

@@ -11005,6 +11005,12 @@ function startApp() {
     var old = document.getElementById("planosVendaModal"); if (old) old.remove();
     var cfg = state.data.planosVenda || {};
     var lista = (cfg.planos || []).slice(0, 3);
+    // Ainda sem planos salvos: já vem com os valores da página da consultoria.
+    if (!lista.length) lista = [
+      { nome: "Mensal", preco: "R$ 120/mês", periodo: "1 mês", desc: "Pagamento mensal de R$ 120" },
+      { nome: "Trimestral", preco: "R$ 100/mês", periodo: "3 meses", desc: "Pagamento de R$ 300 a cada 3 meses" },
+      { nome: "Semestral", preco: "R$ 80/mês", periodo: "6 meses", desc: "Pagamento de R$ 480 a cada 6 meses", destaque: true }
+    ];
     while (lista.length < 3) lista.push({});
     var ov = document.createElement("div");
     ov.className = "sa-modal-overlay"; ov.id = "planosVendaModal";

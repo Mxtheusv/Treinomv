@@ -2273,6 +2273,27 @@
   .mg-sub { font-size: 12.5px; opacity: .85; margin: 10px 0 6px; }
   .mg-det { margin-top: 8px; font-size: 13px; }
   .mg-det summary { cursor: pointer; opacity: .85; }
+  /* ---- montagem de treino compacta ---- */
+  .ex-card { padding: 10px 12px; }
+  .ex-card.ex-sem-obs .ex-obs-input, .ex-card.ex-sem-tec .ex-tec-row, .ex-card.ex-eq-padrao .ex-meta-equip, .ex-card.ex-cargas-fechadas .ex-cargas-row { display: none; }
+  .ex-tools-mini { display: inline-flex; gap: 4px; margin: 0 4px 0 4px; flex: 0 0 auto; }
+  @media (max-width: 640px) { .ex-tools-mini { margin-right: auto; margin-left: 0; } }
+  .ex-tools-mini .ex-tool-btn { width: 28px; height: 28px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 13px; }
+  .ex-meta-row { gap: 10px; margin-top: 6px; }
+  .ex-meta input { width: 72px; }
+  .ex-obs-input { margin-top: 8px; }
+  .ex-opc { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .ex-opc-b, .ex-opc .chain-link-btn { display: inline-flex; align-items: center; width: auto; margin: 0; padding: 5px 10px; border-radius: 999px; border: 1px dashed var(--line); background: transparent; color: var(--ink-soft); font-family: inherit; font-weight: 700; font-size: 12px; line-height: 1.3; cursor: pointer; text-align: left; }
+  .ex-opc-b:hover, .ex-opc .chain-link-btn:hover { border-color: var(--blue); color: var(--blue-deep); }
+  .ex-opc .chain-link-btn.active { border-style: solid; border-color: var(--blue); background: var(--blue-tint); color: var(--blue-deep); }
+  .ex-opc-cargas { margin-left: auto; border-style: solid; color: var(--ink); }
+  .ex-card:not(.ex-cargas-fechadas) .ex-opc-cargas { border-color: #e6b800; background: var(--gold-tint, #fff6d6); }
+  .bl-mais { position: relative; margin-left: auto; }
+  .bl-mais summary { list-style: none; cursor: pointer; width: 34px; height: 30px; border-radius: 8px; border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; font-weight: 800; color: var(--ink-soft); background: var(--surface); }
+  .bl-mais summary::-webkit-details-marker { display: none; }
+  .bl-mais-menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 70; display: flex; flex-direction: column; gap: 6px; padding: 10px; min-width: 240px; border-radius: 12px; background: var(--surface, #fff); border: 1px solid var(--line); box-shadow: 0 16px 40px rgba(0,0,0,.22); }
+  .bloco-toolbar .bl-mais-menu .btn-secondary { margin: 0; width: 100%; text-align: left; }
+  .bl-mais-menu .bl-mais-perigo { color: #b42318; }
   .ut-card { margin: 0 0 14px; padding: 14px 16px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface, #fff); color: var(--ink); }
   .ut-top { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
   .ut-eyebrow { font: 800 11.5px "Barlow", sans-serif; letter-spacing: .12em; color: #c58f00; }
@@ -8141,10 +8162,10 @@ function startApp() {
   }
   function exToolsHtml(ex, sLocked) {
     if (sLocked || isStudentView()) return "";
-    return '<div class="ex-tools">' +
-      '<button type="button" class="ex-tool-btn" data-rename-ex="1" title="Corrige o nome aqui, no Acervo e em todos os planos e modelos">✏️ Corrigir nome</button>' +
-      '<button type="button" class="ex-tool-btn" data-vary-ex="1" title="Sugestões do que escolher no lugar, com base no que o aluno já fez">💡 Trocar / variar</button>' +
-      '</div>';
+    return '<span class="ex-tools ex-tools-mini">' +
+      '<button type="button" class="ex-tool-btn" data-rename-ex="1" title="Corrigir nome (aqui, no Acervo e em todos os planos e modelos)" aria-label="Corrigir nome">✏️</button>' +
+      '<button type="button" class="ex-tool-btn" data-vary-ex="1" title="Trocar / variar: sugestões do que escolher no lugar" aria-label="Trocar ou variar">🔄</button>' +
+      '</span>';
   }
 
   // ----- correção de nome: Acervo + todos os planos + histórico -----
@@ -9114,13 +9135,26 @@ function startApp() {
       var chainBadgeHtml = (chainLen >= 2 && isChainStart) ? '<span class="biset-badge" title="Sem descanso entre esses exercícios — descansa só depois de completar a rodada">🔗 ' + bisetLabelForLength(chainLen) + '</span>' : '';
       var chainLinkBtnHtml = (sLocked || !hasNext) ? '' :
         '<button type="button" class="chain-link-btn' + (linksToNext ? " active" : "") + '" data-chain-link="1" title="Marca que não tem descanso entre este exercício e o próximo (bi-set/tri-set)">' +
-        (linksToNext ? "🔗 Sem descanso até o próximo — toque pra desligar" : "🔗 Ligar sem descanso ao próximo") + '</button>';
-      return '<div class="ex-card' + (linksToNext ? " chain-after" : "") + (exIdx > 0 && exLinksToNext(bloco, exIdx - 1) ? " chain-before" : "") + '" data-bloco="' + bloco.id + '" data-ex="' + ex.id + '">' +
+        (linksToNext ? "🔗 Ligado ao próximo ✕" : "🔗 Ligar ao próximo") + '</button>';
+      // Cartão compacto: o que está no padrão (sem observação, sem técnica, equipamento do acervo,
+      // cargas do aluno) fica recolhido num atalho; tudo continua no DOM com os mesmos campos.
+      var cargasVals = trainerCargaKeysFor(ex).map(function (k) { return String((ex.cargas || {})[k] || "").trim(); }).filter(Boolean);
+      var podeEditar = !sLocked;
+      var cls = (String(ex.obs || "").trim() ? "" : " ex-sem-obs") + (ex.tecnica ? "" : " ex-sem-tec") + (ex.equipamento ? "" : " ex-eq-padrao") + " ex-cargas-fechadas";
+      var opcHtml = '<div class="ex-opc">' +
+        (podeEditar && !String(ex.obs || "").trim() ? '<button type="button" class="ex-opc-b" data-ex-abre="obs">📝 Observação</button>' : '') +
+        (podeEditar && !ex.tecnica ? '<button type="button" class="ex-opc-b" data-ex-abre="tec">⚡ Técnica</button>' : '') +
+        (podeEditar && !ex.equipamento ? '<button type="button" class="ex-opc-b" data-ex-abre="eq">🏷️ Equipamento</button>' : '') +
+        chainLinkBtnHtml +
+        '<button type="button" class="ex-opc-b ex-opc-cargas" data-ex-abre="cargas" title="Cargas que o aluno registrou (toque para ver ou editar)">🏋️ ' + (cargasVals.length ? escapeHtml(cargasVals.join(" · ")) + " kg" : "Cargas") + '</button>' +
+        '</div>';
+      return '<div class="ex-card' + cls + (linksToNext ? " chain-after" : "") + (exIdx > 0 && exLinksToNext(bloco, exIdx - 1) ? " chain-before" : "") + '" data-bloco="' + bloco.id + '" data-ex="' + ex.id + '">' +
         '<div class="ex-card-head">' +
         '<div class="ex-name-wrap">' +
         '<textarea data-field="nome" class="ex-name-input" rows="1" placeholder="Nome do exercício" autocomplete="off" spellcheck="false" ' + (sLocked ? "disabled" : "") + '>' + escapeHtml(ex.nome || "") + '</textarea>' +
         '<span data-info-slot>' + infoBtnHtml(ex) + '</span>' +
         '</div>' +
+        exToolsHtml(ex, sLocked) +
         (sLocked || bloco.exercicios.length < 2 ? '' : '<span class="ex-drag-handle" data-drag-handle="1" title="Segure e arraste para reordenar">⠿</span>') +
         (sLocked ? '' : '<div class="ex-card-move">' +
           (canMoveUp ? '<button type="button" class="row-move" data-move-ex="-1" title="Mover para cima">▲</button>' : '') +
@@ -9129,17 +9163,16 @@ function startApp() {
         (sLocked ? '' : '<button type="button" class="row-del" data-del-ex="1" title="Remover exercício">✕</button>') +
         '</div>' +
         '<div data-ex-extras>' + chainBadgeHtml + exCardExtrasHtml(ex) + '</div>' +
-        exToolsHtml(ex, sLocked) +
         '<div class="ex-meta-row">' +
         '<label class="ex-meta"><span>Séries</span><input data-field="series" value="' + escapeAttr(ex.series) + '" placeholder="—" ' + (sLocked ? "disabled" : "") + '></label>' +
         '<label class="ex-meta"><span>' + escapeHtml(tecRepsRotulo(ex)) + '</span><input data-field="reps" value="' + escapeAttr(ex.reps) + '" placeholder="—" ' + (sLocked ? "disabled" : "") + '></label>' +
         descansoHtml +
         equipSelectHtml(ex, "equipamento", sLocked) +
         '</div>' +
-        '<div class="ex-cargas-row">' + cargaChipsRowHtml(ex, locked) + '</div>' +
-        '<input data-field="obs" class="ex-obs-input" value="' + escapeAttr(ex.obs) + '" placeholder="Observação (opcional)" ' + (sLocked ? "disabled" : "") + '>' +
+        '<input data-field="obs" class="ex-obs-input" value="' + escapeAttr(ex.obs) + '" placeholder="Observação para o aluno (opcional)" ' + (sLocked ? "disabled" : "") + '>' +
         tecRowHtml(ex, sLocked) +
-        chainLinkBtnHtml +
+        '<div class="ex-cargas-row">' + cargaChipsRowHtml(ex, locked) + '</div>' +
+        opcHtml +
         '</div>';
     }
     var runsHtml = blocoRuns(bloco).map(function (run) {
@@ -9162,10 +9195,12 @@ function startApp() {
       (sLocked ?
         (bloco.titulo ? '<span class="bloco-titulo-display">' + escapeHtml(bloco.titulo) + '</span>' : '') :
         '<input data-field="bloco-titulo" class="bloco-titulo-input" value="' + escapeAttr(bloco.titulo || "") + '" placeholder="Nome do bloco (ex: Preparação, Treino de força...)" maxlength="40">') +
-      (sLocked ? '' : '<button type="button" class="btn-secondary" data-add-bloco-above="' + bloco.id + '" title="Adiciona um bloco novo acima deste">↑ Bloco acima</button>') +
-      (sLocked ? '' : '<button type="button" class="btn-secondary" data-dup-bloco="' + bloco.id + '" title="Copia este bloco (sem as cargas) logo abaixo">⧉ Duplicar bloco</button>') +
-      (sLocked || bloco.exercicios.length < 2 ? '' : '<button type="button" class="btn-secondary" data-sort-bloco="' + bloco.id + '" title="Reorganiza os exercícios deste bloco por grupo muscular">🔀 Ordenar por grupo muscular</button>') +
-      (sLocked || treino.blocos.length < 2 ? '' : '<button type="button" class="btn-secondary" data-del-bloco="' + bloco.id + '">Remover bloco</button>') +
+      (sLocked ? '' : '<details class="bl-mais"><summary title="Ações do bloco">⋯</summary><div class="bl-mais-menu">' +
+        '<button type="button" class="btn-secondary" data-add-bloco-above="' + bloco.id + '" title="Adiciona um bloco novo acima deste">↑ Bloco acima</button>' +
+        '<button type="button" class="btn-secondary" data-dup-bloco="' + bloco.id + '" title="Copia este bloco (sem as cargas) logo abaixo">⧉ Duplicar bloco</button>' +
+        (bloco.exercicios.length < 2 ? '' : '<button type="button" class="btn-secondary" data-sort-bloco="' + bloco.id + '" title="Reorganiza os exercícios deste bloco por grupo muscular">🔀 Ordenar por grupo muscular</button>') +
+        (treino.blocos.length < 2 ? '' : '<button type="button" class="btn-secondary bl-mais-perigo" data-del-bloco="' + bloco.id + '">✕ Remover bloco</button>') +
+        '</div></details>') +
       '</div>' +
       blocoTableHtml(treino, bloco) +
       (sLocked ? '' : '<button type="button" class="add-row-btn" data-add-ex-bloco="' + bloco.id + '">+ Exercício neste bloco</button>') +
@@ -14500,9 +14535,20 @@ function startApp() {
       (!HAS_LOGIN && ROLE === "trainer" ? '<div class="lg-banner"><span>🔐 Crie seu login (e-mail + senha) e entre mais rápido, sem digitar o PIN toda vez.</span><button type="button" id="btnCriarLogin">Criar agora</button></div>' : "") +
       '<div class="tr-push">' + pushBoxHtml(true) + '</div>';
   }
+  // Montagem de treino: atalhos que abrem os campos recolhidos do exercício.
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest("[data-ex-abre]"); if (!b) return;
+    var card = b.closest(".ex-card"); if (!card) return;
+    var k = b.getAttribute("data-ex-abre");
+    if (k === "cargas") { card.classList.toggle("ex-cargas-fechadas"); return; }
+    card.classList.remove(k === "obs" ? "ex-sem-obs" : (k === "tec" ? "ex-sem-tec" : "ex-eq-padrao"));
+    b.hidden = true;
+    var alvo = card.querySelector(k === "obs" ? '[data-field="obs"]' : (k === "tec" ? '[data-field="tecnica"]' : '[data-field="equipamento"]'));
+    if (alvo) try { alvo.focus(); } catch (er) {}
+  });
   // Fecha os menus "⚙️ Configurações" e "⋯ Mais" ao tocar fora deles.
   document.addEventListener("click", function (e) {
-    Array.prototype.forEach.call(document.querySelectorAll("details.tr-cfg[open], details.pl-mais[open]"), function (d) { if (!d.contains(e.target)) { d.removeAttribute("open"); state.plMaisAberto = false; } });
+    Array.prototype.forEach.call(document.querySelectorAll("details.tr-cfg[open], details.pl-mais[open], details.bl-mais[open]"), function (d) { if (!d.contains(e.target)) { d.removeAttribute("open"); state.plMaisAberto = false; } });
   });
   function trWireTabs() {
     Array.prototype.forEach.call(document.querySelectorAll("[data-trtab]"), function (b) {

@@ -12,9 +12,7 @@ const paginas = readdirSync(dir).filter((f) => f.endsWith(".html"));
 const hashes = new Set();
 for (const f of paginas) {
   const html = readFileSync(`${dir}/${f}`, "utf8");
-  const re = /<script(\s[^>]*)?>([\s\S]*?)<\/script>/gi;
-  let m;
-  while ((m = re.exec(html))) {
+  for (const m of html.matchAll(/<script(\s[^>]*)?>([\s\S]*?)<\/script>/gi)) {
     const attrs = m[1] || "", corpo = m[2];
     if (/\bsrc=/i.test(attrs)) continue;
     const tipo = (/\btype=["']?([^"'\s>]+)/i.exec(attrs) || [])[1];

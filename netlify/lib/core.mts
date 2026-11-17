@@ -186,7 +186,7 @@ async function throttleLoad(deps: Deps): Promise<Record<string, any>> {
     if (!t[k].miss.length && !t[k].leads.length && !t[k].ups.length) delete t[k];
   });
   const keys = Object.keys(t);
-  if (keys.length > 500) keys.slice(0, keys.length - 500).forEach((k) => delete t[k]);
+  if (keys.length > 500) for (const k of keys.slice(0, keys.length - 500)) delete t[k];
   return t;
 }
 const MISS_LIMIT = 20; // códigos de aluno errados por hora, por IP
@@ -278,7 +278,7 @@ function resolveAluno(st: any, ident: unknown, acesso: string, now: number): { s
   const students = st?.data?.students || {};
   const id = normCodigo(ident);
   if (!id) return null;
-  const rec = Object.prototype.hasOwnProperty.call(students, id) ? students[id] : null;
+  const rec = Object.hasOwn(students, id) ? students[id] : null;
   if (rec) {
     if (typeof rec.codigo !== "string" || !rec.codigo) return { slug: id, rec, viaCodigo: false }; // códigos ainda não criados
     if (acesso && codigoIgual(acesso, rec.codigo)) return { slug: id, rec, viaCodigo: true };
@@ -305,7 +305,7 @@ function protegeCamposDoPersonal(antes: any, student: any): void {
   if (!antes || !student) return;
   for (const k of CAMPOS_DO_PERSONAL) {
     if (k === "sessoesCanceladas") continue; // tratado por aplicaSessoesCanceladas
-    if (Object.prototype.hasOwnProperty.call(antes, k)) student[k] = antes[k]; else delete student[k];
+    if (Object.hasOwn(antes, k)) student[k] = antes[k]; else delete student[k];
   }
   delete student.codigoReset;
   // Avaliações: as do personal não podem ser apagadas nem alteradas pelo aluno (só a estimativa da IA pode ser anexada).
@@ -435,7 +435,7 @@ async function parabensAluno(deps: Deps, now: number, slug: string, antes: any, 
     else if (a.mes < 8 && b.mes >= 8) { t = "🔥 Seu fogo do mês acendeu!"; c = "8 dias de treino neste mês. Continue assim!"; }
     else if (a.sem < meta && b.sem >= meta) { t = "🏆 Meta da semana batida!"; c = b.sem + " de " + meta + " treinos. Parabéns, " + (String(depois.nome || "").trim().split(/\s+/)[0] || "campeão(ã)") + "!"; }
     if (t) await avisa(deps, now, [slug], t, c, "parabens");
-  } catch (e) { /* nunca derruba o salvamento */ }
+  } catch { /* nunca derruba o salvamento */ }
 }
 // Aluno salvou o próprio registro: se há uma sessão nova (treino finalizado), avisa o personal (uma vez por sessão).
 async function avisoTreinoFinalizado(deps: Deps, now: number, slug: string, antes: any, depois: any): Promise<void> {
@@ -448,7 +448,7 @@ async function avisoTreinoFinalizado(deps: Deps, now: number, slug: string, ante
     const min = Math.max(1, Math.round((Number(x.duracaoSeg) || 0) / 60));
     const pse = typeof x.pse === "number" ? " · PSE " + x.pse : "";
     await avisa(deps, now, ["trainer"], nomeCurto(depois.nome) + " terminou o treino", limpaTexto(x.nome || "Treino", 50) + (x.duracaoSeg ? " · " + min + " min" : "") + pse, "treino-fim");
-  } catch (e) { /* nunca derruba o salvamento */ }
+  } catch { /* nunca derruba o salvamento */ }
 }
 // Compara o banco antes/depois do salvamento do personal e avisa o aluno: nova meta ou treino atualizado.
 async function avisosDeCadastro(deps: Deps, now: number, antes: Record<string, any>, depois: Record<string, any>): Promise<void> {
@@ -477,7 +477,7 @@ async function avisosDeCadastro(deps: Deps, now: number, antes: Record<string, a
         await avisa(deps, now, [slug], "Você tem treino novo", "Novo treino: " + treinosNovos.slice(0, 2).join(" e ") + (treinosNovos.length > 2 ? " e mais " + (treinosNovos.length - 2) : "") + ". Bora! 💪", "treino-novo");
       } else if ((Number(d.treinoAtualizadoEm) || 0) > (Number(a.treinoAtualizadoEm) || 0)) await avisa(deps, now, [slug], "Seu treino foi atualizado", "Dê uma olhada nas mudanças.", "treino");
     }
-  } catch (e) { /* nunca derruba o salvamento */ }
+  } catch { /* nunca derruba o salvamento */ }
 }
 // Histórico do aluno: sessão nova entra junto com o que o servidor já tem, e só sai quando alguém a apaga de
 // propósito (fica registrada em sessoesApagadas). Assim, um salvamento feito por uma cópia antiga do app
@@ -656,7 +656,7 @@ async function postAuth(req: Request, deps: Deps, now: number): Promise<Response
     if (!ok) {
       auth.fails = (auth.fails || []).filter((x) => now - x < 10 * 60_000).concat([now]);
       if (auth.fails.length >= 5) {
-        auth.lockUntil = now + Math.min(15 * 60_000 * Math.pow(2, auth.lockLevel || 0), 24 * 3600_000);
+        auth.lockUntil = now + Math.min(15 * 60_000 * 2 ** (auth.lockLevel || 0), 24 * 3600_000);
         auth.lockLevel = (auth.lockLevel || 0) + 1;
         auth.fails = [];
       }
@@ -678,7 +678,7 @@ async function postAuth(req: Request, deps: Deps, now: number): Promise<Response
     if (!ok) {
       auth.fails = (auth.fails || []).filter((x) => now - x < 10 * 60_000).concat([now]);
       if (auth.fails.length >= 5) {
-        auth.lockUntil = now + Math.min(15 * 60_000 * Math.pow(2, auth.lockLevel || 0), 24 * 3600_000);
+        auth.lockUntil = now + Math.min(15 * 60_000 * 2 ** (auth.lockLevel || 0), 24 * 3600_000);
         auth.lockLevel = (auth.lockLevel || 0) + 1;
         auth.fails = [];
       }
@@ -740,7 +740,7 @@ async function postLead(req: Request, deps: Deps, now: number): Promise<Response
 // ---------- avisos no celular (push) ----------
 // Ver push.mts. Aqui ficam a rota (/api/push) e os atalhos usados pelos eventos do app.
 async function avisa(deps: Deps, now: number, donos: string[] | "alunos", titulo: string, corpo: string, tag?: string): Promise<void> {
-  try { await PUSH.enviar(deps.kv, AUTH_STORE, donos, { title: limpaTexto(titulo, 80), body: limpaTexto(corpo, 160), tag }, now, deps.fetch); } catch (e) { /* nunca derruba a operação */ }
+  try { await PUSH.enviar(deps.kv, AUTH_STORE, donos, { title: limpaTexto(titulo, 80), body: limpaTexto(corpo, 160), tag }, now, deps.fetch); } catch { /* nunca derruba a operação */ }
 }
 async function pushRoute(req: Request, url: URL, deps: Deps, now: number): Promise<Response> {
   if (req.method === "GET") {
@@ -767,9 +767,9 @@ async function pushRoute(req: Request, url: URL, deps: Deps, now: number): Promi
     const s = body.sub && typeof body.sub === "object" ? body.sub : null;
     const ep = s && s.endpoint, p = s && s.keys && s.keys.p256dh, a = s && s.keys && s.keys.auth;
     if (!PUSH.endpointOk(ep) || typeof p !== "string" || typeof a !== "string" || p.length > 120 || a.length > 60) return reply(400, { error: "pedido_invalido" });
-    try { if (PUSH.unb64u(p).length !== 65) throw new Error("x"); } catch (e) { return reply(400, { error: "pedido_invalido" }); }
+    try { if (PUSH.unb64u(p).length !== 65) throw new Error("x"); } catch { return reply(400, { error: "pedido_invalido" }); }
     for (const k of Object.keys(subs)) subs[k] = subs[k].filter((x) => x.endpoint !== ep); // o aparelho muda de dono se trocar de aluno
-    const lista = (subs[dono] || []).concat([{ endpoint: ep, p256dh: p, auth: a, ts: now, url: typeof body.url === "string" && /^\/[#?\/A-Za-z0-9_=.&%-]{0,120}$/.test(body.url) ? body.url : "/" }]);
+    const lista = (subs[dono] || []).concat([{ endpoint: ep, p256dh: p, auth: a, ts: now, url: typeof body.url === "string" && /^\/[#?/A-Za-z0-9_=.&%-]{0,120}$/.test(body.url) ? body.url : "/" }]);
     subs[dono] = lista.slice(-PUSH.MAX_SUBS_POR_DONO);
     for (const k of Object.keys(subs)) if (!subs[k].length) delete subs[k];
     await PUSH.saveSubs(deps.kv, AUTH_STORE, subs);
@@ -828,7 +828,7 @@ const CHAMADA_LONGA: Modelo[] = [ // 14 dias ou mais
 ];
 function hashSlug(s: string): number { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return h; }
 async function chamadasLer(deps: Deps): Promise<Record<string, { ts: number; t: string; c: string; ix: number }>> {
-  try { const v = await deps.kv.get(AUTH_STORE, CHAMADA_KEY); return v && typeof v === "object" ? v : {}; } catch (e) { return {}; }
+  try { const v = await deps.kv.get(AUTH_STORE, CHAMADA_KEY); return v && typeof v === "object" ? v : {}; } catch { return {}; }
 }
 function chamadaTexto(m: Modelo, nome: string, dias: number): Modelo {
   const sub = (s: string) => s.split("{nome}").join(nome).split("{dias}").join(String(dias));
@@ -861,7 +861,7 @@ export async function chamaAlunos(deps: Deps, now: number, slugs: unknown, opts:
       const primeiro = String(rec.nome || "").trim().split(/\s+/)[0] || "aluno";
       const msg = chamadaTexto(modelos[ix], primeiro, dias);
       let n = 0;
-      if (comPush) { try { n = await PUSH.enviar(deps.kv, AUTH_STORE, [slug], { title: msg.t, body: msg.c, tag: "chamada" }, now, deps.fetch); } catch (e) { n = 0; } }
+      if (comPush) { try { n = await PUSH.enviar(deps.kv, AUTH_STORE, [slug], { title: msg.t, body: msg.c, tag: "chamada" }, now, deps.fetch); } catch { n = 0; } }
       reg[slug] = { ts: now, t: msg.t, c: msg.c, ix };
       out.chamados++;
       out.ts[slug] = now;
@@ -870,7 +870,7 @@ export async function chamaAlunos(deps: Deps, now: number, slugs: unknown, opts:
     }
     for (const k of Object.keys(reg)) if (!students[k]) delete reg[k];
     if (out.chamados) await deps.kv.set(AUTH_STORE, CHAMADA_KEY, reg);
-  } catch (e) { /* nunca derruba o app: o personal tenta de novo */ }
+  } catch { /* nunca derruba o app: o personal tenta de novo */ }
   return out;
 }
 
@@ -938,7 +938,7 @@ export async function rodaCheckinAuto(deps: Deps, now: number): Promise<{ marcad
       mudou = true;
     }
     if (mudou) await deps.kv.set(STATE_STORE, STATE_KEY, { ...st, version: (st.version || 0) + 1, data: st.data });
-  } catch (e) {}
+  } catch {}
   return out;
 }
 export async function rodaLembretes(deps: Deps, now: number): Promise<{ enviados: number; alunos: string[]; personal?: string[] }> {
@@ -1021,7 +1021,7 @@ export async function rodaLembretes(deps: Deps, now: number): Promise<{ enviados
     }
     for (const k of Object.keys(reg)) if (!students[k]) delete reg[k];
     await deps.kv.set(AUTH_STORE, LEMB_KEY, reg);
-  } catch (e) { /* tarefa agendada: tenta de novo amanhã */ }
+  } catch { /* tarefa agendada: tenta de novo amanhã */ }
   return out;
 }
 
@@ -1056,6 +1056,7 @@ function nomeCurto(nome: unknown): string {
   return last && last.toLowerCase() !== first.toLowerCase() ? first + " " + last.charAt(0).toUpperCase() + "." : first;
 }
 function limpaTexto(v: unknown, max: number): string {
+  // biome-ignore lint/suspicious/noControlCharactersInRegex: tira caracteres de controle de propósito
   return String(v == null ? "" : v).replace(/[\u0000-\u001f\u007f]+/g, " ").replace(/\s+/g, " ").trim().slice(0, max);
 }
 function diaBR(now: number): string { return new Date(now - 3 * 3600_000).toISOString().slice(0, 10); }
@@ -1412,7 +1413,8 @@ async function postTurma(req: Request, deps: Deps, now: number): Promise<Respons
     if (action === "desafio_encerrar") {
       const d = (T.desafios as any[]).find((x) => x.id === body.id);
       if (!d) return reply(404, { error: "nao_encontrado" });
-      d.encerrado = true; if (d.ate >= hoje) d.ate = addDias(hoje, -1) < d.de ? d.de : addDias(hoje, -1);
+      // biome-ignore lint/complexity/useMathMinMax: compara datas em texto (AAAA-MM-DD), não números
+      d.encerrado = true; if (d.ate >= hoje) { const ontem = addDias(hoje, -1); d.ate = ontem < d.de ? d.de : ontem; }
       await save(); return reply(200, { ok: true });
     }
     if (action === "destaque_clear") { T.destaques = []; await save(); return reply(200, { ok: true }); }
@@ -1440,7 +1442,7 @@ async function postTurma(req: Request, deps: Deps, now: number): Promise<Respons
     }
     if (action === "evento_criar") {
       const titulo = limpaTexto(body.titulo, 60), quando = typeof body.quando === "string" ? body.quando : "";
-      if (!titulo || !DT_LOCAL.test(quando) || isNaN(Date.parse(quando + ":00Z"))) return reply(400, { error: "pedido_invalido" });
+      if (!titulo || !DT_LOCAL.test(quando) || Number.isNaN(Date.parse(quando + ":00Z"))) return reply(400, { error: "pedido_invalido" });
       if (quando < new Date(now - 3 * 3600_000 - 3600_000).toISOString().slice(0, 16)) return reply(400, { error: "no_passado" });
       if ((T.eventos as any[]).length >= 30) return reply(409, { error: "limite_eventos" });
       T.eventos.push({ id: novoId("e"), titulo, quando, local: limpaTexto(body.local, 80), texto: limpaTexto(body.texto, 200), rsvp: {}, criadoEm: now });
@@ -1696,7 +1698,7 @@ async function postEstima(req: Request, deps: Deps, now: number): Promise<Respon
       if (resp.ok) break;
       const det = await resp.text().catch(() => "");
       ultimoErro = resp.status + " " + det.slice(0, 400);
-      console.error("[estima] modelo=" + modelo + " temp=" + comTemp + " ->", ultimoErro);
+      console.error("[estima] modelo=" + modelo + " temp=" + comTemp + " ->", ultimoErro.replace(/sk-ant-[\w-]+/g, "***"));
       // 401/403 (chave), 429 (limite) e 529 (sobrecarga) não melhoram trocando modelo
       if (resp.status === 401 || resp.status === 403 || resp.status === 429 || resp.status >= 500) break;
       if (!(resp.status === 400 && /temperature/i.test(det))) break; // só tenta sem temperature se o erro falar dela
@@ -1712,7 +1714,7 @@ async function postEstima(req: Request, deps: Deps, now: number): Promise<Respon
   const j: any = await resp.json().catch(() => null);
   const texto = String(((j && j.content) || []).map((c: any) => c && c.text || "").join("")).trim();
   const m = texto.match(/\{[\s\S]*\}/);
-  let r: any = null; try { r = m ? JSON.parse(m[0]) : null; } catch (e) { r = null; }
+  let r: any = null; try { r = m ? JSON.parse(m[0]) : null; } catch { r = null; }
   if (!r) {
     const tipos = ((j && j.content) || []).map((c: any) => c && c.type).join(",");
     console.error("[estima] resposta sem JSON: stop=" + (j && j.stop_reason) + " tipos=" + tipos + " texto=" + texto.slice(0, 300));
@@ -1723,7 +1725,7 @@ async function postEstima(req: Request, deps: Deps, now: number): Promise<Respon
   await deps.kv.set(IA_STORE, IA_KEY, uso);
   if (r.erro) return reply(200, { ok: false, erro: String(r.erro).slice(0, 160) });
   let min = Number(r.min), max = Number(r.max);
-  if (!isFinite(min) || !isFinite(max)) return reply(502, { error: "ia_resposta" });
+  if (!Number.isFinite(min) || !Number.isFinite(max)) return reply(502, { error: "ia_resposta" });
   if (min > max) { const t = min; min = max; max = t; }
   min = Math.max(3, Math.min(60, min)); max = Math.max(min, Math.min(60, max));
   const conf = ["baixa", "media", "alta"].includes(r.confianca) ? r.confianca : "baixa";

@@ -80,8 +80,8 @@ export default async (req: Request, context: Context) => {
       const match = /bytes=(\d*)-(\d*)/.exec(range);
       let start = match && match[1] ? parseInt(match[1], 10) : 0;
       let end = match && match[2] ? parseInt(match[2], 10) : total - 1;
-      if (isNaN(start) || start < 0) start = 0;
-      if (isNaN(end) || end >= total) end = total - 1;
+      if (Number.isNaN(start) || start < 0) start = 0;
+      if (Number.isNaN(end) || end >= total) end = total - 1;
       const chunk = data.slice(start, end + 1);
       return new Response(chunk, {
         status: 206,

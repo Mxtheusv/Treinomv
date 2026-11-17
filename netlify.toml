@@ -6,6 +6,10 @@
   command = "(node scripts/minificar.mjs || echo 'minificar falhou: publicando sem minificar') && (node scripts/csp.mjs || echo 'csp falhou: publicando sem CSP')"
   functions = "netlify/functions"
 
+# Biome e Stryker são ferramentas de desenvolvimento: o Netlify não precisa instalá-las (build mais rápido e mais barato).
+[build.environment]
+  NPM_FLAGS = "--omit=dev"
+
 # O service worker nunca pode ficar em cache do navegador: senão uma versão nova do app
 # demora a chegar nos celulares.
 [[headers]]

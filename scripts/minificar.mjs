@@ -17,9 +17,7 @@ const antes = Buffer.byteLength(html);
 
 const partes = [];
 let ultimo = 0;
-const re = /<(script|style)(\s[^>]*)?>([\s\S]*?)<\/\1>/g;
-let m;
-while ((m = re.exec(html))) {
+for (const m of html.matchAll(/<(script|style)(\s[^>]*)?>([\s\S]*?)<\/\1>/g)) {
   partes.push(html.slice(ultimo, m.index));
   const [tudo, tag, attrs = "", corpo] = m;
   ultimo = m.index + tudo.length;

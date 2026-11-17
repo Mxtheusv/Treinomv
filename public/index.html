@@ -10573,142 +10573,217 @@ function startApp() {
     var pageCount = keys.length;
 
     function setColor(fn, c) { doc[fn](c[0], c[1], c[2]); }
+    // As fontes padrão do PDF só têm o alfabeto latino: emoji e símbolos viram lixo. Tira o que não cabe.
+    function pdfTxt(v) {
+      return String(v == null ? "" : v).replace(/[→↓]/g, "").replace(/[^\u0000-ÿ–—‘’“”•…]/g, "").replace(/\s{2,}/g, " ").trim();
+    }
+    var curTitle = "";
+    var FOOT = 30; // espaço do rodapé (número da página)
     function ensureSpace(h) {
-      if (y + h > pageH - margin) { doc.addPage(); y = margin; }
+      if (y + h > pageH - FOOT - 8) { doc.addPage(); drawMiniHeader(); }
+    }
+    // Página de continuação: faixa fina dizendo de quem é e qual treino, para folha solta não se perder.
+    function drawMiniHeader() {
+      var h = 28;
+      setColor("setFillColor", PDF_COLOR.blueDeep);
+      doc.rect(0, 0, pageW, h, "F");
+      setColor("setFillColor", PDF_COLOR.gold);
+      doc.rect(0, h, pageW, 2.5, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold"); doc.setFontSize(10);
+      doc.text(pdfTxt(s.nome || "Aluno"), margin, 18);
+      doc.setFont("helvetica", "normal"); doc.setFontSize(9);
+      doc.text(pdfTxt(curTitle) + "  (continuação)", pageW - margin, 18, { align: "right" });
+      y = h + 22;
     }
 
     // ---- header banner (mirrors the app's blue top bar) — redrawn once per
     // section when exporting several at once, each getting its own page.
-    function drawHeader(active, pageNum) {
-      var headerH = 66;
-      doc.setFillColor(PDF_COLOR.blue[0], PDF_COLOR.blue[1], PDF_COLOR.blue[2]);
+    function drawHeader(active) {
+      var headerH = 78;
+      curTitle = active.title || "";
+      numExercicio = 0;
+      setColor("setFillColor", PDF_COLOR.blueDeep);
       doc.rect(0, 0, pageW, headerH, "F");
+      setColor("setFillColor", PDF_COLOR.gold);
+      doc.rect(0, headerH, pageW, 4, "F");
+      var logoSize = 42, logoX = pageW - margin - logoSize, logoY = (headerH - logoSize) / 2;
+      var textW = logoX - 14 - margin;
       doc.setTextColor(255, 255, 255);
-      doc.setFont("helvetica", "bold"); doc.setFontSize(18);
-      doc.text(s.nome || "Aluno", margin, 30);
-      doc.setFont("helvetica", "normal"); doc.setFontSize(10.5);
-      doc.text(active.title + "  ·  " + (plan.microciclo || plan.label || ""), margin, 47);
-      doc.setFontSize(9);
-      doc.text("Matheus Venâncio · CREF 038618-G/SC  ·  Gerado em " + new Date().toLocaleDateString("pt-BR"), margin, 60);
+      doc.setFont("helvetica", "bold"); doc.setFontSize(19);
+      doc.text(doc.splitTextToSize(pdfTxt(s.nome || "Aluno"), textW)[0] || "", margin, 31);
+      doc.setFont("helvetica", "normal"); doc.setFontSize(11);
+      var sub = pdfTxt(active.title) + ((plan.microciclo || plan.label) ? "  ·  " + pdfTxt(plan.microciclo || plan.label) : "");
+      doc.text(doc.splitTextToSize(sub, textW)[0] || "", margin, 50);
+      doc.setFontSize(8.5);
+      doc.setTextColor(214, 226, 255);
+      doc.text("Matheus Venâncio · CREF 038618-G/SC  ·  Gerado em " + new Date().toLocaleDateString("pt-BR"), margin, 65);
       try {
-        var logoSize = 40;
-        var logoX = pageW - margin - logoSize;
-        var logoY = (headerH - logoSize) / 2;
         doc.setFillColor(255, 255, 255);
-        doc.roundedRect(logoX - 6, logoY - 6, logoSize + 12, logoSize + 12, 8, 8, "F");
+        doc.roundedRect(logoX - 5, logoY - 5, logoSize + 10, logoSize + 10, 8, 8, "F");
         doc.addImage(PDF_LOGO_DATA_URL, "PNG", logoX, logoY, logoSize, logoSize);
       } catch (e) { /* logo is a nice-to-have — never block the PDF over it */ }
-      if (pageCount > 1) {
-        doc.setTextColor(255, 255, 255);
-        doc.setFont("helvetica", "bold"); doc.setFontSize(8.5);
-        doc.text(pageNum + "/" + pageCount, pageW - margin - 4, headerH - 8, { align: "right" });
-      }
-      y = headerH + 20;
+      y = headerH + 28;
     }
 
     function sectionTitle(text) {
       ensureSpace(26);
       doc.setTextColor(PDF_COLOR.blueDeep[0], PDF_COLOR.blueDeep[1], PDF_COLOR.blueDeep[2]);
       doc.setFont("helvetica", "bold"); doc.setFontSize(12.5);
-      doc.text(text, margin, y);
+      doc.text(pdfTxt(text), margin, y);
       doc.setDrawColor(PDF_COLOR.line[0], PDF_COLOR.line[1], PDF_COLOR.line[2]);
       doc.setLineWidth(1);
       doc.line(margin, y + 6, pageW - margin, y + 6);
       y += 20;
     }
 
-    function blocoBadge(letra, titulo) {
-      ensureSpace(22);
-      doc.setFillColor(PDF_COLOR.blue[0] + 60, PDF_COLOR.blue[1] + 90, 240);
-      doc.roundedRect(margin, y - 12, 20, 16, 3, 3, "F");
-      doc.setTextColor(PDF_COLOR.blue[0], PDF_COLOR.blue[1], PDF_COLOR.blue[2]);
-      doc.setFont("helvetica", "bold"); doc.setFontSize(9.5);
-      doc.text(String(letra || ""), margin + 10, y - 1, { align: "center" });
-      doc.setTextColor(PDF_COLOR.inkSoft[0], PDF_COLOR.inkSoft[1], PDF_COLOR.inkSoft[2]);
+    // Título do bloco. Pede espaço para o título + a primeira ficha, para nunca ficar sozinho no pé da página.
+    function blocoBadge(letra, titulo, proximoH) {
+      ensureSpace(26 + (proximoH || 0));
+      var txt = "BLOCO " + pdfTxt(letra);
       doc.setFont("helvetica", "bold"); doc.setFontSize(8.5);
-      doc.text("BLOCO" + (titulo ? " — " + String(titulo).toUpperCase() : ""), margin + 28, y - 1);
+      var w = doc.getTextWidth(txt) + 18;
+      setColor("setFillColor", PDF_COLOR.blue);
+      doc.roundedRect(margin, y - 11, w, 16, 8, 8, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.text(txt, margin + 9, y);
+      if (titulo) {
+        setColor("setTextColor", PDF_COLOR.blueDeep);
+        doc.setFontSize(10);
+        doc.text(pdfTxt(titulo).toUpperCase(), margin + w + 10, y + 0.5);
+      }
       y += 14;
     }
 
-    // One exercise card: bordered box, bold name, meta line, gold carga chips.
-    // opts.singleCarga controls the single-box "CARGA ___kg" fallback used
-    // when cargaKeys is empty — set to false for drills (speed/agility) where
-    // a load in kg doesn't make sense, so no box is drawn at all.
-    function exerciseCard(ex, cargaKeys, cargaLabelPrefix, opts) {
+    // Ficha do exercício: número, etiqueta da técnica, nome, colunas (equipamento/séries/reps/descanso),
+    // cargas por série e observação. A altura sai das MESMAS medidas usadas no desenho.
+    // opts.singleCarga = false: drills de velocidade/agilidade, sem caixa de kg.
+    var CARD = { padL: 46, padR: 14, padTop: 12, tagH: 14, gapTag: 6, nameLH: 13.5, gapStats: 8, statH: 24, statGapY: 4, gapChips: 8, chipH: 30, chipW: 52, chipGap: 7, gapObs: 9, obsLH: 11, padBottom: 12, after: 9 };
+    function cardLayout(ex, cargaKeys, opts) {
       opts = opts || {};
-      var singleCarga = opts.singleCarga !== false;
-      doc.setFont("helvetica", "bold"); doc.setFontSize(10.5);
-      var namePrefix = opts.chainBadge ? (opts.chainBadge + " — ") : "";
-      var nameLines = doc.splitTextToSize((namePrefix + (ex.nome || "(exercício)")).toUpperCase(), contentW - 20);
-      var nameH = nameLines.length * 13;
-      var metaH = 14;
-      var showSingleCarga = !cargaKeys.length && singleCarga && ("carga" in ex);
-      var chipRowH = (cargaKeys.length || showSingleCarga) ? 34 : 0;
-      var obsH = ex.obs ? 12 : 0;
-      var padTop = 10, padBottom = 10;
-      var cardH = padTop + nameH + 4 + metaH + (chipRowH ? 6 + chipRowH : 0) + (obsH ? 4 + obsH : 0) + padBottom;
-
-      ensureSpace(cardH + 8);
-      doc.setFillColor(PDF_COLOR.paper[0], PDF_COLOR.paper[1], PDF_COLOR.paper[2]);
-      doc.setDrawColor(PDF_COLOR.line[0], PDF_COLOR.line[1], PDF_COLOR.line[2]);
-      doc.roundedRect(margin, y, contentW, cardH, 6, 6, "FD");
-
-      var cy = y + padTop + 9;
-      doc.setTextColor(PDF_COLOR.ink[0], PDF_COLOR.ink[1], PDF_COLOR.ink[2]);
-      doc.setFont("helvetica", "bold"); doc.setFontSize(10.5);
-      nameLines.forEach(function (l) { doc.text(l, margin + 10, cy); cy += 13; });
-
-      cy += 2;
-      doc.setFont("helvetica", "normal"); doc.setFontSize(8.5);
-      doc.setTextColor(PDF_COLOR.inkSoft[0], PDF_COLOR.inkSoft[1], PDF_COLOR.inkSoft[2]);
-      var metaParts = [];
+      var innerW = contentW - CARD.padL - CARD.padR;
+      doc.setFont("helvetica", "bold"); doc.setFontSize(11);
+      var nameLines = doc.splitTextToSize(pdfTxt(ex.nome || "(exercício)"), innerW);
+      var tag = opts.chainBadge ? pdfTxt(opts.chainBadge).toUpperCase() : "";
+      var stats = [];
       var catEntry = findCatalog(ex.nome);
-      if (catEntry && catEntry.equipamento) metaParts.push(catEntry.equipamento.toUpperCase());
-      if (ex.series) metaParts.push("Séries " + ex.series);
-      if (ex.reps) metaParts.push("Reps " + ex.reps);
-      if (ex.volume) metaParts.push("Volume " + ex.volume);
-      if (opts.semDescanso) metaParts.push("↓ direto pro próximo");
-      else if (ex.intervalo) metaParts.push("Descanso " + ex.intervalo);
-      doc.text(metaParts.join("     ") || "—", margin + 10, cy);
-      cy += 10;
+      if (catEntry && catEntry.equipamento) stats.push(["EQUIPAMENTO", pdfTxt(catEntry.equipamento)]);
+      if (ex.series) stats.push(["SÉRIES", pdfTxt(ex.series)]);
+      if (ex.reps) stats.push(["REPS", pdfTxt(ex.reps)]);
+      if (ex.volume) stats.push(["VOLUME", pdfTxt(ex.volume)]);
+      if (opts.semDescanso) stats.push(["DESCANSO", "Direto pro próximo"]);
+      else if (ex.intervalo) stats.push(["DESCANSO", pdfTxt(ex.intervalo)]);
+      // colunas lado a lado; o que não couber desce para a linha de baixo
+      var rows = [[]], rowW = 0;
+      stats.forEach(function (st) {
+        doc.setFont("helvetica", "bold"); doc.setFontSize(10);
+        var w = doc.getTextWidth(st[1]);
+        doc.setFontSize(6.5);
+        w = Math.max(w, doc.getTextWidth(st[0])) + 22;
+        if (rowW + w > innerW && rows[rows.length - 1].length) { rows.push([]); rowW = 0; }
+        rows[rows.length - 1].push({ label: st[0], value: st[1], w: w });
+        rowW += w;
+      });
+      if (!stats.length) rows = [];
+      var showSingleCarga = !cargaKeys.length && opts.singleCarga !== false && ("carga" in ex);
+      var nChips = cargaKeys.length || (showSingleCarga ? 1 : 0);
+      var obs = pdfTxt(ex.obs);
+      doc.setFont("helvetica", "italic"); doc.setFontSize(8.5);
+      var obsLines = obs ? doc.splitTextToSize(obs, innerW) : [];
+      var h = CARD.padTop + (tag ? CARD.tagH + CARD.gapTag : 0) + nameLines.length * CARD.nameLH
+        + (rows.length ? CARD.gapStats + rows.length * CARD.statH + (rows.length - 1) * CARD.statGapY : 0)
+        + (nChips ? CARD.gapChips + CARD.chipH : 0)
+        + (obsLines.length ? CARD.gapObs + obsLines.length * CARD.obsLH : 0) + CARD.padBottom;
+      return { tag: tag, nameLines: nameLines, rows: rows, showSingleCarga: showSingleCarga, obsLines: obsLines, h: h };
+    }
+    var numExercicio = 0;
+    function exerciseCard(ex, cargaKeys, cargaLabelPrefix, opts) {
+      var L = cardLayout(ex, cargaKeys, opts);
+      ensureSpace(L.h + CARD.after);
+      numExercicio++;
+      // cartão branco com borda fina e barra azul à esquerda
+      doc.setFillColor(255, 255, 255);
+      setColor("setDrawColor", PDF_COLOR.line);
+      doc.setLineWidth(0.8);
+      doc.roundedRect(margin, y, contentW, L.h, 7, 7, "FD");
+      setColor("setFillColor", PDF_COLOR.blue);
+      doc.roundedRect(margin, y, 4, L.h, 2, 2, "F");
+      // número do exercício
+      setColor("setFillColor", PDF_COLOR.blueDeep);
+      doc.circle(margin + 25, y + CARD.padTop + 9, 11, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold"); doc.setFontSize(10);
+      doc.text(String(numExercicio), margin + 25, y + CARD.padTop + 12.5, { align: "center" });
 
-      if (cargaKeys.length) {
-        cy += 8;
-        var chipW = 46, chipGap = 8, chipH = 26;
-        cargaKeys.forEach(function (ck, i) {
-          var cx = margin + 10 + i * (chipW + chipGap);
-          doc.setFillColor(PDF_COLOR.goldTint[0], PDF_COLOR.goldTint[1], PDF_COLOR.goldTint[2]);
-          doc.setDrawColor(PDF_COLOR.gold[0], PDF_COLOR.gold[1], PDF_COLOR.gold[2]);
-          doc.roundedRect(cx, cy - 18, chipW, chipH, 5, 5, "FD");
-          doc.setTextColor(PDF_COLOR.goldDeep[0], PDF_COLOR.goldDeep[1], PDF_COLOR.goldDeep[2]);
-          doc.setFont("helvetica", "bold"); doc.setFontSize(7);
-          doc.text(cargaLabelPrefix + (i + 1), cx + chipW / 2, cy - 9, { align: "center" });
-          doc.setFontSize(9.5);
-          var val = (ex.cargas ? ex.cargas[ck] : (i === 0 ? ex.carga : "")) || "___";
-          doc.text(String(val) + " kg", cx + chipW / 2, cy + 3, { align: "center" });
-        });
-        cy += chipH - 10;
-      } else if (showSingleCarga) {
-        cy += 8;
-        var cw = 60;
-        doc.setFillColor(PDF_COLOR.goldTint[0], PDF_COLOR.goldTint[1], PDF_COLOR.goldTint[2]);
-        doc.setDrawColor(PDF_COLOR.gold[0], PDF_COLOR.gold[1], PDF_COLOR.gold[2]);
-        doc.roundedRect(margin + 10, cy - 18, cw, 26, 5, 5, "FD");
-        doc.setTextColor(PDF_COLOR.goldDeep[0], PDF_COLOR.goldDeep[1], PDF_COLOR.goldDeep[2]);
+      var x = margin + CARD.padL;
+      var cy = y + CARD.padTop;
+      if (L.tag) {
         doc.setFont("helvetica", "bold"); doc.setFontSize(7);
-        doc.text("CARGA", margin + 10 + cw / 2, cy - 9, { align: "center" });
-        doc.setFontSize(9.5);
-        doc.text((ex.carga || "___") + " kg", margin + 10 + cw / 2, cy + 3, { align: "center" });
+        var tw = doc.getTextWidth(L.tag) + 14;
+        setColor("setFillColor", PDF_COLOR.gold);
+        doc.roundedRect(x, cy, tw, CARD.tagH, 7, 7, "F");
+        setColor("setTextColor", PDF_COLOR.blueDeep);
+        doc.text(L.tag, x + 7, cy + 9.8);
+        cy += CARD.tagH + CARD.gapTag;
+      }
+      setColor("setTextColor", PDF_COLOR.ink);
+      doc.setFont("helvetica", "bold"); doc.setFontSize(11);
+      L.nameLines.forEach(function (l) { doc.text(l, x, cy + 9.5); cy += CARD.nameLH; });
+
+      if (L.rows.length) {
+        cy += CARD.gapStats;
+        L.rows.forEach(function (row, ri) {
+          if (ri) cy += CARD.statGapY;
+          var sx = x;
+          row.forEach(function (c, ci) {
+            if (ci) { setColor("setDrawColor", PDF_COLOR.line); doc.setLineWidth(0.8); doc.line(sx - 11, cy + 2, sx - 11, cy + CARD.statH - 2); }
+            doc.setFont("helvetica", "bold"); doc.setFontSize(6.5);
+            setColor("setTextColor", PDF_COLOR.inkSoft);
+            doc.text(c.label, sx, cy + 7);
+            doc.setFontSize(10);
+            setColor("setTextColor", PDF_COLOR.ink);
+            doc.text(c.value, sx, cy + 20);
+            sx += c.w;
+          });
+          cy += CARD.statH;
+        });
       }
 
-      if (ex.obs) {
-        cy += 12;
-        doc.setFont("helvetica", "italic"); doc.setFontSize(8);
-        doc.setTextColor(PDF_COLOR.inkSoft[0], PDF_COLOR.inkSoft[1], PDF_COLOR.inkSoft[2]);
-        doc.text(ex.obs, margin + 10, cy);
+      function chip(cx, w, label, valor, vazio) {
+        setColor("setFillColor", PDF_COLOR.goldTint);
+        setColor("setDrawColor", PDF_COLOR.gold);
+        doc.setLineWidth(0.8);
+        doc.roundedRect(cx, cy, w, CARD.chipH, 6, 6, "FD");
+        setColor("setTextColor", PDF_COLOR.goldDeep);
+        doc.setFont("helvetica", "bold"); doc.setFontSize(6.5);
+        doc.text(label, cx + w / 2, cy + 9.5, { align: "center" });
+        doc.setFontSize(10.5);
+        if (vazio) {
+          setColor("setDrawColor", PDF_COLOR.goldDeep); doc.setLineWidth(0.6);
+          doc.line(cx + 9, cy + 24, cx + w - 22, cy + 24);
+          doc.setFontSize(8.5); doc.text("kg", cx + w - 9, cy + 23.5, { align: "right" });
+        } else doc.text(valor, cx + w / 2, cy + 23.5, { align: "center" });
       }
-
-      y += cardH + 8;
+      if (cargaKeys.length) {
+        cy += CARD.gapChips;
+        cargaKeys.forEach(function (ck, i) {
+          var val = pdfTxt((ex.cargas ? ex.cargas[ck] : (i === 0 ? ex.carga : "")) || "");
+          chip(x + i * (CARD.chipW + CARD.chipGap), CARD.chipW, "SÉRIE " + (i + 1), val + " kg", !val);
+        });
+        cy += CARD.chipH;
+      } else if (L.showSingleCarga) {
+        cy += CARD.gapChips;
+        var val1 = pdfTxt(ex.carga);
+        chip(x, 64, "CARGA", val1 + " kg", !val1);
+        cy += CARD.chipH;
+      }
+      if (L.obsLines.length) {
+        cy += CARD.gapObs;
+        doc.setFont("helvetica", "italic"); doc.setFontSize(8.5);
+        setColor("setTextColor", PDF_COLOR.inkSoft);
+        L.obsLines.forEach(function (l) { doc.text(l, x, cy + 7); cy += CARD.obsLH; });
+      }
+      y += L.h + CARD.after;
     }
 
     // How many "SÉRIES x KG" chips to print for a treino exercise: only as
@@ -10732,7 +10807,7 @@ function startApp() {
     keys.forEach(function (key, idx) {
       var active = resolveActiveSection(plan, key);
       if (idx > 0) doc.addPage();
-      drawHeader(active, idx + 1);
+      drawHeader(active);
 
       if (active.kind === "treino" && active.section) {
         var t = active.section;
@@ -10742,23 +10817,26 @@ function startApp() {
           ensureSpace(16);
           doc.setFont("helvetica", "bold"); doc.setFontSize(9);
           doc.setTextColor(PDF_COLOR.inkSoft[0], PDF_COLOR.inkSoft[1], PDF_COLOR.inkSoft[2]);
-          doc.text("🔥 Aeróbico: " + items.map(function (a) {
+          var aeroLines = doc.splitTextToSize("AERÓBICO: " + pdfTxt(items.map(function (a) {
             return a.tipo ? a.tipo + (a.texto ? " — " + a.texto : "") : (a.texto || "");
-          }).join(" · "), margin, y);
-          y += 16;
+          }).join(" · ")), contentW);
+          ensureSpace(aeroLines.length * 12 + 4);
+          aeroLines.forEach(function (l) { doc.text(l, margin, y); y += 12; });
+          y += 12;
         }
         drawAerobicoBlock(aeroGroupsPdf.start);
         (t.blocos || []).forEach(function (b) {
-          blocoBadge(b.bloco, b.titulo);
           var runsByStart = {};
           blocoRuns(b).forEach(function (run) { runsByStart[run.start] = run.end - run.start + 1; });
-          (b.exercicios || []).forEach(function (ex, exIdx) {
+          var fichas = (b.exercicios || []).map(function (ex, exIdx) {
             var chainLen = runsByStart[exIdx];
-            var chainBadge = chainLen >= 2 ? "🔗 " + bisetLabelForLength(chainLen) : null;
+            var chainBadge = chainLen >= 2 ? bisetLabelForLength(chainLen) : null;
             if (ex.tecnica && tecInfo(ex.tecnica)) chainBadge = (chainBadge ? chainBadge + " — " : "") + tecRotulo(ex).toUpperCase();
-            exerciseCard(ex, activeCargaKeysFor(ex), "S", { semDescanso: exLinksToNext(b, exIdx), chainBadge: chainBadge });
+            return { ex: ex, keys: activeCargaKeysFor(ex), opts: { semDescanso: exLinksToNext(b, exIdx), chainBadge: chainBadge } };
           });
-          y += 4;
+          blocoBadge(b.bloco, b.titulo, fichas.length ? cardLayout(fichas[0].ex, fichas[0].keys, fichas[0].opts).h : 0);
+          fichas.forEach(function (f) { exerciseCard(f.ex, f.keys, "S", f.opts); });
+          y += 8;
           drawAerobicoBlock(aeroGroupsPdf.after[b.id]);
         });
         drawAerobicoBlock(aeroGroupsPdf.end);
@@ -10818,11 +10896,24 @@ function startApp() {
           ensureSpace(20);
           doc.setFont("helvetica", "italic"); doc.setFontSize(8.5);
           doc.setTextColor(PDF_COLOR.inkSoft[0], PDF_COLOR.inkSoft[1], PDF_COLOR.inkSoft[2]);
-          var notaLines = doc.splitTextToSize(comp.nota, contentW);
-          notaLines.forEach(function (l) { doc.text(l, margin, y); y += 11; });
+          var notaLines = doc.splitTextToSize(pdfTxt(comp.nota), contentW);
+          notaLines.forEach(function (l) { ensureSpace(11); doc.text(l, margin, y); y += 11; });
         }
       }
     });
+
+    // Rodapé em todas as páginas: número da página (antes ficava escondido atrás do logo).
+    var total = doc.getNumberOfPages();
+    for (var pg = 1; pg <= total; pg++) {
+      doc.setPage(pg);
+      setColor("setDrawColor", PDF_COLOR.line);
+      doc.setLineWidth(0.6);
+      doc.line(margin, pageH - FOOT + 4, pageW - margin, pageH - FOOT + 4);
+      doc.setFont("helvetica", "normal"); doc.setFontSize(7.5);
+      setColor("setTextColor", PDF_COLOR.inkSoft);
+      doc.text("Matheus Venâncio · Treino Online", margin, pageH - FOOT + 16);
+      doc.text("Página " + pg + " de " + total, pageW - margin, pageH - FOOT + 16, { align: "right" });
+    }
 
     return doc.output("blob");
   }

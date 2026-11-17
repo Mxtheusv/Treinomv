@@ -2607,7 +2607,7 @@
 []
 </script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="/vendor/jspdf-2.5.1.umd.min.js" defer></script>
 
 <script>
 
@@ -3117,7 +3117,7 @@ function startApp() {
           fetch("/api/state", saveInit()).then(function (res) {
             if (res.status === 409) {
               return res.json().then(function (body) {
-                serverVersion = body.version || serverVersion;
+                adotaCodigos(body); serverVersion = body.version || serverVersion;
                 if (body.data) state.data = mergeServerData(body.data, state.data, state.slug);
                 if (body.data) noteServerSlugs(body.data);
                 if (body.catalog) CATALOG = body.catalog;
@@ -3143,7 +3143,7 @@ function startApp() {
               });
             }
             if (!res.ok) throw new Error("http_" + res.status);
-            return res.json().then(function (body) { serverVersion = body.version; noteServerSlugs(state.data); state.dirty = false; });
+            return res.json().then(function (body) { adotaCodigos(body); serverVersion = body.version; noteServerSlugs(state.data); state.dirty = false; });
           }).catch(function () { state.dirty = true; });
         })();
       }, 0);
@@ -4199,9 +4199,19 @@ function startApp() {
   // plus their own short code; "Copiar convite" below copies both together.
   var CANONICAL_URL = "https://matheusvenancio.com.br";
 
+  // O servidor devolve os códigos de acesso ao salvar (alunos novos ganham o seu na hora).
+  function adotaCodigos(body) {
+    try {
+      if (!body || !body.codigos || !isTrainerRole()) return;
+      Object.keys(body.codigos).forEach(function (k) { var st = state.data.students[k]; if (st) { st.codigo = body.codigos[k]; delete st.codigoReset; } });
+      if (body.codigoLegadoAte) state.data.codigoLegadoAte = body.codigoLegadoAte;
+    } catch (e) {}
+  }
+  function codigoDoAluno(slug) { var s = state.data.students[slug]; return (s && typeof s.codigo === "string" && s.codigo) || slug; }
   function inviteMessageFor(slug) {
     var s = state.data.students[slug];
     var nome = String((s && s.nome) || slug).trim().split(/\s+/)[0];
+    slug = codigoDoAluno(slug);
     return "Oi, " + nome + "! Seu treino está pronto 💪\n\n" +
       "1) Toque neste link (abra no Safari, no iPhone, ou no Chrome, no Android):\n" + CANONICAL_URL + "/i/" + slug + "\n\n" +
       "2) Siga o passo a passo na tela para colocar o app no seu celular.\n\n" +
@@ -4229,6 +4239,8 @@ function startApp() {
   function currentUrlFor(slug) {
     var url = new URL(location.href);
     url.searchParams.delete("aluno");
+    // No app do aluno, o link guarda o código (é o que o iPhone grava ao instalar na tela inicial).
+    if (!isTrainerRole()) { try { slug = localStorage.getItem("treinoOnlineAcesso") || slug; } catch (e) {} }
     url.hash = "aluno=" + encodeURIComponent(slug);
     return url.toString();
   }
@@ -5468,7 +5480,7 @@ function startApp() {
         fetch("/api/state", saveInit()).then(function (res) {
           if (res.status === 409) {
             return res.json().then(function (body) {
-              serverVersion = body.version || serverVersion;
+              adotaCodigos(body); serverVersion = body.version || serverVersion;
               if (body.data) state.data = mergeServerData(body.data, state.data, state.slug);
               if (body.data) noteServerSlugs(body.data);
               if (body.catalog) CATALOG = body.catalog;
@@ -5481,7 +5493,7 @@ function startApp() {
             });
           }
           if (!res.ok) throw new Error("http_" + res.status);
-          return res.json().then(function (body) { serverVersion = body.version; noteServerSlugs(state.data); state.dirty = false; });
+          return res.json().then(function (body) { adotaCodigos(body); serverVersion = body.version; noteServerSlugs(state.data); state.dirty = false; });
         }).catch(function () { state.dirty = true; });
       })();
     }, 0);
@@ -7331,7 +7343,7 @@ function startApp() {
         (s.presencial ? '<span class="tr-badge-pres">presencial</span>' : '') +
         (s.online ? '<span class="tr-badge-online">online</span>' : '') +
         '</div>' +
-        '<div class="tr-roster-meta">' + escapeHtml((plan && plan.microciclo) || "") + ' · código ' + escapeHtml(slug) + '</div>' +
+        '<div class="tr-roster-meta">' + escapeHtml((plan && plan.microciclo) || "") + ' · código ' + escapeHtml(codigoDoAluno(slug)) + '</div>' +
         '</div>' + trSemanasHtml(s) + '</div>' +
         '<div class="tr-chips">' + trValidadeCurtaHtml(s, plan) + (s.ofertaPlanos ? '<span class="tr-chip-oferta">🏷️ Oferta ligada</span>' : '') +
         trStreakChipHtml(s) + '</div>' +
@@ -7352,7 +7364,7 @@ function startApp() {
           '<button type="button" data-presencial="' + escapeAttr(slug) + '">' + (s.presencial ? '🏋️ Tirar de presencial' : '🏋️ Marcar como presencial') + '</button>' +
           '<button type="button" data-online="' + escapeAttr(slug) + '">' + (s.online ? '🌐 Tirar de online' : '🌐 Marcar como online') + '</button>' +
           '<a href="' + escapeAttr(whatsappUrlFor(slug)) + '" target="_blank" rel="noopener">📲 WhatsApp com o convite</a>' +
-          '<button type="button" data-rename="' + escapeAttr(slug) + '">🔑 Trocar código</button>' +
+          '<button type="button" data-rename="' + escapeAttr(slug) + '">🔑 Gerar novo código</button>' +
           '<button type="button" data-remove="' + escapeAttr(slug) + '">✕ Remover aluno</button>' +
           '</div>' : '') +
         '</div></div></div>' + trResumoAlunoHtml(slug, s, aberto) + '</div>';
@@ -7614,19 +7626,12 @@ function startApp() {
     });
     Array.prototype.forEach.call(document.querySelectorAll("[data-rename]"), function (btn) {
       btn.addEventListener("click", function () {
-        var oldSlug = btn.getAttribute("data-rename");
-        var current = state.data.students[oldSlug];
+        var sl = btn.getAttribute("data-rename"), current = state.data.students[sl];
         if (!current) return;
-        var input = window.prompt("Novo código de acesso para " + (current.nome || "aluno") + ":", oldSlug);
-        if (input === null) return;
-        var newSlug = slugify(input);
-        if (!newSlug) { showToast("Código inválido", true); return; }
-        if (newSlug === oldSlug) return;
-        if (state.data.students[newSlug]) { showToast("Já existe um aluno com esse código", true); return; }
-        state.data.students[newSlug] = current;
-        delete state.data.students[oldSlug];
-        saPendingRemovedSlugs[oldSlug] = true;
-        persistThen(function () { showToast("Código alterado para \"" + newSlug + "\" — avise o aluno pelo novo link"); renderRoster(); });
+        if (!window.confirm("Gerar um novo código de acesso para " + (current.nome || "o aluno") + "?\n\nO código atual para de funcionar na hora, em todos os aparelhos. Use se o código vazou ou se o aluno saiu. Depois mande o convite novo para ele.")) return;
+        current.codigoReset = Date.now();
+        state.rosterOpenMenu = null;
+        persistThen(function () { showToast("Novo código: " + codigoDoAluno(sl) + " — mande o convite de novo"); renderRoster(); });
       });
     });
     Array.prototype.forEach.call(document.querySelectorAll("[data-presencial]"), function (btn) {
@@ -15902,6 +15907,7 @@ function startApp() {
       (s.fotoUrl ? '<button type="button" class="sa-cta-ghost" id="btnFotoRemover">Remover</button>' : "") +
       '</div>' +
       '<label class="fd-toggle"><input type="checkbox" id="chkFeedOn"' + (s.feedOff ? "" : " checked") + '> Aparecer no feed da galera</label>' +
+      (s.codigo && !isTrainerRole() ? '<div class="fd-perfil-s" style="margin-top:10px">🔑 Seu código de acesso: <b style="letter-spacing:.04em">' + escapeHtml(s.codigo) + '</b><br><small>Use para entrar em outro celular. Não compartilhe.</small></div>' : "") +
       '</div></div>';
   }
   function attachFeedStudentHandlers(s) {
@@ -18721,14 +18727,20 @@ function startApp() {
       var errEl = document.getElementById("alunoCodeError");
       var slug = slugify(raw);
       if (!slug) { errEl.style.display = "block"; return; }
+      try { localStorage.removeItem("treinoOnlineAcesso"); } catch (e) {} // código digitado agora vale mais que um guardado
       fetch("/api/state?slug=" + encodeURIComponent(slug), { cache: "no-store" }).then(function (res) {
         if (res.ok) {
           // Guarda a identidade e recarrega: a abertura normal do app (com as migrações
           // e a leitura dos dados do aluno) faz o resto.
-          try { localStorage.setItem("treinoOnlineMyAluno", slug); } catch (e) {}
-          try { sessionStorage.setItem("treinoOnlineAluno", slug); } catch (e) {}
-          errEl.style.display = "none";
-          location.reload();
+          return res.json().catch(function () { return {}; }).then(function (b) {
+            var real = (b && b.slugReal) || slug;
+            try { localStorage.setItem("treinoOnlineMyAluno", real); } catch (e) {}
+            try { sessionStorage.setItem("treinoOnlineAluno", real); } catch (e) {}
+            try { if (b && b.acesso) localStorage.setItem("treinoOnlineAcesso", b.acesso); } catch (e) {}
+            try { if (/(?:^#|[#&])aluno=/.test(location.hash || "")) location.hash = ""; } catch (e) {}
+            errEl.style.display = "none";
+            location.reload();
+          });
         } else if (res.status === 429) {
           errEl.textContent = "Muitas tentativas. Aguarde um pouco e tente de novo.";
           errEl.style.display = "block";
@@ -19004,7 +19016,7 @@ function startApp() {
       var baseIgual = !!(p && p.base && p.base === JSON.stringify(srv.plans || []));
       state.data = body.data;
       state.data.students[state.slug] = pendMesclar(srv, p ? p.student : atual, baseIgual && !!p);
-      serverVersion = body.version || serverVersion;
+      adotaCodigos(body); serverVersion = body.version || serverVersion;
       if (body.catalog) CATALOG = body.catalog;
       state.dirty = true;
       persistThen(function () { pendClear(); showToast("📶 Registros do modo offline enviados ✓"); fim(); render(); }, "Não enviou", 1, function () { fim(); });
@@ -19062,7 +19074,7 @@ function startApp() {
       }
       if (res.status === 409) {
         return res.json().then(function (body) {
-          serverVersion = body.version || serverVersion;
+          adotaCodigos(body); serverVersion = body.version || serverVersion;
           if (body.data) state.data = mergeServerData(body.data, state.data, state.slug);
           if (body.data) noteServerSlugs(body.data);
           if (body.catalog) CATALOG = body.catalog;
@@ -19092,7 +19104,7 @@ function startApp() {
       }
       if (!res.ok) throw new Error("http_" + res.status);
       return res.json().then(function (body) {
-        serverVersion = body.version;
+        adotaCodigos(body); serverVersion = body.version;
         if (body.sessaoCancelada) saAplicaCancelamentoDoServidor(body);
         // Our local data (missing whatever this session deleted) is now the
         // accepted server copy, so there's nothing left to force out on a
@@ -19170,6 +19182,9 @@ function startApp() {
   var alunoParam = parseAlunoFromLocation();
   if (alunoParam) {
     var slug = slugify(alunoParam);
+    if (slug && !state.data.students[slug]) { // link com o código novo: acha o aluno dono dele
+      Object.keys(state.data.students || {}).forEach(function (k) { if (state.data.students[k] && state.data.students[k].codigo === slug) slug = k; });
+    }
     if (slug) {
       setSlug(slug);
       try { history.replaceState(null, "", currentUrlFor(slug)); } catch (e) {}
@@ -19226,6 +19241,35 @@ function startApp() {
 
 (function () {
   "use strict";
+  // Código de acesso do aluno: vai num cabeçalho em toda chamada ao servidor (o nome sozinho não basta mais).
+  (function acessoNoCabecalho() {
+    var real = window.fetch.bind(window);
+    window.fetch = function (url, init) {
+      try {
+        var u = typeof url === "string" ? url : (url && url.url) || "";
+        var a = ""; try { a = localStorage.getItem("treinoOnlineAcesso") || ""; } catch (e) {}
+        if (a && u.indexOf("/api/") === 0 && u.indexOf("/api/img/") !== 0) {
+          var h = new Headers((init && init.headers) || {});
+          if (!h.has("Authorization") && !h.has("X-Acesso")) { h.set("X-Acesso", a); init = Object.assign({}, init || {}, { headers: h }); }
+        }
+      } catch (e) {}
+      return real(url, init);
+    };
+  })();
+  // Guarda a identidade que o servidor confirmou (o código novo pode ter sido digitado no lugar do nome).
+  function adotaAcesso(body) {
+    if (!body || !body.slugReal) return;
+    try {
+      localStorage.setItem("treinoOnlineMyAluno", body.slugReal);
+      sessionStorage.setItem("treinoOnlineAluno", body.slugReal);
+      if (body.acesso) localStorage.setItem("treinoOnlineAcesso", body.acesso);
+    } catch (e) {}
+    // Se o link trazia o código, troca pelo endereço limpo (o app volta a colocar o código na barra depois).
+    try {
+      var temNoLink = /(?:^#|[#&])aluno=/.test(location.hash || "") || new URLSearchParams(location.search).get("aluno");
+      if (temNoLink) { var u2 = new URL(location.href); u2.searchParams.delete("aluno"); u2.hash = ""; history.replaceState(null, "", u2.toString()); }
+    } catch (e) {}
+  }
   var loadingEl = document.getElementById("main");
 
   // App instalável: captura o convite de instalação do Chrome/Android o quanto antes e
@@ -19291,14 +19335,16 @@ function startApp() {
     return bootGet("/api/state?slug=" + encodeURIComponent(slug)).catch(function (err) {
       // Sem internet: abre com o treino que ficou guardado neste aparelho (só do próprio aluno).
       var c = offLoad(slug);
+      if (!c) { try { var mine = localStorage.getItem("treinoOnlineMyAluno"); if (mine) { c = offLoad(mine); if (c) { try { sessionStorage.setItem("treinoOnlineAluno", mine); var u3 = new URL(location.href); u3.searchParams.delete("aluno"); u3.hash = ""; history.replaceState(null, "", u3.toString()); } catch (e4) {} } } } catch (e3) {} }
       if (c && c.payload) { window.__offline = true; return { status: 200, body: c.payload }; }
       throw err;
     }).then(function (r) {
       if (r.status === 404) {
-        try { localStorage.removeItem("treinoOnlineMyAluno"); sessionStorage.removeItem("treinoOnlineAluno"); } catch (e) {}
+        try { localStorage.removeItem("treinoOnlineMyAluno"); sessionStorage.removeItem("treinoOnlineAluno"); localStorage.removeItem("treinoOnlineAcesso"); } catch (e) {}
         window.__codeNotFound = true;
         return bootGet("/api/state");
       }
+      if (r.status === 200) adotaAcesso(r.body);
       return r;
     });
   }
@@ -19406,8 +19452,9 @@ function startApp() {
           : "Não consegui carregar os dados agora. Verifique sua internet e recarregue a página.";
         loadingEl.innerHTML = '<div style="max-width:420px;margin:60px auto;text-align:center;padding:24px;">' +
           '<p style="font-size:15px;color:#4f5670;">' + msg + '</p>' +
-          '<button onclick="location.reload()" style="margin-top:10px;background:#004aad;color:#fff;border:none;padding:10px 20px;border-radius:999px;font-weight:700;cursor:pointer;">Recarregar</button>' +
+          '<button type="button" id="btnRecarregarErro" style="margin-top:10px;background:#004aad;color:#fff;border:none;padding:10px 20px;border-radius:999px;font-weight:700;cursor:pointer;">Recarregar</button>' +
           "</div>";
+        var br = document.getElementById("btnRecarregarErro"); if (br) br.addEventListener("click", function () { location.reload(); });
       }
     });
 })();

@@ -49,7 +49,9 @@ const MAX_POSTS = 150;
 const MAX_IMG = 400 * 1024;
 
 const TOKEN_TTL_MS = 60 * 24 * 3600 * 1000; // sessão longa: o app renova a cada abertura ("refresh"), então quem usa sempre fica conectado
-const PBKDF2_ITER = 120000;
+const PBKDF2_ITER = 600000; // OWASP 2023 para PBKDF2-SHA256; hashes antigos são refeitos no próximo login
+const CODIGO_LEGADO_DIAS = 30; // por quanto tempo o código antigo (nome do aluno) ainda funciona depois que os códigos novos são criados
+const CODIGO_ALFABETO = "abcdefghjkmnpqrstuvwxyz23456789"; // sem 0/o, 1/l/i: fácil de ditar e digitar
 const MIN_PIN = 6;
 const MIN_PASS = 8; // senha do login novo (e-mail + senha)
 const MAX_BODY_CHARS = 12_000_000;
@@ -113,9 +115,9 @@ function newRecoveryKey(): string {
   return s.match(/.{4}/g)!.join("-");
 }
 function rkNorm(v: unknown): string { return String(v == null ? "" : v).toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 40); }
-async function makeRk(key: string): Promise<{ salt: string; hash: string }> {
+async function makeRk(key: string): Promise<{ salt: string; hash: string; iter?: number }> {
   const salt = randomBytes(16);
-  return { salt: b64(salt), hash: b64(await pbkdf2(rkNorm(key), salt, PBKDF2_ITER)) };
+  return { salt: b64(salt), hash: b64(await pbkdf2(rkNorm(key), salt, PBKDF2_ITER)), iter: PBKDF2_ITER };
 }
 async function makeAuth(pin: string, prev?: AuthRec | null): Promise<AuthRec> {
   const salt = randomBytes(16);
@@ -215,6 +217,7 @@ export async function handleApi(req: Request, deps: Deps): Promise<Response | nu
     return reply(405, { error: "method" });
   }
   if (path === "/api/estima" && req.method === "POST") return postEstima(req, deps, now);
+  if (path === "/api/backup" && req.method === "GET") return getBackup(req, url, deps, now);
   if (path === "/api/img" && req.method === "POST") return postImg(req, deps, now);
   if (path.startsWith("/api/img/") && req.method === "GET") return getImg(path.slice("/api/img/".length), deps);
   return null;
@@ -225,6 +228,131 @@ export async function requestIsTrainer(req: Request, deps: Deps): Promise<boolea
   if (deps.admin) return true;
   const now = (deps.now || Date.now)();
   return tokenValid(bearer(req), await loadAuth(deps), now);
+}
+
+
+// ================= Código de acesso do aluno =================
+// Antes o código era o nome do aluno ("ana-souza"), fácil de adivinhar. Agora cada aluno tem um código com
+// parte aleatória ("ana-k7f3x2"). O nome antigo ainda funciona por CODIGO_LEGADO_DIAS, e só até o app daquele
+// aluno passar a usar o código novo (o app troca sozinho na primeira abertura).
+function normCodigo(v: unknown): string { return String(v == null ? "" : v).trim().toLowerCase().slice(0, 80); }
+function gerarCodigo(nome: unknown, usados: Set<string>): string {
+  const base = String(nome || "aluno").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z]+/g, " ").trim().split(" ")[0].slice(0, 12) || "aluno";
+  for (;;) {
+    const r = randomBytes(6); let suf = "";
+    for (const b of r) suf += CODIGO_ALFABETO[b % CODIGO_ALFABETO.length];
+    const c = base + "-" + suf;
+    if (!usados.has(c)) { usados.add(c); return c; }
+  }
+}
+function codigoIgual(a: string, b: string): boolean {
+  if (!a || !b || a.length !== b.length) return false;
+  return safeEqual(enc.encode(a), enc.encode(b));
+}
+// Dá código a quem ainda não tem e liga o prazo do código antigo. Devolve true se mudou algo.
+function garanteCodigos(data: any, now: number, anterior?: Record<string, any>): boolean {
+  const students = data && data.students; if (!students || typeof students !== "object") return false;
+  let mudou = false;
+  const usados = new Set<string>();
+  for (const k of Object.keys(students)) { const c = students[k] && students[k].codigo; if (typeof c === "string") usados.add(c); }
+  for (const k of Object.keys(students)) {
+    const rec = students[k]; if (!rec || typeof rec !== "object") continue;
+    const ant = anterior && anterior[k];
+    // o app do personal nunca apaga o código por engano: o que está no servidor vale
+    if (ant && typeof ant.codigo === "string" && !rec.codigo && !rec.codigoReset) { rec.codigo = ant.codigo; if (ant.codigoUsadoEm) rec.codigoUsadoEm = ant.codigoUsadoEm; mudou = true; }
+    if (ant && ant.codigoUsadoEm && !rec.codigoUsadoEm && rec.codigo === ant.codigo) { rec.codigoUsadoEm = ant.codigoUsadoEm; mudou = true; }
+    if (rec.codigoReset) { // "Gerar novo código": o antigo e o nome deixam de valer na hora
+      if (typeof rec.codigo === "string") usados.delete(rec.codigo);
+      rec.codigo = gerarCodigo(rec.nome || k, usados); rec.codigoUsadoEm = now; delete rec.codigoReset; mudou = true;
+    }
+    if (typeof rec.codigo !== "string" || !rec.codigo) { rec.codigo = gerarCodigo(rec.nome || k, usados); mudou = true; }
+  }
+  if (!data.codigoLegadoAte) { data.codigoLegadoAte = now + CODIGO_LEGADO_DIAS * DIA_MS; mudou = true; }
+  return mudou;
+}
+function acessoDe(req: Request, body?: any): string {
+  return normCodigo(req.headers.get("x-acesso") || (body && typeof body.acesso === "string" ? body.acesso : ""));
+}
+// Acha o aluno pelo código novo ou (no período de transição) pelo nome antigo.
+function resolveAluno(st: any, ident: unknown, acesso: string, now: number): { slug: string; rec: any; viaCodigo: boolean } | null {
+  const students = st?.data?.students || {};
+  const id = normCodigo(ident);
+  if (!id) return null;
+  const rec = Object.prototype.hasOwnProperty.call(students, id) ? students[id] : null;
+  if (rec) {
+    if (typeof rec.codigo !== "string" || !rec.codigo) return { slug: id, rec, viaCodigo: false }; // códigos ainda não criados
+    if (acesso && codigoIgual(acesso, rec.codigo)) return { slug: id, rec, viaCodigo: true };
+    const legadoAte = Number(st?.data?.codigoLegadoAte) || 0;
+    if (!rec.codigoUsadoEm && now < legadoAte) return { slug: id, rec, viaCodigo: false };
+    return null;
+  }
+  for (const k of Object.keys(students)) {
+    const r = students[k];
+    if (r && typeof r.codigo === "string" && codigoIgual(id, r.codigo)) return { slug: k, rec: r, viaCodigo: true };
+  }
+  return null;
+}
+// Campos que só o personal escreve: quando o app do aluno salva, eles ficam como estavam.
+const CAMPOS_DO_PERSONAL = ["nome", "notas", "presencial", "online", "mesGratisEm", "ofertaPlanos", "criadoEm", "reviewed", "codigo", "codigoUsadoEm", "sessoesCanceladas"];
+// O que o aluno não recebe: anotações do personal (anamnese, saúde).
+const CAMPOS_PRIVADOS = ["notas"];
+function alunoParaAluno(rec: any): any {
+  const r = { ...(rec || {}) };
+  for (const k of CAMPOS_PRIVADOS) delete r[k];
+  return r;
+}
+function protegeCamposDoPersonal(antes: any, student: any): void {
+  if (!antes || !student) return;
+  for (const k of CAMPOS_DO_PERSONAL) {
+    if (k === "sessoesCanceladas") continue; // tratado por aplicaSessoesCanceladas
+    if (Object.prototype.hasOwnProperty.call(antes, k)) student[k] = antes[k]; else delete student[k];
+  }
+  delete student.codigoReset;
+  // Avaliações: as do personal não podem ser apagadas nem alteradas pelo aluno (só a estimativa da IA pode ser anexada).
+  const doPersonal = (Array.isArray(antes.avaliacoes) ? antes.avaliacoes : []).filter((a: any) => a && a.por !== "aluno");
+  const enviadas = Array.isArray(student.avaliacoes) ? student.avaliacoes : [];
+  const porId: Record<string, any> = {};
+  for (const a of enviadas) if (a && typeof a.id === "string") porId[a.id] = a;
+  const final: any[] = doPersonal.map((a: any) => { const e = porId[a.id]; return e && e.ia && typeof e.ia === "object" ? { ...a, ia: e.ia } : a; });
+  const idsPersonal = new Set(doPersonal.map((a: any) => a.id));
+  for (const a of enviadas) if (a && !idsPersonal.has(a.id)) final.push({ ...a, por: "aluno" });
+  if (final.length || Array.isArray(antes.avaliacoes)) student.avaliacoes = final.sort((x: any, y: any) => String(x.date || "").localeCompare(String(y.date || "")) || (Number(x.ts) || 0) - (Number(y.ts) || 0));
+}
+
+
+// ================= Backup =================
+// Cópias em "gavetas" que se revezam (sem precisar apagar nada): 48 por hora (antes de o personal gravar)
+// e 30 por dia (tarefa agendada). Um índice pequeno diz o que tem em cada gaveta.
+const BACKUP_STORE = "treino-online-backup";
+const BACKUP_IDX = "indice";
+const BACKUP_HORAS = 48, BACKUP_DIAS = 30;
+async function guardaCopia(deps: Deps, st: any, now: number, tipo: "hora" | "dia"): Promise<void> {
+  try {
+    if (!st || !st.data) return;
+    const n = Math.floor(now / (tipo === "hora" ? 3600_000 : DIA_MS));
+    const key = tipo + "-" + (n % (tipo === "hora" ? BACKUP_HORAS : BACKUP_DIAS));
+    const idx: any = (await deps.kv.get(BACKUP_STORE, BACKUP_IDX)) || {};
+    if (idx[key] && idx[key].n === n) return; // já tem cópia desta hora/deste dia
+    await deps.kv.set(BACKUP_STORE, key, { ts: now, state: st });
+    idx[key] = { n, ts: now, version: st.version || 0, alunos: Object.keys(st.data.students || {}).length };
+    await deps.kv.set(BACKUP_STORE, BACKUP_IDX, idx);
+  } catch (e) { console.error("[backup]", String(e).slice(0, 200)); } // backup nunca impede de salvar
+}
+/** Tarefa agendada (netlify/functions/backup.mts): cópia diária. */
+export async function rodaBackupDiario(deps: Deps, now: number): Promise<any> {
+  const st = await loadState(deps);
+  await guardaCopia(deps, st, now, "dia");
+  return { ok: true, alunos: Object.keys(st.data?.students || {}).length, version: st.version };
+}
+async function getBackup(req: Request, url: URL, deps: Deps, now: number): Promise<Response> {
+  if (!(deps.admin || (await tokenValid(bearer(req), await loadAuth(deps), now)))) return reply(401, { error: "token_invalido" });
+  const idx: any = (await deps.kv.get(BACKUP_STORE, BACKUP_IDX)) || {};
+  const k = url.searchParams.get("k");
+  if (!k) return reply(200, { copias: Object.keys(idx).map((key) => ({ key, ts: idx[key].ts, version: idx[key].version, alunos: idx[key].alunos })).sort((a, b) => b.ts - a.ts) });
+  if (!idx[k]) return reply(404, { error: "sem_copia" });
+  const c: any = await deps.kv.get(BACKUP_STORE, k);
+  if (!c) return reply(404, { error: "sem_copia" });
+  return new Response(JSON.stringify(c), { status: 200, headers: { "Content-Type": "application/json", "Cache-Control": "no-store", "Content-Disposition": 'attachment; filename="treino-online-backup-' + new Date(c.ts).toISOString().slice(0, 16).replace(/[:T]/g, "-") + '.json"' } });
 }
 
 function publicState(st: any) {
@@ -255,6 +383,7 @@ async function getState(req: Request, url: URL, deps: Deps, now: number): Promis
   if (deps.admin || (await tokenValid(bearer(req), auth, now))) {
     let st = await loadState(deps);
     if (!deps.admin) st = await applySeeds(st, deps, now);
+    if (st && st.data && garanteCodigos(st.data, now)) { st = { ...st, version: (st.version || 0) + 1 }; await deps.kv.set(STATE_STORE, STATE_KEY, st); }
     return reply(200, { ...publicState(st), role: deps.admin ? "admin" : "trainer", email: auth?.email || "", hasLogin: !!auth?.email });
   }
   if (bearer(req)) return reply(401, { error: "token_invalido" }); // token vencido/inválido: o app volta para a tela do PIN
@@ -265,16 +394,21 @@ async function getState(req: Request, url: URL, deps: Deps, now: number): Promis
     const thr = await throttleLoad(deps);
     if ((thr[tk]?.miss?.length || 0) >= MISS_LIMIT) return reply(429, { error: "muitas_tentativas" });
     const st = await loadState(deps);
-    const rec = typeof slug === "string" && slug.length <= 80 ? st.data?.students?.[slug] : null;
-    if (!rec) {
+    const achado = slug.length <= 80 ? resolveAluno(st, slug, acessoDe(req), now) : null;
+    if (!achado) {
       thr[tk] = thr[tk] || { miss: [], leads: [] };
       thr[tk].miss.push(now);
       await deps.kv.set(AUTH_STORE, THROTTLE_KEY, thr);
       return reply(404, { error: "codigo_nao_encontrado" });
     }
+    const { slug: real, rec } = achado;
+    if (achado.viaCodigo && !rec.codigoUsadoEm) { // o app deste aluno já usa o código novo: o nome antigo deixa de valer para ele
+      rec.codigoUsadoEm = now;
+      await deps.kv.set(STATE_STORE, STATE_KEY, st);
+    }
     return reply(200, {
-      version: st.version, role: "student",
-      data: { students: { [slug]: rec }, templates: [], leads: [], alertaCheckinDias: st.data?.alertaCheckinDias || 7, planosVenda: st.data?.planosVenda || null },
+      version: st.version, role: "student", slugReal: real, acesso: typeof rec.codigo === "string" ? rec.codigo : "",
+      data: { students: { [real]: alunoParaAluno(rec) }, templates: [], leads: [], alertaCheckinDias: st.data?.alertaCheckinDias || 7, planosVenda: st.data?.planosVenda || null },
       catalog: st.catalog || [],
     });
   }
@@ -411,13 +545,16 @@ async function postState(req: Request, deps: Deps, now: number): Promise<Respons
     const thr = await throttleLoad(deps);
     if ((thr[tk]?.miss?.length || 0) >= MISS_LIMIT) return reply(429, { error: "muitas_tentativas" });
     const st = await loadState(deps);
-    if (!st.data?.students?.[slug]) {
+    const achado = resolveAluno(st, slug, acessoDe(req, body), now);
+    if (!achado) {
       thr[tk] = thr[tk] || { miss: [], leads: [] };
       thr[tk].miss.push(now);
       await deps.kv.set(AUTH_STORE, THROTTLE_KEY, thr);
       return reply(404, { error: "removido" });
     }
-    const antes = st.data.students[slug];
+    const real = achado.slug;
+    const antes = st.data.students[real];
+    protegeCamposDoPersonal(antes, student);
     mesclaSessoesAluno(antes, student);
     // Treino "em andamento" que já está salvo nas sessões (envio atrasado ou de outra aba/aparelho): não reabre.
     const abertoAgora = (student as any).sessaoEmAndamento;
@@ -425,10 +562,10 @@ async function postState(req: Request, deps: Deps, now: number): Promise<Respons
     // Treino que o personal (ou o próprio aluno) já cancelou não volta por um envio antigo.
     const idEnviado = (student as any).sessaoEmAndamento?.startedAt;
     const trocou = aplicaSessoesCanceladas(antes, student);
-    st.data.students[slug] = student;
+    st.data.students[real] = student;
     st.version = (st.version || 0) + 1;
     await deps.kv.set(STATE_STORE, STATE_KEY, st);
-    await avisoTreinoFinalizado(deps, now, slug, antes, student);
+    await avisoTreinoFinalizado(deps, now, real, antes, student);
     if (trocou) return reply(200, { version: st.version, sessaoCancelada: true, sessaoCanceladaId: String(idEnviado), sessaoEmAndamento: (student as any).sessaoEmAndamento || null });
     return reply(200, { version: st.version });
   }
@@ -446,10 +583,15 @@ async function postState(req: Request, deps: Deps, now: number): Promise<Respons
   const pinFromClient = typeof data.pin === "string" ? data.pin.trim() : "";
   delete data.pin; // o PIN nunca mais mora no banco
   if (deps.admin && pinFromClient && !auth) await deps.kv.set(AUTH_STORE, AUTH_KEY, await makeAuth(pinFromClient)); // só testes: semeia o PIN se ainda não existe
+  if (!data.codigoLegadoAte && current.data?.codigoLegadoAte) data.codigoLegadoAte = current.data.codigoLegadoAte;
+  garanteCodigos(data, now, current.data?.students || {});
+  const codigos: Record<string, string> = {};
+  for (const k of Object.keys(data.students)) if (data.students[k] && typeof data.students[k].codigo === "string") codigos[k] = data.students[k].codigo;
   const next = { version: (current.version || 0) + 1, data, catalog: Array.isArray(body.catalog) ? body.catalog : current.catalog };
+  await guardaCopia(deps, current, now, "hora");
   await deps.kv.set(STATE_STORE, STATE_KEY, next);
   await avisosDeCadastro(deps, now, current.data?.students || {}, data.students);
-  return reply(200, { version: next.version });
+  return reply(200, { version: next.version, codigos, codigoLegadoAte: data.codigoLegadoAte });
 }
 
 async function postAuth(req: Request, deps: Deps, now: number): Promise<Response> {
@@ -509,7 +651,7 @@ async function postAuth(req: Request, deps: Deps, now: number): Promise<Response
   if (action === "recover") {
     if (!auth || !auth.email || !auth.rk) return reply(404, { error: "sem_login" });
     if (auth.lockUntil > now) return reply(429, { error: "bloqueado", retryAfterSec: Math.ceil((auth.lockUntil - now) / 1000) });
-    const okRk = safeEqual(await pbkdf2(rkNorm(body.recoveryKey), unb64(auth.rk.salt), auth.iter), unb64(auth.rk.hash));
+    const okRk = safeEqual(await pbkdf2(rkNorm(body.recoveryKey), unb64(auth.rk.salt), auth.rk.iter || auth.iter), unb64(auth.rk.hash));
     const ok = okRk && normEmail(body.email) === auth.email;
     if (!ok) {
       auth.fails = (auth.fails || []).filter((x) => now - x < 10 * 60_000).concat([now]);
@@ -544,6 +686,11 @@ async function postAuth(req: Request, deps: Deps, now: number): Promise<Response
       return reply(401, { error: "pin_incorreto", restantes: Math.max(0, 5 - auth.fails.length) });
     }
     auth.fails = []; auth.lockUntil = 0; auth.lockLevel = 0;
+    if ((auth.iter || 0) < PBKDF2_ITER) { // hash antigo, mais fraco: refaz agora que temos a senha certa (não derruba sessões)
+      if (auth.rk && !auth.rk.iter) auth.rk = { ...auth.rk, iter: auth.iter };
+      const salt = randomBytes(16);
+      auth.salt = b64(salt); auth.hash = b64(await pbkdf2(pin, salt, PBKDF2_ITER)); auth.iter = PBKDF2_ITER;
+    }
     await deps.kv.set(AUTH_STORE, AUTH_KEY, auth);
     return reply(200, { token: await signToken(auth, now) });
   }
@@ -889,14 +1036,15 @@ async function who(req: Request, deps: Deps, now: number, slug: unknown, body?: 
   const tk = await throttleKey(deps);
   const thr = await throttleLoad(deps);
   if (!trainer && (thr[tk]?.miss?.length || 0) >= MISS_LIMIT) return { err: reply(429, { error: "muitas_tentativas" }) };
-  const rec = typeof slug === "string" && slug && slug.length <= 80 ? st.data?.students?.[slug] || null : null;
+  const achado = typeof slug === "string" && slug && slug.length <= 80 ? (trainer ? (st.data?.students?.[slug] ? { slug, rec: st.data.students[slug], viaCodigo: false } : null) : resolveAluno(st, slug, acessoDe(req, body), now)) : null;
+  const rec = achado ? achado.rec : null;
   if (!trainer && !rec) {
     thr[tk] = thr[tk] || { miss: [], leads: [], ups: [] };
     thr[tk].miss.push(now);
     await deps.kv.set(AUTH_STORE, THROTTLE_KEY, thr);
     return { err: reply(404, { error: "codigo_nao_encontrado" }) };
   }
-  return { trainer, slug: rec ? (slug as string) : null, rec, st };
+  return { trainer, slug: achado ? achado.slug : null, rec, st };
 }
 
 const FOTO_URL = /^\/api\/img\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;

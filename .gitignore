@@ -1,0 +1,4 @@
+public/_headers
+node_modules/
+.stryker-tmp/
+reports/

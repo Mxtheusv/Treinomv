@@ -321,7 +321,7 @@
     font-weight: 800; font-size: 12.5px; padding: 10px 18px; border-radius: 999px;
     text-transform: uppercase; letter-spacing: 0.05em;
     cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
-    transition: transform 0.1s ease, box-shadow 0.15s ease; white-space: nowrap;
+    transition: transform var(--mo-fast) var(--mo-out), box-shadow var(--mo-fast) var(--mo-out); white-space: nowrap;
   }
   button.cta:hover { transform: translateY(-1px); box-shadow: 0 6px 16px -6px rgba(255,199,0,0.6); }
   button.cta:active { transform: translateY(0); }
@@ -342,7 +342,7 @@
     border: 1px solid var(--line); background: var(--paper); color: var(--ink-soft);
     padding: 9px 16px; border-radius: 999px; font-size: 12.5px; font-weight: 700;
     text-transform: uppercase; letter-spacing: 0.04em;
-    cursor: pointer; white-space: nowrap; transition: all 0.12s ease; flex: none;
+    cursor: pointer; white-space: nowrap; transition: all var(--mo-fast) var(--mo-out); flex: none;
   }
   .tab:hover { border-color: var(--blue); color: var(--blue); }
   .tab.active {
@@ -539,7 +539,7 @@
   .ex-card-list { display: flex; flex-direction: column; gap: 10px; }
   .ex-card {
     border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: var(--paper);
-    transition: transform 0.15s ease;
+    transition: transform var(--mo-fast) var(--mo-out);
   }
   .ex-card-dragging { position: relative; z-index: 40; box-shadow: 0 8px 20px rgba(0,0,0,0.18); transition: none !important; }
   .ex-card-head { display: flex; align-items: center; gap: 6px; }
@@ -1041,7 +1041,7 @@
   .toast {
     position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(20px);
     background: var(--blue-deep); color: #fff; padding: 10px 20px; border-radius: 999px; font-size: 13px;
-    opacity: 0; pointer-events: none; transition: all 0.25s ease; z-index: 60; font-weight: 600;
+    opacity: 0; pointer-events: none; transition: opacity var(--mo-base) var(--mo-out), transform var(--mo-base) var(--mo-out); z-index: 60; font-weight: 600;
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   .toast.warn { background: var(--danger); }
@@ -1091,7 +1091,7 @@
   .cal-cell.today { box-shadow: inset 0 0 0 1.5px var(--blue); font-weight: 700; color: var(--ink); }
   .cal-cell.checked { background: var(--ok); color: #fff; font-weight: 700; }
   .cal-dot { position: absolute; bottom: 1px; right: 3px; font-size: 8px; }
-  .cal-cell-editable { cursor: pointer; transition: transform 0.1s ease, box-shadow 0.15s ease; }
+  .cal-cell-editable { cursor: pointer; transition: transform var(--mo-fast) var(--mo-out), box-shadow var(--mo-fast) var(--mo-out); }
   .cal-cell-editable:hover { box-shadow: inset 0 0 0 1.5px var(--blue-soft, var(--blue)); }
   .cal-cell-editable:active { transform: scale(0.92); }
 
@@ -1101,7 +1101,7 @@
   .pse-btn {
     border: 1px solid var(--line); background: var(--paper); font-size: 13px; font-weight: 700; line-height: 1;
     cursor: pointer; color: var(--ink-soft); padding: 0; width: 100%; height: 34px; border-radius: 8px;
-    transition: all 0.15s ease;
+    transition: all var(--mo-fast) var(--mo-out);
   }
   .pse-btn.selected { color: #fff; border-color: var(--gold-deep); background: var(--gold-deep); }
   .pse-label { font-size: 12.5px; color: var(--ink-soft); min-height: 16px; }
@@ -1132,6 +1132,17 @@
     .scroll-hint { display: block; }
   }
 
+  /* ===== Padrão de animação =====
+     3 durações: rápida (toques, botões), base (avisos, barras), lenta (telas e janelas entrando).
+     Curva "out" para o que entra (desacelera ao chegar); "io" para o que muda de lugar na tela. */
+  :root { --mo-fast: 120ms; --mo-base: 200ms; --mo-slow: 320ms; --mo-out: cubic-bezier(.2, .8, .2, 1); --mo-io: cubic-bezier(.65, 0, .35, 1); }
+  @keyframes moFade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes moSheet { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
+  @keyframes moPop { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: none; } }
+  .mo-in { animation: moFade var(--mo-base) var(--mo-out) both; }
+  .mo-in > .sa-modal, .mo-in > .av-modal, .mo-in > .tec-sheet, .mo-in > .tr-bell-sheet { animation: moSheet var(--mo-slow) var(--mo-out) both; }
+  .mo-in > .modal, .mo-in > img { animation: moPop var(--mo-slow) var(--mo-out) both; }
+  @media (min-width: 700px) { .mo-in > .av-modal { animation-name: moPop; } }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 
   .print-only { display: none; }
@@ -1231,7 +1242,7 @@
   .sa-week-ring-wrap { position: relative; width: 64px; height: 64px; flex-shrink: 0; }
   .sa-week-ring-svg { width: 64px; height: 64px; transform: rotate(-90deg); }
   .sa-week-ring-track { fill: none; stroke: var(--sa-border); stroke-width: 6; }
-  .sa-week-ring-fill { fill: none; stroke: var(--sa-teal); stroke-width: 6; stroke-linecap: round; transition: stroke-dasharray .3s; }
+  .sa-week-ring-fill { fill: none; stroke: var(--sa-teal); stroke-width: 6; stroke-linecap: round; transition: stroke-dasharray var(--mo-slow) var(--mo-out); }
   .sa-week-ring-label { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: "Saira Condensed", sans-serif; font-weight: 700; font-size: 14px; color: var(--sa-text); }
   .sa-week-card-text { min-width: 0; }
   .sa-week-card .sa-week { margin-top: 16px; }
@@ -1354,7 +1365,7 @@
   .sa-treino-head-title { font-size: 20px; }
   .sa-treino-head-meta { color: var(--sa-text-muted); font-size: 12.5px; margin-top: 3px; }
   .sa-treino-progress-track { height: 4px; background: var(--sa-panel); }
-  .sa-treino-progress-fill { height: 100%; background: var(--sa-accent); transition: width .2s; }
+  .sa-treino-progress-fill { height: 100%; background: var(--sa-accent); transition: width var(--mo-base) var(--mo-out); }
   .sa-section-head { display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--sa-text-muted); }
   .sa-section-head .sa-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
   .sa-ex-card { background: var(--sa-panel); border: 1px solid var(--sa-border-soft); border-radius: 16px; padding: 15px; }
@@ -1468,7 +1479,7 @@
   .sa-import-meta { color: var(--sa-text-muted); font-size: 12.5px; margin-top: 2px; }
   /* Tour de primeiro acesso + confete */
   .sa-tour { position: fixed; inset: 0; z-index: 9500; }
-  .sa-tour-spot { position: fixed; border-radius: 14px; box-shadow: 0 0 0 9999px rgba(4, 8, 20, .78), 0 0 0 3px var(--sa-accent); transition: all .25s ease; pointer-events: none; }
+  .sa-tour-spot { position: fixed; border-radius: 14px; box-shadow: 0 0 0 9999px rgba(4, 8, 20, .78), 0 0 0 3px var(--sa-accent); transition: all var(--mo-base) var(--mo-io); pointer-events: none; }
   .sa-tour-card { position: fixed; left: 16px; right: 16px; max-width: 360px; margin: 0 auto; background: var(--sa-panel, var(--sa-x-d2-111b38)); color: var(--sa-text, var(--sa-x-t1-f3f6ff)); border: 1px solid var(--sa-border, var(--sa-x-b1-24305a)); border-radius: 16px; padding: 16px; box-shadow: 0 10px 30px rgba(0, 0, 0, .5); }
   .sa-tour-card h4 { font: 800 18px "Barlow Condensed", "Barlow", sans-serif; text-transform: uppercase; letter-spacing: .02em; margin: 0 0 6px; }
   .sa-tour-card p { font-size: 14.5px; line-height: 1.4; margin: 0 0 12px; color: var(--sa-text-muted, var(--sa-x-t3-9aa8cc)); }
@@ -1815,7 +1826,7 @@
   .sa-corr-meta span { background: rgba(var(--sa-sh1-rgb),.55); border: 1px solid var(--sa-border); border-radius: 999px; padding: 3px 10px; font-size: 11.5px; font-weight: 700; color: var(--sa-text-muted); }
   .sa-corr-meta span b { color: var(--sa-text); }
   .sa-corr-prog { height: 6px; background: rgba(var(--sa-sh1-rgb),.55); border-radius: 999px; overflow: hidden; margin: 10px 0 2px; }
-  .sa-corr-prog i { display: block; height: 100%; background: var(--sa-accent); border-radius: 999px; transition: width .25s; }
+  .sa-corr-prog i { display: block; height: 100%; background: var(--sa-accent); border-radius: 999px; transition: width var(--mo-base) var(--mo-out); }
   .sa-corr-step { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 10px 0; border-top: 1px solid var(--sa-border); }
   .sa-corr-step:first-of-type { border-top: 0; }
   .sa-corr-chk { width: 28px; height: 28px; border-radius: 8px; border: 2px solid var(--sa-text-faint); background: transparent; cursor: pointer; display: grid; place-items: center; color: var(--sa-accent-ink); font-weight: 900; padding: 0; }
@@ -2497,7 +2508,7 @@
   .tm-s { font-size: 12.5px; color: var(--sa-text-muted); line-height: 1.45; overflow-wrap: anywhere; }
   .tm-s b { color: var(--sa-text); }
   .tm-bar { height: 10px; border-radius: 999px; background: rgba(var(--sa-tint-rgb),.16); overflow: hidden; }
-  .tm-bar i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--sa-teal), var(--sa-accent)); transition: width .4s; }
+  .tm-bar i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--sa-teal), var(--sa-accent)); transition: width var(--mo-slow) var(--mo-out); }
   .tm-meta-n { font-family: "Saira Condensed", sans-serif; font-weight: 800; font-style: italic; font-size: 34px; line-height: 1; color: var(--sa-accent-text); }
   .tm-meta-n span { font-size: 15px; font-style: normal; font-weight: 600; color: var(--sa-text-muted); font-family: "Barlow", sans-serif; }
   .tm-dica { border-radius: 16px; padding: 13px 15px; background: rgba(var(--sa-gold-rgb),.09); border: 1px solid rgba(var(--sa-gold-rgb),.38); display: flex; flex-direction: column; gap: 6px; }
@@ -2607,7 +2618,7 @@
 []
 </script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="/vendor/jspdf-2.5.1.umd.min.js" defer></script>
 
 <script>
 
@@ -3117,7 +3128,7 @@ function startApp() {
           fetch("/api/state", saveInit()).then(function (res) {
             if (res.status === 409) {
               return res.json().then(function (body) {
-                serverVersion = body.version || serverVersion;
+                adotaCodigos(body); serverVersion = body.version || serverVersion;
                 if (body.data) state.data = mergeServerData(body.data, state.data, state.slug);
                 if (body.data) noteServerSlugs(body.data);
                 if (body.catalog) CATALOG = body.catalog;
@@ -3143,7 +3154,7 @@ function startApp() {
               });
             }
             if (!res.ok) throw new Error("http_" + res.status);
-            return res.json().then(function (body) { serverVersion = body.version; noteServerSlugs(state.data); state.dirty = false; });
+            return res.json().then(function (body) { adotaCodigos(body); serverVersion = body.version; noteServerSlugs(state.data); state.dirty = false; });
           }).catch(function () { state.dirty = true; });
         })();
       }, 0);
@@ -4199,9 +4210,19 @@ function startApp() {
   // plus their own short code; "Copiar convite" below copies both together.
   var CANONICAL_URL = "https://matheusvenancio.com.br";
 
+  // O servidor devolve os códigos de acesso ao salvar (alunos novos ganham o seu na hora).
+  function adotaCodigos(body) {
+    try {
+      if (!body || !body.codigos || !isTrainerRole()) return;
+      Object.keys(body.codigos).forEach(function (k) { var st = state.data.students[k]; if (st) { st.codigo = body.codigos[k]; delete st.codigoReset; } });
+      if (body.codigoLegadoAte) state.data.codigoLegadoAte = body.codigoLegadoAte;
+    } catch (e) {}
+  }
+  function codigoDoAluno(slug) { var s = state.data.students[slug]; return (s && typeof s.codigo === "string" && s.codigo) || slug; }
   function inviteMessageFor(slug) {
     var s = state.data.students[slug];
     var nome = String((s && s.nome) || slug).trim().split(/\s+/)[0];
+    slug = codigoDoAluno(slug);
     return "Oi, " + nome + "! Seu treino está pronto 💪\n\n" +
       "1) Toque neste link (abra no Safari, no iPhone, ou no Chrome, no Android):\n" + CANONICAL_URL + "/i/" + slug + "\n\n" +
       "2) Siga o passo a passo na tela para colocar o app no seu celular.\n\n" +
@@ -4229,6 +4250,8 @@ function startApp() {
   function currentUrlFor(slug) {
     var url = new URL(location.href);
     url.searchParams.delete("aluno");
+    // No app do aluno, o link guarda o código (é o que o iPhone grava ao instalar na tela inicial).
+    if (!isTrainerRole()) { try { slug = localStorage.getItem("treinoOnlineAcesso") || slug; } catch (e) {} }
     url.hash = "aluno=" + encodeURIComponent(slug);
     return url.toString();
   }
@@ -5468,7 +5491,7 @@ function startApp() {
         fetch("/api/state", saveInit()).then(function (res) {
           if (res.status === 409) {
             return res.json().then(function (body) {
-              serverVersion = body.version || serverVersion;
+              adotaCodigos(body); serverVersion = body.version || serverVersion;
               if (body.data) state.data = mergeServerData(body.data, state.data, state.slug);
               if (body.data) noteServerSlugs(body.data);
               if (body.catalog) CATALOG = body.catalog;
@@ -5481,7 +5504,7 @@ function startApp() {
             });
           }
           if (!res.ok) throw new Error("http_" + res.status);
-          return res.json().then(function (body) { serverVersion = body.version; noteServerSlugs(state.data); state.dirty = false; });
+          return res.json().then(function (body) { adotaCodigos(body); serverVersion = body.version; noteServerSlugs(state.data); state.dirty = false; });
         }).catch(function () { state.dirty = true; });
       })();
     }, 0);
@@ -5527,16 +5550,16 @@ function startApp() {
     if (!url) return null;
     url = url.trim();
     var yt = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([A-Za-z0-9_-]{6,})/);
-    if (yt) return '<iframe src="https://www.youtube.com/embed/' + yt[1] + '" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';
+    if (yt) return '<iframe loading="lazy" src="https://www.youtube.com/embed/' + yt[1] + '" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';
     var vimeo = url.match(/vimeo\.com\/(\d+)/);
-    if (vimeo) return '<iframe src="https://player.vimeo.com/video/' + vimeo[1] + '" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>';
+    if (vimeo) return '<iframe loading="lazy" src="https://player.vimeo.com/video/' + vimeo[1] + '" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>';
     // Google Drive: any of the share-link shapes Drive hands out
     // ("...file/d/ID/view?usp=sharing", "open?id=ID", "uc?id=ID") carry the
     // file id — Drive's own /preview endpoint embeds a player from that id,
     // same as YouTube/Vimeo below. Requires the file to be shared as
     // "Qualquer pessoa com o link" (viewer), or students see an access error.
     var drive = url.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?id=)([A-Za-z0-9_-]+)/);
-    if (drive) return '<iframe src="https://drive.google.com/file/d/' + drive[1] + '/preview" allow="autoplay" allowfullscreen></iframe>';
+    if (drive) return '<iframe loading="lazy" src="https://drive.google.com/file/d/' + drive[1] + '/preview" allow="autoplay" allowfullscreen></iframe>';
     // Self-hosted clip (our own /exercicios/*.mp4 or any other direct file
     // link) -- plays like a GIF: silent, looping, no tap needed. autoplay
     // requires muted in every mobile browser, so that's not optional here;
@@ -5616,7 +5639,7 @@ function startApp() {
         '<button type="button" class="anim-aba on" data-aba="video" role="tab" aria-selected="true">🎬 Vídeo</button>' +
         '<button type="button" class="anim-aba" data-aba="musc" role="tab" aria-selected="false">💪 Músculos</button></div>' +
         '<div data-painel="video">' + midia + '</div>' +
-        '<div data-painel="musc" hidden><div class="anim-musc"><video src="' + escapeAttr(animUrl) + '" loop muted playsinline preload="auto"></video></div>' +
+        '<div data-painel="musc" hidden><div class="anim-musc"><video src="' + escapeAttr(animUrl) + '" loop muted playsinline preload="metadata"></video></div>' +
         '<p class="video-prov">💪 Os músculos acendem mais forte na fase em que trabalham mais.</p></div>';
     }
     var equipLine = equip ? (function () {
@@ -5626,7 +5649,7 @@ function startApp() {
     document.getElementById("detailModal").innerHTML =
       '<div class="modal-head"><h2 class="ex-title-upper">' + escapeHtml(ex.nome) + '</h2>' +
       '<button class="icon-btn" id="detailClose" aria-label="Fechar">✕</button></div>' +
-      '<div class="modal-body">' + equipLine + abasMidia((fotoRef ? '<div class="foto-ref"><img src="' + escapeAttr(fotoRef[0]) + '" alt=""><img src="' + escapeAttr(fotoRef[1]) + '" alt=""></div><p class="video-prov">📷 Foto de referência de um exercício parecido. Em breve, o vídeo do Matheus.</p>' : videoBlock)) +
+      '<div class="modal-body">' + equipLine + abasMidia((fotoRef ? '<div class="foto-ref"><img loading="lazy" decoding="async" src="' + escapeAttr(fotoRef[0]) + '" alt=""><img loading="lazy" decoding="async" src="' + escapeAttr(fotoRef[1]) + '" alt=""></div><p class="video-prov">📷 Foto de referência de um exercício parecido. Em breve, o vídeo do Matheus.</p>' : videoBlock)) +
       (refAnim ? '<p class="video-prov">🎞️ Animação de referência. Em breve, o vídeo do Matheus.</p>' : '') +
       (provisorio ? '<p class="video-prov">🌐 Vídeo de referência da internet. Em breve, o vídeo do Matheus.</p>' : '') +
       (execTxt ? '<div class="exec-label">COMO FAZER</div>' : '') +
@@ -7331,7 +7354,7 @@ function startApp() {
         (s.presencial ? '<span class="tr-badge-pres">presencial</span>' : '') +
         (s.online ? '<span class="tr-badge-online">online</span>' : '') +
         '</div>' +
-        '<div class="tr-roster-meta">' + escapeHtml((plan && plan.microciclo) || "") + ' · código ' + escapeHtml(slug) + '</div>' +
+        '<div class="tr-roster-meta">' + escapeHtml((plan && plan.microciclo) || "") + ' · código ' + escapeHtml(codigoDoAluno(slug)) + '</div>' +
         '</div>' + trSemanasHtml(s) + '</div>' +
         '<div class="tr-chips">' + trValidadeCurtaHtml(s, plan) + (s.ofertaPlanos ? '<span class="tr-chip-oferta">🏷️ Oferta ligada</span>' : '') +
         trStreakChipHtml(s) + '</div>' +
@@ -7352,7 +7375,7 @@ function startApp() {
           '<button type="button" data-presencial="' + escapeAttr(slug) + '">' + (s.presencial ? '🏋️ Tirar de presencial' : '🏋️ Marcar como presencial') + '</button>' +
           '<button type="button" data-online="' + escapeAttr(slug) + '">' + (s.online ? '🌐 Tirar de online' : '🌐 Marcar como online') + '</button>' +
           '<a href="' + escapeAttr(whatsappUrlFor(slug)) + '" target="_blank" rel="noopener">📲 WhatsApp com o convite</a>' +
-          '<button type="button" data-rename="' + escapeAttr(slug) + '">🔑 Trocar código</button>' +
+          '<button type="button" data-rename="' + escapeAttr(slug) + '">🔑 Gerar novo código</button>' +
           '<button type="button" data-remove="' + escapeAttr(slug) + '">✕ Remover aluno</button>' +
           '</div>' : '') +
         '</div></div></div>' + trResumoAlunoHtml(slug, s, aberto) + '</div>';
@@ -7614,19 +7637,12 @@ function startApp() {
     });
     Array.prototype.forEach.call(document.querySelectorAll("[data-rename]"), function (btn) {
       btn.addEventListener("click", function () {
-        var oldSlug = btn.getAttribute("data-rename");
-        var current = state.data.students[oldSlug];
+        var sl = btn.getAttribute("data-rename"), current = state.data.students[sl];
         if (!current) return;
-        var input = window.prompt("Novo código de acesso para " + (current.nome || "aluno") + ":", oldSlug);
-        if (input === null) return;
-        var newSlug = slugify(input);
-        if (!newSlug) { showToast("Código inválido", true); return; }
-        if (newSlug === oldSlug) return;
-        if (state.data.students[newSlug]) { showToast("Já existe um aluno com esse código", true); return; }
-        state.data.students[newSlug] = current;
-        delete state.data.students[oldSlug];
-        saPendingRemovedSlugs[oldSlug] = true;
-        persistThen(function () { showToast("Código alterado para \"" + newSlug + "\" — avise o aluno pelo novo link"); renderRoster(); });
+        if (!window.confirm("Gerar um novo código de acesso para " + (current.nome || "o aluno") + "?\n\nO código atual para de funcionar na hora, em todos os aparelhos. Use se o código vazou ou se o aluno saiu. Depois mande o convite novo para ele.")) return;
+        current.codigoReset = Date.now();
+        state.rosterOpenMenu = null;
+        persistThen(function () { showToast("Novo código: " + codigoDoAluno(sl) + " — mande o convite de novo"); renderRoster(); });
       });
     });
     Array.prototype.forEach.call(document.querySelectorAll("[data-presencial]"), function (btn) {
@@ -10050,7 +10066,7 @@ function startApp() {
   function avFotosSlotsHtml(d) {
     return '<div class="av-slots">' + AV_POSES.map(function (p) {
       var u = (d.fotos || {})[p[0]];
-      return '<div class="av-slot">' + (u ? '<img src="' + escapeAttr(u) + '" alt="">' : '<div class="av-slot-v">' + avSilhuetaSvg(p[0], true) + '</div>') +
+      return '<div class="av-slot">' + (u ? '<img loading="lazy" decoding="async" src="' + escapeAttr(u) + '" alt="">' : '<div class="av-slot-v">' + avSilhuetaSvg(p[0], true) + '</div>') +
         '<button type="button" class="av-btn-mini" data-av="foto" data-av-pose="' + p[0] + '">' + (u ? "🔄 " : "📷 ") + p[1] + '</button></div>';
     }).join("") + '</div>';
   }
@@ -10175,7 +10191,7 @@ function startApp() {
       '<div class="av-cmp-poses">' + AV_POSES.map(function (p) { var ok = poses.some(function (x) { return x[0] === p[0]; }); return '<button type="button" class="' + (p[0] === AV.cmpPose ? "on" : "") + '" data-avcmp-pose="' + p[0] + '"' + (ok ? "" : " disabled") + '>' + p[1] + '</button>'; }).join("") + '</div>' +
       (ua && ub ? '<div class="av-cmp" style="--pos:' + AV.cmpPos + '%"><img src="' + escapeAttr(ub) + '" alt="Agora"><div class="av-cmp-a"><img src="' + escapeAttr(ua) + '" alt="Antes"></div><div class="av-cmp-l"></div><span class="av-cmp-t l">ANTES</span><span class="av-cmp-t r">AGORA</span>' +
         '<input type="range" min="0" max="100" value="' + AV.cmpPos + '" data-avcmp="pos" aria-label="Arraste para comparar"></div>' +
-        '<div class="av-cmp-lado"><figure><img src="' + escapeAttr(ua) + '" alt=""><figcaption>' + escapeHtml(formatDateBR(A.date)) + '</figcaption></figure><figure><img src="' + escapeAttr(ub) + '" alt=""><figcaption>' + escapeHtml(formatDateBR(B.date)) + '</figcaption></figure></div>'
+        '<div class="av-cmp-lado"><figure><img loading="lazy" decoding="async" src="' + escapeAttr(ua) + '" alt=""><figcaption>' + escapeHtml(formatDateBR(A.date)) + '</figcaption></figure><figure><img loading="lazy" decoding="async" src="' + escapeAttr(ub) + '" alt=""><figcaption>' + escapeHtml(formatDateBR(B.date)) + '</figcaption></figure></div>'
         : '<p class="av-ajuda">Essas duas datas não têm a mesma pose. Escolha outras datas.</p>') +
       '</div></div>';
   }
@@ -11378,7 +11394,8 @@ function startApp() {
   ];
 
   function saAvatarHtml(nome, sizeClass, fotoUrl) {
-    if (feedFotoOk(fotoUrl)) return '<div class="' + sizeClass + ' img" style="background:#1b2540 url(' + fotoUrl + ') center/cover no-repeat"></div>';
+    // <img> com loading="lazy": no feed e na turma, só baixa a foto de quem aparece na tela.
+    if (feedFotoOk(fotoUrl)) return '<div class="' + sizeClass + ' img" style="background:#1b2540;overflow:hidden"><img src="' + escapeAttr(fotoUrl) + '" alt="" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:inherit"></div>';
     var hue = avatarHue(nome || "?");
     return '<div class="' + sizeClass + '" style="background:hsl(' + hue + ',65%,45%)">' + escapeHtml(initialsOf(nome)) + '</div>';
   }
@@ -14339,7 +14356,7 @@ function startApp() {
       '<div class="cm-who"><div class="cm-nome">' + escapeHtml(p.nome) + ' <span class="cm-tit">e ' + escapeHtml(p.colab) + '</span> <span class="cm-pers-chip">PERSONAL</span></div>' +
       '<div class="cm-quando">' + escapeHtml(q.txt + " · treino juntos") + '</div></div>' + apagar + '</div>';
     var out = '<div class="cm-post' + (p.pr ? " pr" : "") + (p.tipo === "personal" ? " pers" : "") + '" data-post="' + escapeAttr(p.id) + '">';
-    if (p.foto) out += '<div class="cm-foto"><img loading="lazy" alt="" src="' + escapeAttr(p.foto) + '"><div class="cm-foto-head">' + head + '</div></div>';
+    if (p.foto) out += '<div class="cm-foto"><img loading="lazy" decoding="async" alt="" src="' + escapeAttr(p.foto) + '"><div class="cm-foto-head">' + head + '</div></div>';
     else out += '<div class="cm-semfoto">' + head + '</div>';
     if (p.pr) out += '<div class="cm-pr"><span class="cm-pr-tag">NOVO PR</span><div class="cm-pr-mid"><div class="cm-pr-ex">' + escapeHtml(p.pr.ex) + '</div>' +
       (p.pr.antes ? '<div class="cm-pr-antes">antes ' + escapeHtml(p.pr.antes) + '</div>' : "") + '</div><div class="cm-pr-v">' + escapeHtml(p.pr.agora) + '</div></div>';
@@ -15902,6 +15919,7 @@ function startApp() {
       (s.fotoUrl ? '<button type="button" class="sa-cta-ghost" id="btnFotoRemover">Remover</button>' : "") +
       '</div>' +
       '<label class="fd-toggle"><input type="checkbox" id="chkFeedOn"' + (s.feedOff ? "" : " checked") + '> Aparecer no feed da galera</label>' +
+      (s.codigo && !isTrainerRole() ? '<div class="fd-perfil-s" style="margin-top:10px">🔑 Seu código de acesso: <b style="letter-spacing:.04em">' + escapeHtml(s.codigo) + '</b><br><small>Use para entrar em outro celular. Não compartilhe.</small></div>' : "") +
       '</div></div>';
   }
   function attachFeedStudentHandlers(s) {
@@ -18721,14 +18739,20 @@ function startApp() {
       var errEl = document.getElementById("alunoCodeError");
       var slug = slugify(raw);
       if (!slug) { errEl.style.display = "block"; return; }
+      try { localStorage.removeItem("treinoOnlineAcesso"); } catch (e) {} // código digitado agora vale mais que um guardado
       fetch("/api/state?slug=" + encodeURIComponent(slug), { cache: "no-store" }).then(function (res) {
         if (res.ok) {
           // Guarda a identidade e recarrega: a abertura normal do app (com as migrações
           // e a leitura dos dados do aluno) faz o resto.
-          try { localStorage.setItem("treinoOnlineMyAluno", slug); } catch (e) {}
-          try { sessionStorage.setItem("treinoOnlineAluno", slug); } catch (e) {}
-          errEl.style.display = "none";
-          location.reload();
+          return res.json().catch(function () { return {}; }).then(function (b) {
+            var real = (b && b.slugReal) || slug;
+            try { localStorage.setItem("treinoOnlineMyAluno", real); } catch (e) {}
+            try { sessionStorage.setItem("treinoOnlineAluno", real); } catch (e) {}
+            try { if (b && b.acesso) localStorage.setItem("treinoOnlineAcesso", b.acesso); } catch (e) {}
+            try { if (/(?:^#|[#&])aluno=/.test(location.hash || "")) location.hash = ""; } catch (e) {}
+            errEl.style.display = "none";
+            location.reload();
+          });
         } else if (res.status === 429) {
           errEl.textContent = "Muitas tentativas. Aguarde um pouco e tente de novo.";
           errEl.style.display = "block";
@@ -19004,7 +19028,7 @@ function startApp() {
       var baseIgual = !!(p && p.base && p.base === JSON.stringify(srv.plans || []));
       state.data = body.data;
       state.data.students[state.slug] = pendMesclar(srv, p ? p.student : atual, baseIgual && !!p);
-      serverVersion = body.version || serverVersion;
+      adotaCodigos(body); serverVersion = body.version || serverVersion;
       if (body.catalog) CATALOG = body.catalog;
       state.dirty = true;
       persistThen(function () { pendClear(); showToast("📶 Registros do modo offline enviados ✓"); fim(); render(); }, "Não enviou", 1, function () { fim(); });
@@ -19062,7 +19086,7 @@ function startApp() {
       }
       if (res.status === 409) {
         return res.json().then(function (body) {
-          serverVersion = body.version || serverVersion;
+          adotaCodigos(body); serverVersion = body.version || serverVersion;
           if (body.data) state.data = mergeServerData(body.data, state.data, state.slug);
           if (body.data) noteServerSlugs(body.data);
           if (body.catalog) CATALOG = body.catalog;
@@ -19092,7 +19116,7 @@ function startApp() {
       }
       if (!res.ok) throw new Error("http_" + res.status);
       return res.json().then(function (body) {
-        serverVersion = body.version;
+        adotaCodigos(body); serverVersion = body.version;
         if (body.sessaoCancelada) saAplicaCancelamentoDoServidor(body);
         // Our local data (missing whatever this session deleted) is now the
         // accepted server copy, so there's nothing left to force out on a
@@ -19170,6 +19194,9 @@ function startApp() {
   var alunoParam = parseAlunoFromLocation();
   if (alunoParam) {
     var slug = slugify(alunoParam);
+    if (slug && !state.data.students[slug]) { // link com o código novo: acha o aluno dono dele
+      Object.keys(state.data.students || {}).forEach(function (k) { if (state.data.students[k] && state.data.students[k].codigo === slug) slug = k; });
+    }
     if (slug) {
       setSlug(slug);
       try { history.replaceState(null, "", currentUrlFor(slug)); } catch (e) {}
@@ -19226,6 +19253,53 @@ function startApp() {
 
 (function () {
   "use strict";
+  // Animação de entrada das janelas: só quando uma janela NOVA aparece (redesenhar a mesma janela não reanima).
+  (function entradaDasJanelas() {
+    if (!window.MutationObserver) return;
+    var SEL = ".sa-modal-overlay, .av-ov, .tec-ov, .tr-bell-ov, .lg-ov, .cm-lb, .overlay";
+    var chave = function (el) { return String(el.id || el.className || "").replace(/\bmo-in\b/g, "").trim(); };
+    var anima = function (el) { el.classList.remove("mo-in"); void el.offsetWidth; el.classList.add("mo-in"); };
+    var iniciar = function () {
+      new MutationObserver(function (lista) {
+        var saiu = {};
+        lista.forEach(function (m) { Array.prototype.forEach.call(m.removedNodes || [], function (n) { if (n.nodeType === 1 && n.matches && n.matches(SEL)) saiu[chave(n)] = true; }); });
+        lista.forEach(function (m) {
+          if (m.type === "attributes") { var t = m.target; if (t.matches && t.matches(".overlay") && !t.hidden && m.oldValue !== null) anima(t); return; }
+          Array.prototype.forEach.call(m.addedNodes || [], function (n) { if (n.nodeType === 1 && n.matches && n.matches(SEL) && !saiu[chave(n)]) anima(n); });
+        });
+      }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["hidden"], attributeOldValue: true });
+    };
+    if (document.body) iniciar(); else document.addEventListener("DOMContentLoaded", iniciar);
+  })();
+  // Código de acesso do aluno: vai num cabeçalho em toda chamada ao servidor (o nome sozinho não basta mais).
+  (function acessoNoCabecalho() {
+    var real = window.fetch.bind(window);
+    window.fetch = function (url, init) {
+      try {
+        var u = typeof url === "string" ? url : (url && url.url) || "";
+        var a = ""; try { a = localStorage.getItem("treinoOnlineAcesso") || ""; } catch (e) {}
+        if (a && u.indexOf("/api/") === 0 && u.indexOf("/api/img/") !== 0) {
+          var h = new Headers((init && init.headers) || {});
+          if (!h.has("Authorization") && !h.has("X-Acesso")) { h.set("X-Acesso", a); init = Object.assign({}, init || {}, { headers: h }); }
+        }
+      } catch (e) {}
+      return real(url, init);
+    };
+  })();
+  // Guarda a identidade que o servidor confirmou (o código novo pode ter sido digitado no lugar do nome).
+  function adotaAcesso(body) {
+    if (!body || !body.slugReal) return;
+    try {
+      localStorage.setItem("treinoOnlineMyAluno", body.slugReal);
+      sessionStorage.setItem("treinoOnlineAluno", body.slugReal);
+      if (body.acesso) localStorage.setItem("treinoOnlineAcesso", body.acesso);
+    } catch (e) {}
+    // Se o link trazia o código, troca pelo endereço limpo (o app volta a colocar o código na barra depois).
+    try {
+      var temNoLink = /(?:^#|[#&])aluno=/.test(location.hash || "") || new URLSearchParams(location.search).get("aluno");
+      if (temNoLink) { var u2 = new URL(location.href); u2.searchParams.delete("aluno"); u2.hash = ""; history.replaceState(null, "", u2.toString()); }
+    } catch (e) {}
+  }
   var loadingEl = document.getElementById("main");
 
   // App instalável: captura o convite de instalação do Chrome/Android o quanto antes e
@@ -19291,14 +19365,16 @@ function startApp() {
     return bootGet("/api/state?slug=" + encodeURIComponent(slug)).catch(function (err) {
       // Sem internet: abre com o treino que ficou guardado neste aparelho (só do próprio aluno).
       var c = offLoad(slug);
+      if (!c) { try { var mine = localStorage.getItem("treinoOnlineMyAluno"); if (mine) { c = offLoad(mine); if (c) { try { sessionStorage.setItem("treinoOnlineAluno", mine); var u3 = new URL(location.href); u3.searchParams.delete("aluno"); u3.hash = ""; history.replaceState(null, "", u3.toString()); } catch (e4) {} } } } catch (e3) {} }
       if (c && c.payload) { window.__offline = true; return { status: 200, body: c.payload }; }
       throw err;
     }).then(function (r) {
       if (r.status === 404) {
-        try { localStorage.removeItem("treinoOnlineMyAluno"); sessionStorage.removeItem("treinoOnlineAluno"); } catch (e) {}
+        try { localStorage.removeItem("treinoOnlineMyAluno"); sessionStorage.removeItem("treinoOnlineAluno"); localStorage.removeItem("treinoOnlineAcesso"); } catch (e) {}
         window.__codeNotFound = true;
         return bootGet("/api/state");
       }
+      if (r.status === 200) adotaAcesso(r.body);
       return r;
     });
   }
@@ -19406,8 +19482,9 @@ function startApp() {
           : "Não consegui carregar os dados agora. Verifique sua internet e recarregue a página.";
         loadingEl.innerHTML = '<div style="max-width:420px;margin:60px auto;text-align:center;padding:24px;">' +
           '<p style="font-size:15px;color:#4f5670;">' + msg + '</p>' +
-          '<button onclick="location.reload()" style="margin-top:10px;background:#004aad;color:#fff;border:none;padding:10px 20px;border-radius:999px;font-weight:700;cursor:pointer;">Recarregar</button>' +
+          '<button type="button" id="btnRecarregarErro" style="margin-top:10px;background:#004aad;color:#fff;border:none;padding:10px 20px;border-radius:999px;font-weight:700;cursor:pointer;">Recarregar</button>' +
           "</div>";
+        var br = document.getElementById("btnRecarregarErro"); if (br) br.addEventListener("click", function () { location.reload(); });
       }
     });
 })();

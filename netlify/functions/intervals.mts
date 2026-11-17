@@ -28,6 +28,7 @@ export default async (req: Request, _context: Context) => {
   const athleteId = String(input?.athleteId ?? "").trim();
   const apiKey = String(input?.apiKey ?? "").trim();
   if (!/^(0|i?\d{1,12})$/.test(athleteId)) return reply(400, { error: "ID do atleta inválido. Ele parece com i123456." });
+  // biome-ignore lint/suspicious/noControlCharactersInRegex: recusa chave com caractere de controle
   if (!apiKey || apiKey.length > 200 || /[\s\u0000-\u001f]/.test(apiKey)) return reply(400, { error: "Chave (API key) inválida." });
 
   // Modo "detalhe": pontos gravados de UMA atividade (tempo, distância, FC, altitude),

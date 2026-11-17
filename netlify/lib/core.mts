@@ -49,7 +49,9 @@ const MAX_POSTS = 150;
 const MAX_IMG = 400 * 1024;
 
 const TOKEN_TTL_MS = 60 * 24 * 3600 * 1000; // sessão longa: o app renova a cada abertura ("refresh"), então quem usa sempre fica conectado
-const PBKDF2_ITER = 120000;
+const PBKDF2_ITER = 600000; // OWASP 2023 para PBKDF2-SHA256; hashes antigos são refeitos no próximo login
+const CODIGO_LEGADO_DIAS = 30; // por quanto tempo o código antigo (nome do aluno) ainda funciona depois que os códigos novos são criados
+const CODIGO_ALFABETO = "abcdefghjkmnpqrstuvwxyz23456789"; // sem 0/o, 1/l/i: fácil de ditar e digitar
 const MIN_PIN = 6;
 const MIN_PASS = 8; // senha do login novo (e-mail + senha)
 const MAX_BODY_CHARS = 12_000_000;
@@ -113,9 +115,9 @@ function newRecoveryKey(): string {
   return s.match(/.{4}/g)!.join("-");
 }
 function rkNorm(v: unknown): string { return String(v == null ? "" : v).toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 40); }
-async function makeRk(key: string): Promise<{ salt: string; hash: string }> {
+async function makeRk(key: string): Promise<{ salt: string; hash: string; iter?: number }> {
   const salt = randomBytes(16);
-  return { salt: b64(salt), hash: b64(await pbkdf2(rkNorm(key), salt, PBKDF2_ITER)) };
+  return { salt: b64(salt), hash: b64(await pbkdf2(rkNorm(key), salt, PBKDF2_ITER)), iter: PBKDF2_ITER };
 }
 async function makeAuth(pin: string, prev?: AuthRec | null): Promise<AuthRec> {
   const salt = randomBytes(16);
@@ -184,7 +186,7 @@ async function throttleLoad(deps: Deps): Promise<Record<string, any>> {
     if (!t[k].miss.length && !t[k].leads.length && !t[k].ups.length) delete t[k];
   });
   const keys = Object.keys(t);
-  if (keys.length > 500) keys.slice(0, keys.length - 500).forEach((k) => delete t[k]);
+  if (keys.length > 500) for (const k of keys.slice(0, keys.length - 500)) delete t[k];
   return t;
 }
 const MISS_LIMIT = 20; // códigos de aluno errados por hora, por IP
@@ -215,6 +217,7 @@ export async function handleApi(req: Request, deps: Deps): Promise<Response | nu
     return reply(405, { error: "method" });
   }
   if (path === "/api/estima" && req.method === "POST") return postEstima(req, deps, now);
+  if (path === "/api/backup" && req.method === "GET") return getBackup(req, url, deps, now);
   if (path === "/api/img" && req.method === "POST") return postImg(req, deps, now);
   if (path.startsWith("/api/img/") && req.method === "GET") return getImg(path.slice("/api/img/".length), deps);
   return null;
@@ -225,6 +228,131 @@ export async function requestIsTrainer(req: Request, deps: Deps): Promise<boolea
   if (deps.admin) return true;
   const now = (deps.now || Date.now)();
   return tokenValid(bearer(req), await loadAuth(deps), now);
+}
+
+
+// ================= Código de acesso do aluno =================
+// Antes o código era o nome do aluno ("ana-souza"), fácil de adivinhar. Agora cada aluno tem um código com
+// parte aleatória ("ana-k7f3x2"). O nome antigo ainda funciona por CODIGO_LEGADO_DIAS, e só até o app daquele
+// aluno passar a usar o código novo (o app troca sozinho na primeira abertura).
+function normCodigo(v: unknown): string { return String(v == null ? "" : v).trim().toLowerCase().slice(0, 80); }
+function gerarCodigo(nome: unknown, usados: Set<string>): string {
+  const base = String(nome || "aluno").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z]+/g, " ").trim().split(" ")[0].slice(0, 12) || "aluno";
+  for (;;) {
+    const r = randomBytes(6); let suf = "";
+    for (const b of r) suf += CODIGO_ALFABETO[b % CODIGO_ALFABETO.length];
+    const c = base + "-" + suf;
+    if (!usados.has(c)) { usados.add(c); return c; }
+  }
+}
+function codigoIgual(a: string, b: string): boolean {
+  if (!a || !b || a.length !== b.length) return false;
+  return safeEqual(enc.encode(a), enc.encode(b));
+}
+// Dá código a quem ainda não tem e liga o prazo do código antigo. Devolve true se mudou algo.
+function garanteCodigos(data: any, now: number, anterior?: Record<string, any>): boolean {
+  const students = data && data.students; if (!students || typeof students !== "object") return false;
+  let mudou = false;
+  const usados = new Set<string>();
+  for (const k of Object.keys(students)) { const c = students[k] && students[k].codigo; if (typeof c === "string") usados.add(c); }
+  for (const k of Object.keys(students)) {
+    const rec = students[k]; if (!rec || typeof rec !== "object") continue;
+    const ant = anterior && anterior[k];
+    // o app do personal nunca apaga o código por engano: o que está no servidor vale
+    if (ant && typeof ant.codigo === "string" && !rec.codigo && !rec.codigoReset) { rec.codigo = ant.codigo; if (ant.codigoUsadoEm) rec.codigoUsadoEm = ant.codigoUsadoEm; mudou = true; }
+    if (ant && ant.codigoUsadoEm && !rec.codigoUsadoEm && rec.codigo === ant.codigo) { rec.codigoUsadoEm = ant.codigoUsadoEm; mudou = true; }
+    if (rec.codigoReset) { // "Gerar novo código": o antigo e o nome deixam de valer na hora
+      if (typeof rec.codigo === "string") usados.delete(rec.codigo);
+      rec.codigo = gerarCodigo(rec.nome || k, usados); rec.codigoUsadoEm = now; delete rec.codigoReset; mudou = true;
+    }
+    if (typeof rec.codigo !== "string" || !rec.codigo) { rec.codigo = gerarCodigo(rec.nome || k, usados); mudou = true; }
+  }
+  if (!data.codigoLegadoAte) { data.codigoLegadoAte = now + CODIGO_LEGADO_DIAS * DIA_MS; mudou = true; }
+  return mudou;
+}
+function acessoDe(req: Request, body?: any): string {
+  return normCodigo(req.headers.get("x-acesso") || (body && typeof body.acesso === "string" ? body.acesso : ""));
+}
+// Acha o aluno pelo código novo ou (no período de transição) pelo nome antigo.
+function resolveAluno(st: any, ident: unknown, acesso: string, now: number): { slug: string; rec: any; viaCodigo: boolean } | null {
+  const students = st?.data?.students || {};
+  const id = normCodigo(ident);
+  if (!id) return null;
+  const rec = Object.hasOwn(students, id) ? students[id] : null;
+  if (rec) {
+    if (typeof rec.codigo !== "string" || !rec.codigo) return { slug: id, rec, viaCodigo: false }; // códigos ainda não criados
+    if (acesso && codigoIgual(acesso, rec.codigo)) return { slug: id, rec, viaCodigo: true };
+    const legadoAte = Number(st?.data?.codigoLegadoAte) || 0;
+    if (!rec.codigoUsadoEm && now < legadoAte) return { slug: id, rec, viaCodigo: false };
+    return null;
+  }
+  for (const k of Object.keys(students)) {
+    const r = students[k];
+    if (r && typeof r.codigo === "string" && codigoIgual(id, r.codigo)) return { slug: k, rec: r, viaCodigo: true };
+  }
+  return null;
+}
+// Campos que só o personal escreve: quando o app do aluno salva, eles ficam como estavam.
+const CAMPOS_DO_PERSONAL = ["nome", "notas", "presencial", "online", "mesGratisEm", "ofertaPlanos", "criadoEm", "reviewed", "codigo", "codigoUsadoEm", "sessoesCanceladas"];
+// O que o aluno não recebe: anotações do personal (anamnese, saúde).
+const CAMPOS_PRIVADOS = ["notas"];
+function alunoParaAluno(rec: any): any {
+  const r = { ...(rec || {}) };
+  for (const k of CAMPOS_PRIVADOS) delete r[k];
+  return r;
+}
+function protegeCamposDoPersonal(antes: any, student: any): void {
+  if (!antes || !student) return;
+  for (const k of CAMPOS_DO_PERSONAL) {
+    if (k === "sessoesCanceladas") continue; // tratado por aplicaSessoesCanceladas
+    if (Object.hasOwn(antes, k)) student[k] = antes[k]; else delete student[k];
+  }
+  delete student.codigoReset;
+  // Avaliações: as do personal não podem ser apagadas nem alteradas pelo aluno (só a estimativa da IA pode ser anexada).
+  const doPersonal = (Array.isArray(antes.avaliacoes) ? antes.avaliacoes : []).filter((a: any) => a && a.por !== "aluno");
+  const enviadas = Array.isArray(student.avaliacoes) ? student.avaliacoes : [];
+  const porId: Record<string, any> = {};
+  for (const a of enviadas) if (a && typeof a.id === "string") porId[a.id] = a;
+  const final: any[] = doPersonal.map((a: any) => { const e = porId[a.id]; return e && e.ia && typeof e.ia === "object" ? { ...a, ia: e.ia } : a; });
+  const idsPersonal = new Set(doPersonal.map((a: any) => a.id));
+  for (const a of enviadas) if (a && !idsPersonal.has(a.id)) final.push({ ...a, por: "aluno" });
+  if (final.length || Array.isArray(antes.avaliacoes)) student.avaliacoes = final.sort((x: any, y: any) => String(x.date || "").localeCompare(String(y.date || "")) || (Number(x.ts) || 0) - (Number(y.ts) || 0));
+}
+
+
+// ================= Backup =================
+// Cópias em "gavetas" que se revezam (sem precisar apagar nada): 48 por hora (antes de o personal gravar)
+// e 30 por dia (tarefa agendada). Um índice pequeno diz o que tem em cada gaveta.
+const BACKUP_STORE = "treino-online-backup";
+const BACKUP_IDX = "indice";
+const BACKUP_HORAS = 48, BACKUP_DIAS = 30;
+async function guardaCopia(deps: Deps, st: any, now: number, tipo: "hora" | "dia"): Promise<void> {
+  try {
+    if (!st || !st.data) return;
+    const n = Math.floor(now / (tipo === "hora" ? 3600_000 : DIA_MS));
+    const key = tipo + "-" + (n % (tipo === "hora" ? BACKUP_HORAS : BACKUP_DIAS));
+    const idx: any = (await deps.kv.get(BACKUP_STORE, BACKUP_IDX)) || {};
+    if (idx[key] && idx[key].n === n) return; // já tem cópia desta hora/deste dia
+    await deps.kv.set(BACKUP_STORE, key, { ts: now, state: st });
+    idx[key] = { n, ts: now, version: st.version || 0, alunos: Object.keys(st.data.students || {}).length };
+    await deps.kv.set(BACKUP_STORE, BACKUP_IDX, idx);
+  } catch (e) { console.error("[backup]", String(e).slice(0, 200)); } // backup nunca impede de salvar
+}
+/** Tarefa agendada (netlify/functions/backup.mts): cópia diária. */
+export async function rodaBackupDiario(deps: Deps, now: number): Promise<any> {
+  const st = await loadState(deps);
+  await guardaCopia(deps, st, now, "dia");
+  return { ok: true, alunos: Object.keys(st.data?.students || {}).length, version: st.version };
+}
+async function getBackup(req: Request, url: URL, deps: Deps, now: number): Promise<Response> {
+  if (!(deps.admin || (await tokenValid(bearer(req), await loadAuth(deps), now)))) return reply(401, { error: "token_invalido" });
+  const idx: any = (await deps.kv.get(BACKUP_STORE, BACKUP_IDX)) || {};
+  const k = url.searchParams.get("k");
+  if (!k) return reply(200, { copias: Object.keys(idx).map((key) => ({ key, ts: idx[key].ts, version: idx[key].version, alunos: idx[key].alunos })).sort((a, b) => b.ts - a.ts) });
+  if (!idx[k]) return reply(404, { error: "sem_copia" });
+  const c: any = await deps.kv.get(BACKUP_STORE, k);
+  if (!c) return reply(404, { error: "sem_copia" });
+  return new Response(JSON.stringify(c), { status: 200, headers: { "Content-Type": "application/json", "Cache-Control": "no-store", "Content-Disposition": 'attachment; filename="treino-online-backup-' + new Date(c.ts).toISOString().slice(0, 16).replace(/[:T]/g, "-") + '.json"' } });
 }
 
 function publicState(st: any) {
@@ -255,6 +383,7 @@ async function getState(req: Request, url: URL, deps: Deps, now: number): Promis
   if (deps.admin || (await tokenValid(bearer(req), auth, now))) {
     let st = await loadState(deps);
     if (!deps.admin) st = await applySeeds(st, deps, now);
+    if (st && st.data && garanteCodigos(st.data, now)) { st = { ...st, version: (st.version || 0) + 1 }; await deps.kv.set(STATE_STORE, STATE_KEY, st); }
     return reply(200, { ...publicState(st), role: deps.admin ? "admin" : "trainer", email: auth?.email || "", hasLogin: !!auth?.email });
   }
   if (bearer(req)) return reply(401, { error: "token_invalido" }); // token vencido/inválido: o app volta para a tela do PIN
@@ -265,16 +394,21 @@ async function getState(req: Request, url: URL, deps: Deps, now: number): Promis
     const thr = await throttleLoad(deps);
     if ((thr[tk]?.miss?.length || 0) >= MISS_LIMIT) return reply(429, { error: "muitas_tentativas" });
     const st = await loadState(deps);
-    const rec = typeof slug === "string" && slug.length <= 80 ? st.data?.students?.[slug] : null;
-    if (!rec) {
+    const achado = slug.length <= 80 ? resolveAluno(st, slug, acessoDe(req), now) : null;
+    if (!achado) {
       thr[tk] = thr[tk] || { miss: [], leads: [] };
       thr[tk].miss.push(now);
       await deps.kv.set(AUTH_STORE, THROTTLE_KEY, thr);
       return reply(404, { error: "codigo_nao_encontrado" });
     }
+    const { slug: real, rec } = achado;
+    if (achado.viaCodigo && !rec.codigoUsadoEm) { // o app deste aluno já usa o código novo: o nome antigo deixa de valer para ele
+      rec.codigoUsadoEm = now;
+      await deps.kv.set(STATE_STORE, STATE_KEY, st);
+    }
     return reply(200, {
-      version: st.version, role: "student",
-      data: { students: { [slug]: rec }, templates: [], leads: [], alertaCheckinDias: st.data?.alertaCheckinDias || 7, planosVenda: st.data?.planosVenda || null },
+      version: st.version, role: "student", slugReal: real, acesso: typeof rec.codigo === "string" ? rec.codigo : "",
+      data: { students: { [real]: alunoParaAluno(rec) }, templates: [], leads: [], alertaCheckinDias: st.data?.alertaCheckinDias || 7, planosVenda: st.data?.planosVenda || null },
       catalog: st.catalog || [],
     });
   }
@@ -301,7 +435,7 @@ async function parabensAluno(deps: Deps, now: number, slug: string, antes: any, 
     else if (a.mes < 8 && b.mes >= 8) { t = "🔥 Seu fogo do mês acendeu!"; c = "8 dias de treino neste mês. Continue assim!"; }
     else if (a.sem < meta && b.sem >= meta) { t = "🏆 Meta da semana batida!"; c = b.sem + " de " + meta + " treinos. Parabéns, " + (String(depois.nome || "").trim().split(/\s+/)[0] || "campeão(ã)") + "!"; }
     if (t) await avisa(deps, now, [slug], t, c, "parabens");
-  } catch (e) { /* nunca derruba o salvamento */ }
+  } catch { /* nunca derruba o salvamento */ }
 }
 // Aluno salvou o próprio registro: se há uma sessão nova (treino finalizado), avisa o personal (uma vez por sessão).
 async function avisoTreinoFinalizado(deps: Deps, now: number, slug: string, antes: any, depois: any): Promise<void> {
@@ -314,7 +448,7 @@ async function avisoTreinoFinalizado(deps: Deps, now: number, slug: string, ante
     const min = Math.max(1, Math.round((Number(x.duracaoSeg) || 0) / 60));
     const pse = typeof x.pse === "number" ? " · PSE " + x.pse : "";
     await avisa(deps, now, ["trainer"], nomeCurto(depois.nome) + " terminou o treino", limpaTexto(x.nome || "Treino", 50) + (x.duracaoSeg ? " · " + min + " min" : "") + pse, "treino-fim");
-  } catch (e) { /* nunca derruba o salvamento */ }
+  } catch { /* nunca derruba o salvamento */ }
 }
 // Compara o banco antes/depois do salvamento do personal e avisa o aluno: nova meta ou treino atualizado.
 async function avisosDeCadastro(deps: Deps, now: number, antes: Record<string, any>, depois: Record<string, any>): Promise<void> {
@@ -343,7 +477,7 @@ async function avisosDeCadastro(deps: Deps, now: number, antes: Record<string, a
         await avisa(deps, now, [slug], "Você tem treino novo", "Novo treino: " + treinosNovos.slice(0, 2).join(" e ") + (treinosNovos.length > 2 ? " e mais " + (treinosNovos.length - 2) : "") + ". Bora! 💪", "treino-novo");
       } else if ((Number(d.treinoAtualizadoEm) || 0) > (Number(a.treinoAtualizadoEm) || 0)) await avisa(deps, now, [slug], "Seu treino foi atualizado", "Dê uma olhada nas mudanças.", "treino");
     }
-  } catch (e) { /* nunca derruba o salvamento */ }
+  } catch { /* nunca derruba o salvamento */ }
 }
 // Histórico do aluno: sessão nova entra junto com o que o servidor já tem, e só sai quando alguém a apaga de
 // propósito (fica registrada em sessoesApagadas). Assim, um salvamento feito por uma cópia antiga do app
@@ -411,13 +545,16 @@ async function postState(req: Request, deps: Deps, now: number): Promise<Respons
     const thr = await throttleLoad(deps);
     if ((thr[tk]?.miss?.length || 0) >= MISS_LIMIT) return reply(429, { error: "muitas_tentativas" });
     const st = await loadState(deps);
-    if (!st.data?.students?.[slug]) {
+    const achado = resolveAluno(st, slug, acessoDe(req, body), now);
+    if (!achado) {
       thr[tk] = thr[tk] || { miss: [], leads: [] };
       thr[tk].miss.push(now);
       await deps.kv.set(AUTH_STORE, THROTTLE_KEY, thr);
       return reply(404, { error: "removido" });
     }
-    const antes = st.data.students[slug];
+    const real = achado.slug;
+    const antes = st.data.students[real];
+    protegeCamposDoPersonal(antes, student);
     mesclaSessoesAluno(antes, student);
     // Treino "em andamento" que já está salvo nas sessões (envio atrasado ou de outra aba/aparelho): não reabre.
     const abertoAgora = (student as any).sessaoEmAndamento;
@@ -425,10 +562,10 @@ async function postState(req: Request, deps: Deps, now: number): Promise<Respons
     // Treino que o personal (ou o próprio aluno) já cancelou não volta por um envio antigo.
     const idEnviado = (student as any).sessaoEmAndamento?.startedAt;
     const trocou = aplicaSessoesCanceladas(antes, student);
-    st.data.students[slug] = student;
+    st.data.students[real] = student;
     st.version = (st.version || 0) + 1;
     await deps.kv.set(STATE_STORE, STATE_KEY, st);
-    await avisoTreinoFinalizado(deps, now, slug, antes, student);
+    await avisoTreinoFinalizado(deps, now, real, antes, student);
     if (trocou) return reply(200, { version: st.version, sessaoCancelada: true, sessaoCanceladaId: String(idEnviado), sessaoEmAndamento: (student as any).sessaoEmAndamento || null });
     return reply(200, { version: st.version });
   }
@@ -446,10 +583,15 @@ async function postState(req: Request, deps: Deps, now: number): Promise<Respons
   const pinFromClient = typeof data.pin === "string" ? data.pin.trim() : "";
   delete data.pin; // o PIN nunca mais mora no banco
   if (deps.admin && pinFromClient && !auth) await deps.kv.set(AUTH_STORE, AUTH_KEY, await makeAuth(pinFromClient)); // só testes: semeia o PIN se ainda não existe
+  if (!data.codigoLegadoAte && current.data?.codigoLegadoAte) data.codigoLegadoAte = current.data.codigoLegadoAte;
+  garanteCodigos(data, now, current.data?.students || {});
+  const codigos: Record<string, string> = {};
+  for (const k of Object.keys(data.students)) if (data.students[k] && typeof data.students[k].codigo === "string") codigos[k] = data.students[k].codigo;
   const next = { version: (current.version || 0) + 1, data, catalog: Array.isArray(body.catalog) ? body.catalog : current.catalog };
+  await guardaCopia(deps, current, now, "hora");
   await deps.kv.set(STATE_STORE, STATE_KEY, next);
   await avisosDeCadastro(deps, now, current.data?.students || {}, data.students);
-  return reply(200, { version: next.version });
+  return reply(200, { version: next.version, codigos, codigoLegadoAte: data.codigoLegadoAte });
 }
 
 async function postAuth(req: Request, deps: Deps, now: number): Promise<Response> {
@@ -509,12 +651,12 @@ async function postAuth(req: Request, deps: Deps, now: number): Promise<Response
   if (action === "recover") {
     if (!auth || !auth.email || !auth.rk) return reply(404, { error: "sem_login" });
     if (auth.lockUntil > now) return reply(429, { error: "bloqueado", retryAfterSec: Math.ceil((auth.lockUntil - now) / 1000) });
-    const okRk = safeEqual(await pbkdf2(rkNorm(body.recoveryKey), unb64(auth.rk.salt), auth.iter), unb64(auth.rk.hash));
+    const okRk = safeEqual(await pbkdf2(rkNorm(body.recoveryKey), unb64(auth.rk.salt), auth.rk.iter || auth.iter), unb64(auth.rk.hash));
     const ok = okRk && normEmail(body.email) === auth.email;
     if (!ok) {
       auth.fails = (auth.fails || []).filter((x) => now - x < 10 * 60_000).concat([now]);
       if (auth.fails.length >= 5) {
-        auth.lockUntil = now + Math.min(15 * 60_000 * Math.pow(2, auth.lockLevel || 0), 24 * 3600_000);
+        auth.lockUntil = now + Math.min(15 * 60_000 * 2 ** (auth.lockLevel || 0), 24 * 3600_000);
         auth.lockLevel = (auth.lockLevel || 0) + 1;
         auth.fails = [];
       }
@@ -536,7 +678,7 @@ async function postAuth(req: Request, deps: Deps, now: number): Promise<Response
     if (!ok) {
       auth.fails = (auth.fails || []).filter((x) => now - x < 10 * 60_000).concat([now]);
       if (auth.fails.length >= 5) {
-        auth.lockUntil = now + Math.min(15 * 60_000 * Math.pow(2, auth.lockLevel || 0), 24 * 3600_000);
+        auth.lockUntil = now + Math.min(15 * 60_000 * 2 ** (auth.lockLevel || 0), 24 * 3600_000);
         auth.lockLevel = (auth.lockLevel || 0) + 1;
         auth.fails = [];
       }
@@ -544,6 +686,11 @@ async function postAuth(req: Request, deps: Deps, now: number): Promise<Response
       return reply(401, { error: "pin_incorreto", restantes: Math.max(0, 5 - auth.fails.length) });
     }
     auth.fails = []; auth.lockUntil = 0; auth.lockLevel = 0;
+    if ((auth.iter || 0) < PBKDF2_ITER) { // hash antigo, mais fraco: refaz agora que temos a senha certa (não derruba sessões)
+      if (auth.rk && !auth.rk.iter) auth.rk = { ...auth.rk, iter: auth.iter };
+      const salt = randomBytes(16);
+      auth.salt = b64(salt); auth.hash = b64(await pbkdf2(pin, salt, PBKDF2_ITER)); auth.iter = PBKDF2_ITER;
+    }
     await deps.kv.set(AUTH_STORE, AUTH_KEY, auth);
     return reply(200, { token: await signToken(auth, now) });
   }
@@ -593,7 +740,7 @@ async function postLead(req: Request, deps: Deps, now: number): Promise<Response
 // ---------- avisos no celular (push) ----------
 // Ver push.mts. Aqui ficam a rota (/api/push) e os atalhos usados pelos eventos do app.
 async function avisa(deps: Deps, now: number, donos: string[] | "alunos", titulo: string, corpo: string, tag?: string): Promise<void> {
-  try { await PUSH.enviar(deps.kv, AUTH_STORE, donos, { title: limpaTexto(titulo, 80), body: limpaTexto(corpo, 160), tag }, now, deps.fetch); } catch (e) { /* nunca derruba a operação */ }
+  try { await PUSH.enviar(deps.kv, AUTH_STORE, donos, { title: limpaTexto(titulo, 80), body: limpaTexto(corpo, 160), tag }, now, deps.fetch); } catch { /* nunca derruba a operação */ }
 }
 async function pushRoute(req: Request, url: URL, deps: Deps, now: number): Promise<Response> {
   if (req.method === "GET") {
@@ -620,9 +767,9 @@ async function pushRoute(req: Request, url: URL, deps: Deps, now: number): Promi
     const s = body.sub && typeof body.sub === "object" ? body.sub : null;
     const ep = s && s.endpoint, p = s && s.keys && s.keys.p256dh, a = s && s.keys && s.keys.auth;
     if (!PUSH.endpointOk(ep) || typeof p !== "string" || typeof a !== "string" || p.length > 120 || a.length > 60) return reply(400, { error: "pedido_invalido" });
-    try { if (PUSH.unb64u(p).length !== 65) throw new Error("x"); } catch (e) { return reply(400, { error: "pedido_invalido" }); }
+    try { if (PUSH.unb64u(p).length !== 65) throw new Error("x"); } catch { return reply(400, { error: "pedido_invalido" }); }
     for (const k of Object.keys(subs)) subs[k] = subs[k].filter((x) => x.endpoint !== ep); // o aparelho muda de dono se trocar de aluno
-    const lista = (subs[dono] || []).concat([{ endpoint: ep, p256dh: p, auth: a, ts: now, url: typeof body.url === "string" && /^\/[#?\/A-Za-z0-9_=.&%-]{0,120}$/.test(body.url) ? body.url : "/" }]);
+    const lista = (subs[dono] || []).concat([{ endpoint: ep, p256dh: p, auth: a, ts: now, url: typeof body.url === "string" && /^\/[#?/A-Za-z0-9_=.&%-]{0,120}$/.test(body.url) ? body.url : "/" }]);
     subs[dono] = lista.slice(-PUSH.MAX_SUBS_POR_DONO);
     for (const k of Object.keys(subs)) if (!subs[k].length) delete subs[k];
     await PUSH.saveSubs(deps.kv, AUTH_STORE, subs);
@@ -681,7 +828,7 @@ const CHAMADA_LONGA: Modelo[] = [ // 14 dias ou mais
 ];
 function hashSlug(s: string): number { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return h; }
 async function chamadasLer(deps: Deps): Promise<Record<string, { ts: number; t: string; c: string; ix: number }>> {
-  try { const v = await deps.kv.get(AUTH_STORE, CHAMADA_KEY); return v && typeof v === "object" ? v : {}; } catch (e) { return {}; }
+  try { const v = await deps.kv.get(AUTH_STORE, CHAMADA_KEY); return v && typeof v === "object" ? v : {}; } catch { return {}; }
 }
 function chamadaTexto(m: Modelo, nome: string, dias: number): Modelo {
   const sub = (s: string) => s.split("{nome}").join(nome).split("{dias}").join(String(dias));
@@ -714,7 +861,7 @@ export async function chamaAlunos(deps: Deps, now: number, slugs: unknown, opts:
       const primeiro = String(rec.nome || "").trim().split(/\s+/)[0] || "aluno";
       const msg = chamadaTexto(modelos[ix], primeiro, dias);
       let n = 0;
-      if (comPush) { try { n = await PUSH.enviar(deps.kv, AUTH_STORE, [slug], { title: msg.t, body: msg.c, tag: "chamada" }, now, deps.fetch); } catch (e) { n = 0; } }
+      if (comPush) { try { n = await PUSH.enviar(deps.kv, AUTH_STORE, [slug], { title: msg.t, body: msg.c, tag: "chamada" }, now, deps.fetch); } catch { n = 0; } }
       reg[slug] = { ts: now, t: msg.t, c: msg.c, ix };
       out.chamados++;
       out.ts[slug] = now;
@@ -723,7 +870,7 @@ export async function chamaAlunos(deps: Deps, now: number, slugs: unknown, opts:
     }
     for (const k of Object.keys(reg)) if (!students[k]) delete reg[k];
     if (out.chamados) await deps.kv.set(AUTH_STORE, CHAMADA_KEY, reg);
-  } catch (e) { /* nunca derruba o app: o personal tenta de novo */ }
+  } catch { /* nunca derruba o app: o personal tenta de novo */ }
   return out;
 }
 
@@ -791,7 +938,7 @@ export async function rodaCheckinAuto(deps: Deps, now: number): Promise<{ marcad
       mudou = true;
     }
     if (mudou) await deps.kv.set(STATE_STORE, STATE_KEY, { ...st, version: (st.version || 0) + 1, data: st.data });
-  } catch (e) {}
+  } catch {}
   return out;
 }
 export async function rodaLembretes(deps: Deps, now: number): Promise<{ enviados: number; alunos: string[]; personal?: string[] }> {
@@ -874,7 +1021,7 @@ export async function rodaLembretes(deps: Deps, now: number): Promise<{ enviados
     }
     for (const k of Object.keys(reg)) if (!students[k]) delete reg[k];
     await deps.kv.set(AUTH_STORE, LEMB_KEY, reg);
-  } catch (e) { /* tarefa agendada: tenta de novo amanhã */ }
+  } catch { /* tarefa agendada: tenta de novo amanhã */ }
   return out;
 }
 
@@ -889,14 +1036,15 @@ async function who(req: Request, deps: Deps, now: number, slug: unknown, body?: 
   const tk = await throttleKey(deps);
   const thr = await throttleLoad(deps);
   if (!trainer && (thr[tk]?.miss?.length || 0) >= MISS_LIMIT) return { err: reply(429, { error: "muitas_tentativas" }) };
-  const rec = typeof slug === "string" && slug && slug.length <= 80 ? st.data?.students?.[slug] || null : null;
+  const achado = typeof slug === "string" && slug && slug.length <= 80 ? (trainer ? (st.data?.students?.[slug] ? { slug, rec: st.data.students[slug], viaCodigo: false } : null) : resolveAluno(st, slug, acessoDe(req, body), now)) : null;
+  const rec = achado ? achado.rec : null;
   if (!trainer && !rec) {
     thr[tk] = thr[tk] || { miss: [], leads: [], ups: [] };
     thr[tk].miss.push(now);
     await deps.kv.set(AUTH_STORE, THROTTLE_KEY, thr);
     return { err: reply(404, { error: "codigo_nao_encontrado" }) };
   }
-  return { trainer, slug: rec ? (slug as string) : null, rec, st };
+  return { trainer, slug: achado ? achado.slug : null, rec, st };
 }
 
 const FOTO_URL = /^\/api\/img\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -908,6 +1056,7 @@ function nomeCurto(nome: unknown): string {
   return last && last.toLowerCase() !== first.toLowerCase() ? first + " " + last.charAt(0).toUpperCase() + "." : first;
 }
 function limpaTexto(v: unknown, max: number): string {
+  // biome-ignore lint/suspicious/noControlCharactersInRegex: tira caracteres de controle de propósito
   return String(v == null ? "" : v).replace(/[\u0000-\u001f\u007f]+/g, " ").replace(/\s+/g, " ").trim().slice(0, max);
 }
 function diaBR(now: number): string { return new Date(now - 3 * 3600_000).toISOString().slice(0, 10); }
@@ -1264,7 +1413,8 @@ async function postTurma(req: Request, deps: Deps, now: number): Promise<Respons
     if (action === "desafio_encerrar") {
       const d = (T.desafios as any[]).find((x) => x.id === body.id);
       if (!d) return reply(404, { error: "nao_encontrado" });
-      d.encerrado = true; if (d.ate >= hoje) d.ate = addDias(hoje, -1) < d.de ? d.de : addDias(hoje, -1);
+      // biome-ignore lint/complexity/useMathMinMax: compara datas em texto (AAAA-MM-DD), não números
+      d.encerrado = true; if (d.ate >= hoje) { const ontem = addDias(hoje, -1); d.ate = ontem < d.de ? d.de : ontem; }
       await save(); return reply(200, { ok: true });
     }
     if (action === "destaque_clear") { T.destaques = []; await save(); return reply(200, { ok: true }); }
@@ -1292,7 +1442,7 @@ async function postTurma(req: Request, deps: Deps, now: number): Promise<Respons
     }
     if (action === "evento_criar") {
       const titulo = limpaTexto(body.titulo, 60), quando = typeof body.quando === "string" ? body.quando : "";
-      if (!titulo || !DT_LOCAL.test(quando) || isNaN(Date.parse(quando + ":00Z"))) return reply(400, { error: "pedido_invalido" });
+      if (!titulo || !DT_LOCAL.test(quando) || Number.isNaN(Date.parse(quando + ":00Z"))) return reply(400, { error: "pedido_invalido" });
       if (quando < new Date(now - 3 * 3600_000 - 3600_000).toISOString().slice(0, 16)) return reply(400, { error: "no_passado" });
       if ((T.eventos as any[]).length >= 30) return reply(409, { error: "limite_eventos" });
       T.eventos.push({ id: novoId("e"), titulo, quando, local: limpaTexto(body.local, 80), texto: limpaTexto(body.texto, 200), rsvp: {}, criadoEm: now });
@@ -1548,7 +1698,7 @@ async function postEstima(req: Request, deps: Deps, now: number): Promise<Respon
       if (resp.ok) break;
       const det = await resp.text().catch(() => "");
       ultimoErro = resp.status + " " + det.slice(0, 400);
-      console.error("[estima] modelo=" + modelo + " temp=" + comTemp + " ->", ultimoErro);
+      console.error("[estima] modelo=" + modelo + " temp=" + comTemp + " ->", ultimoErro.replace(/sk-ant-[\w-]+/g, "***"));
       // 401/403 (chave), 429 (limite) e 529 (sobrecarga) não melhoram trocando modelo
       if (resp.status === 401 || resp.status === 403 || resp.status === 429 || resp.status >= 500) break;
       if (!(resp.status === 400 && /temperature/i.test(det))) break; // só tenta sem temperature se o erro falar dela
@@ -1564,7 +1714,7 @@ async function postEstima(req: Request, deps: Deps, now: number): Promise<Respon
   const j: any = await resp.json().catch(() => null);
   const texto = String(((j && j.content) || []).map((c: any) => c && c.text || "").join("")).trim();
   const m = texto.match(/\{[\s\S]*\}/);
-  let r: any = null; try { r = m ? JSON.parse(m[0]) : null; } catch (e) { r = null; }
+  let r: any = null; try { r = m ? JSON.parse(m[0]) : null; } catch { r = null; }
   if (!r) {
     const tipos = ((j && j.content) || []).map((c: any) => c && c.type).join(",");
     console.error("[estima] resposta sem JSON: stop=" + (j && j.stop_reason) + " tipos=" + tipos + " texto=" + texto.slice(0, 300));
@@ -1575,7 +1725,7 @@ async function postEstima(req: Request, deps: Deps, now: number): Promise<Respon
   await deps.kv.set(IA_STORE, IA_KEY, uso);
   if (r.erro) return reply(200, { ok: false, erro: String(r.erro).slice(0, 160) });
   let min = Number(r.min), max = Number(r.max);
-  if (!isFinite(min) || !isFinite(max)) return reply(502, { error: "ia_resposta" });
+  if (!Number.isFinite(min) || !Number.isFinite(max)) return reply(502, { error: "ia_resposta" });
   if (min > max) { const t = min; min = max; max = t; }
   min = Math.max(3, Math.min(60, min)); max = Math.max(min, Math.min(60, max));
   const conf = ["baixa", "media", "alta"].includes(r.confianca) ? r.confianca : "baixa";

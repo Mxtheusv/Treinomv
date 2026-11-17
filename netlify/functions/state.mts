@@ -28,11 +28,11 @@ const blobs: Blobs = {
 function limpa(v: string | undefined): string | undefined { if (!v) return v; const t = String(v).replace(/[\s"'\u200b\ufeff]/g, ""); return t || undefined; }
 
 export default async (req: Request, context: Context) => {
-  const env = (k: string) => { try { return (globalThis as any).Netlify?.env?.get(k) || process.env[k] || ""; } catch (e) { return ""; } };
+  const env = (k: string) => { try { return (globalThis as any).Netlify?.env?.get(k) || process.env[k] || ""; } catch { return ""; } };
   const res = await handleApi(req, { kv, blobs, ip: context.ip || req.headers.get("x-nf-client-connection-ip") || "?", iaKey: limpa(env("ANTHROPIC_API_KEY")), iaModel: limpa(env("ANTHROPIC_MODEL")) });
   return res || new Response("Not found", { status: 404 });
 };
 
 export const config: Config = {
-  path: ["/api/state", "/api/auth", "/api/lead", "/api/feed", "/api/comunidade", "/api/turma", "/api/push", "/api/img", "/api/img/:id", "/api/estima"],
+  path: ["/api/state", "/api/auth", "/api/lead", "/api/feed", "/api/comunidade", "/api/turma", "/api/push", "/api/img", "/api/img/:id", "/api/estima", "/api/backup"],
 };

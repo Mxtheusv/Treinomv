@@ -1,0 +1,17 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "files": {
+    "includes": ["netlify/**/*.mts", "scripts/**/*.mjs", "tests/**/*.mts", "stryker.config.mjs"]
+  },
+  "formatter": { "enabled": false },
+  "assist": { "enabled": false },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "suspicious": { "noExplicitAny": "off" },
+      "style": { "noNonNullAssertion": "off", "useTemplate": "off" },
+      "complexity": { "useOptionalChain": "off" }
+    }
+  }
+}

@@ -2,9 +2,18 @@
   "name": "treinomv",
   "version": "1.0.0",
   "private": true,
+  "scripts": {
+    "test": "node --experimental-strip-types --test tests/*.test.mts",
+    "lint": "biome lint",
+    "mutacao": "stryker run"
+  },
   "dependencies": {
     "@netlify/blobs": "10.7.13",
-    "terser": "5.31.0",
-    "csso": "5.0.5"
+    "csso": "5.0.5",
+    "terser": "5.31.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.4",
+    "@stryker-mutator/core": "10.1.1"
   }
 }

@@ -24,7 +24,7 @@ function cat(...a: Uint8Array[]): Uint8Array { const n = a.reduce((s, x) => s + 
 
 export function endpointOk(ep: unknown): boolean {
   if (typeof ep !== "string" || ep.length > 700) return false;
-  let u: URL; try { u = new URL(ep); } catch (e) { return false; }
+  let u: URL; try { u = new URL(ep); } catch { return false; }
   return u.protocol === "https:" && !u.port && HOSTS_OK.some((r) => r.test(u.hostname));
 }
 
@@ -98,7 +98,7 @@ export async function enviar(kv: KV, store: string, donos: string[] | "alunos", 
             Authorization: "vapid t=" + (await jwtVapid(v, aud, now)) + ", k=" + v.pub } });
           if (res.status === 404 || res.status === 410) mortos.push({ dono, endpoint: sub.endpoint });
           else if (res.status >= 200 && res.status < 300) ok++;
-        } catch (e) { /* aparelho fora do ar: segue */ }
+        } catch { /* aparelho fora do ar: segue */ }
       })),
       new Promise((r) => setTimeout(r, 7000)),
     ]);
@@ -108,5 +108,5 @@ export async function enviar(kv: KV, store: string, donos: string[] | "alunos", 
       await saveSubs(kv, store, atual);
     }
     return ok;
-  } catch (e) { return 0; }
+  } catch { return 0; }
 }

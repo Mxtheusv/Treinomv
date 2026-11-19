@@ -211,6 +211,24 @@
   .depo-quem b { font-weight: 700; }
   .depo-aviso { font-size: 14px; color: var(--faint); margin-top: 24px; }
   @media (max-width: 760px) { .depo-destaque { grid-template-columns: 1fr; } .depo-destaque img { max-width: 420px; } }
+
+  /* credenciais no topo */
+  .provas { display: flex; flex-wrap: wrap; gap: 8px 10px; margin-top: 22px; padding: 0; list-style: none; }
+  .provas li { font-size: 13.5px; font-weight: 600; color: var(--soft); padding: 7px 12px; border: 1px solid var(--line); border-radius: 999px; background: rgba(255,255,255,.03); }
+  .provas li b { color: var(--gold); font-weight: 700; }
+  /* atleta também */
+  .atleta { display: grid; grid-template-columns: 1fr 1.05fr; gap: 56px; align-items: center; }
+  .atleta p { color: var(--soft); }
+  .atleta p b { color: var(--ink); }
+  .atleta p + p { margin-top: 14px; }
+  .atleta-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; padding: 0; list-style: none; }
+  .atleta-tags li { font: 700 13px/1 var(--body); letter-spacing: .06em; text-transform: uppercase; padding: 9px 13px; border-radius: 999px; background: rgba(255,194,32,.12); color: var(--gold); border: 1px solid rgba(255,194,32,.35); }
+  .atleta-fotos { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .atleta-fotos figure { margin: 0; border-radius: 18px; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 24px 60px rgba(0,0,0,.45); background: var(--panel); }
+  .atleta-fotos figure:nth-child(2) { transform: translateY(40px); }
+  .atleta-fotos img { width: 100%; height: auto; aspect-ratio: 4 / 5; object-fit: cover; }
+  .atleta-fotos figcaption { font-size: 12.5px; color: var(--faint); padding: 9px 12px 11px; }
+  @media (max-width: 860px) { .atleta { grid-template-columns: 1fr; gap: 30px; } .atleta-fotos { margin-bottom: 40px; } }
   @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .btn, .sticky { transition: none; } }
 </style>
 </head>
@@ -238,6 +256,11 @@
           <a class="btn ghost" href="#como">Ver como funciona</a>
         </div>
         <p class="hero-note">Sem cobrança para começar. Você conhece o método, testa 1 mês se fizer sentido e decide depois.</p>
+        <ul class="provas" aria-label="Credenciais">
+          <li><b>CREF</b> 038618-G/SC</li>
+          <li><b>Licença B</b> CBF de Preparador Físico</li>
+          <li><b>CHPC</b> Level 2</li>
+        </ul>
       </div>
       <div class="phone"><img fetchpriority="high" src="/lp/hoje.jpg" width="560" height="1149" alt="Tela inicial do app mostrando os dias treinados no mês e a semana de treinos"></div>
     </div>
@@ -366,6 +389,26 @@
         <img loading="lazy" decoding="async" src="/lp/certificado-chpc.jpg" width="802" height="564" alt="Certificado CHPC Level 2 da Athletic Lab Coaching Academy, em nome de Matheus Venâncio">
         <figcaption>Certificado CHPC Level 2 · Athletic Lab Coaching Academy</figcaption>
       </figure>
+      </div>
+    </div>
+  </section>
+
+  <section id="atleta">
+    <div class="wrap atleta">
+      <div>
+        <div class="eyebrow">Atleta também</div>
+        <h2 style="margin:12px 0 18px">Eu treino o que eu ensino</h2>
+        <p>Além de preparar atletas, eu também estou do outro lado: <b>corro provas de rua aqui em Florianópolis</b>.</p>
+        <p>Sei na prática o que é encaixar treino na rotina, ter uma prova no calendário e querer chegar bem nela. É com essa experiência que eu monto o seu treino: <b>exigente na medida, e possível de cumprir</b>.</p>
+        <ul class="atleta-tags">
+          <li>Corrida de rua</li>
+          <li>Circuito das Estações</li>
+          <li>Florianópolis</li>
+        </ul>
+      </div>
+      <div class="atleta-fotos">
+        <figure><img loading="lazy" decoding="async" src="/lp/matheus-corrida-1.jpg" width="800" height="1000" alt="Matheus Venâncio correndo uma prova de rua com a Ponte Hercílio Luz ao fundo"><figcaption>Prova de rua, com a Ponte Hercílio Luz ao fundo</figcaption></figure>
+        <figure><img loading="lazy" decoding="async" src="/lp/matheus-corrida-2.jpg" width="800" height="1000" alt="Matheus Venâncio correndo o Circuito das Estações, com o número 92 no peito"><figcaption>Circuito das Estações</figcaption></figure>
       </div>
     </div>
   </section>

@@ -3265,6 +3265,11 @@ function startApp() {
       texto: "Nos exercícios com técnica, o treino agora mostra o esquema direitinho. No drop set, cada série tem um campo para a carga de cada queda (ex.: 40 → 30 → 20 kg). Na pirâmide, cada série mostra as repetições (S1 · 12). Toque em 'Como fazer' para ver o passo a passo."
     },
     {
+      versao: 23,
+      titulo: "Novo: timer de treino ⏱️",
+      texto: "No topo do app, ao lado do sininho, tem um relógio: é o timer de treino. Intervalos (Tabata, HIIT), EMOM, AMRAP e cronômetro, com bipes nos últimos 3 segundos e a tela sempre acesa. Ajuste os tempos na engrenagem e toque em Iniciar."
+    },
+    {
       versao: 22,
       titulo: "Novo: estimativa de gordura por IA 🤖",
       texto: "Tirou as fotos de evolução? Agora, no card Minha evolução (no Histórico), toque em \"Estimar % de gordura pelas fotos (IA)\". Em poucos segundos a inteligência artificial mostra uma faixa estimada do seu percentual de gordura, que entra no gráfico de evolução. É uma estimativa visual, ótima para ver se você está no caminho certo a cada novo registro. As fotos são usadas só para essa análise."
@@ -15221,7 +15226,7 @@ function startApp() {
       '<div class="sa-brand-text"><div class="sa-brand-name sa-display">TREINO ONLINE</div>' +
       '<div class="sa-brand-sub">MATHEUS VENÂNCIO · CREF 038618-G/SC</div></div></div>' +
       // À vista só o sininho; o resto num menu "⚙️ Configurações" (os botões continuam com os mesmos ids).
-      '<div class="tr-topbar-actions">' + trBellHtml() +
+      '<div class="tr-topbar-actions"><a href="/timer.html?de=app" class="tr-btn-outline" style="text-decoration:none">⏱️ Timer</a>' + trBellHtml() +
       '<details class="tr-cfg"><summary class="tr-btn-outline">⚙️ Configurações</summary><div class="tr-cfg-menu">' +
       '<button type="button" id="btnCopyFormLink" class="tr-btn-outline">🔗 Link pra aluno novo</button>' +
       '<button type="button" id="btnAcervo" class="tr-btn-outline">🎬 Acervo de vídeos</button>' +
@@ -16133,7 +16138,7 @@ function startApp() {
       '<div class="sa-brand"><img src="' + PDF_LOGO_DATA_URL + '" alt="">' +
       '<div class="sa-brand-text"><div class="sa-brand-name sa-display">TREINO ONLINE</div>' +
       '<div class="sa-brand-sub">MATHEUS VENÂNCIO · CREF 038618-G/SC</div></div></div>' +
-      '<div class="sa-hdr-r">' + saBellHtml(s) + '<button type="button" class="sa-hdr-av" data-sa-tab="perfil" aria-label="Meu perfil e foto">' + saAvatarHtml(s.nome, "sa-avatar", s.fotoUrl) + (s.fotoUrl ? "" : '<span class="sa-hdr-cam">📷</span>') + '</button></div>' +
+      '<div class="sa-hdr-r"><a class="sa-bell" href="/timer.html?de=app" aria-label="Timer de treino" style="text-decoration:none"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9.5 2h5M12 2v3"/></svg></a>' + saBellHtml(s) + '<button type="button" class="sa-hdr-av" data-sa-tab="perfil" aria-label="Meu perfil e foto">' + saAvatarHtml(s.nome, "sa-avatar", s.fotoUrl) + (s.fotoUrl ? "" : '<span class="sa-hdr-cam">📷</span>') + '</button></div>' +
       '</div>';
 
     var navHtml = '<div class="sa-nav">' + saTabsFor(s).map(function (tb) {

@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#070c1a">
 <link rel="icon" href="/icons/icon-192.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
@@ -29,6 +29,9 @@
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
+html, button, a, input, label { touch-action: manipulation; }
+body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+input { -webkit-user-select: text; user-select: text; }
 html, body { height: 100%; }
 body { background: var(--bg); color: var(--ink); font-family: var(--body); overflow: hidden; -webkit-tap-highlight-color: transparent; }
 button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
@@ -93,12 +96,17 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 .field > span { font-weight: 600; font-size: 16px; }
 .step { display: flex; align-items: center; gap: 6px; }
 .step button { width: 44px; height: 44px; border-radius: 12px; background: var(--bg); font-size: 24px; font-weight: 700; color: var(--gold); }
+.tin { display: flex; align-items: center; gap: 2px; font-family: var(--display); font-weight: 800; font-size: 30px; }
+.tin input { width: 2.1em; height: 48px; text-align: center; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--ink); font: inherit; font-variant-numeric: tabular-nums; padding: 0; }
+.tin input.n { width: 2.6em; }
+.tin input:focus { outline: 2px solid var(--gold); border-color: var(--gold); }
 .step output { min-width: 78px; text-align: center; font-family: var(--display); font-weight: 800; font-size: 30px; font-variant-numeric: tabular-nums; }
 .toggle { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-top: 1px solid var(--line); font-weight: 600; }
 .toggle input { width: 22px; height: 22px; accent-color: var(--gold); }
 .summary { font-size: 14px; color: var(--mut); }
 .summary b { color: var(--ink); }
-.done-btn { height: 54px; border-radius: 999px; background: var(--gold); color: var(--gold-ink); font-weight: 700; font-size: 17px; }
+.sheet-card > * { flex-shrink: 0; }
+.done-btn { min-height: 54px; height: 54px; border-radius: 999px; background: var(--gold); color: var(--gold-ink); font-weight: 700; font-size: 17px; }
 @media (max-height: 700px) { .cnt b { font-size: 48px; } .play { width: 92px; height: 92px; } .lap { width: 80px; height: 80px; } .ttl #total { font-size: 28px; } }
 @media (prefers-reduced-motion: reduce) { .stage, .play { transition: none; } }
 html { height: 100%; }
@@ -146,7 +154,9 @@ body.de-app .app { height: calc(100% - 32px); }
     <h2 id="sheetTitle">Ajustes</h2>
     <div id="presetWrap"><div class="lbl" style="margin-bottom:8px">Prontos</div><div class="presets" id="presets"></div></div>
     <div id="fields"></div>
-    <label class="toggle" for="somChk"><span>Bipes na contagem final</span><input type="checkbox" id="somChk" checked></label>
+    <label class="toggle" for="somChk"><span>Bipes (3, 2, 1 e troca de fase)</span><input type="checkbox" id="somChk" checked></label>
+    <label class="toggle" for="vozChk"><span>Voz falando a fase (Exercício, Descanso…)</span><input type="checkbox" id="vozChk" checked></label>
+    <div class="summary">Toque no número para digitar o tempo exato. Se não ouvir os bipes no iPhone, aumente o volume.</div>
     <div class="summary" id="summary"></div>
     <button class="done-btn" id="doneBtn">Pronto</button>
   </div>
@@ -178,7 +188,8 @@ body.de-app .app { height: calc(100% - 32px); }
   var cfg = {}; Object.keys(MODES).forEach(function (m) { cfg[m] = Object.assign({}, MODES[m].def, (saved.cfg || {})[m] || {}); });
   var mode = MODES[saved.mode] ? saved.mode : "intervalos";
   var som = saved.som !== false;
-  function persist() { try { localStorage.setItem("timerMV", JSON.stringify({ cfg: cfg, mode: mode, som: som })); } catch (e) { /* sem armazenamento */ } }
+  var vozOn = saved.voz !== false;
+  function persist() { try { localStorage.setItem("timerMV", JSON.stringify({ cfg: cfg, mode: mode, som: som, voz: vozOn })); } catch (e) { /* sem armazenamento */ } }
 
   // ---- sequência de fases do modo atual ----
   var seq = [], total = 0;
@@ -211,9 +222,10 @@ body.de-app .app { height: calc(100% - 32px); }
   function fmt(sec) { sec = Math.max(0, sec); var m = Math.floor(sec / 60), s = sec % 60; return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0"); }
 
   // ---- som (só começa depois de tocar em Iniciar) ----
+  // Bipes gerados como pequenos arquivos WAV e tocados como mídia: no iPhone isso toca com o volume normal
+  // (o áudio "de página" é cortado no modo silencioso). Se o navegador recusar, cai no sintetizador.
   var ac = null;
   function tone(f, ms, vol) {
-    if (!som) return;
     try {
       ac = ac || new (window.AudioContext || window.webkitAudioContext)();
       if (ac.state === "suspended") ac.resume();
@@ -222,6 +234,54 @@ body.de-app .app { height: calc(100% - 32px); }
       g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol || 0.25, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + ms / 1000);
       o.connect(g).connect(ac.destination); o.start(t); o.stop(t + ms / 1000 + 0.02);
     } catch (e) { /* sem áudio */ }
+  }
+  function wav(freq, ms, vol) {
+    var sr = 22050, n = Math.floor(sr * ms / 1000), b = new ArrayBuffer(44 + n * 2), v = new DataView(b), i;
+    function str(o, t) { for (var k = 0; k < t.length; k++) v.setUint8(o + k, t.charCodeAt(k)); }
+    str(0, "RIFF"); v.setUint32(4, 36 + n * 2, true); str(8, "WAVE"); str(12, "fmt "); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+    v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); str(36, "data"); v.setUint32(40, n * 2, true);
+    for (i = 0; i < n; i++) {
+      var t = i / sr, env = Math.min(1, i / 200, (n - i) / 600);
+      var sm = Math.sin(2 * Math.PI * freq * t) + 0.3 * Math.sin(2 * Math.PI * freq * 2 * t);
+      v.setInt16(44 + i * 2, Math.max(-1, Math.min(1, sm * vol * env)) * 32767, true);
+    }
+    return URL.createObjectURL(new Blob([b], { type: "audio/wav" }));
+  }
+  var SONS = { curto: [880, 150], longo: [1175, 500], descanso: [587, 500], fim: [1320, 900] }, players = {}, liberado = false;
+  try { Object.keys(SONS).forEach(function (k) { var a = new Audio(wav(SONS[k][0], SONS[k][1], 0.8)); a.preload = "auto"; players[k] = a; }); } catch (e) { players = {}; }
+  function liberaSom() { // precisa acontecer dentro de um toque (regra dos celulares)
+    if (liberado) return; liberado = true;
+    try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch (e) { /* sem controle de sessão */ }
+    Object.keys(players).forEach(function (k) {
+      var a = players[k]; a.muted = true;
+      try { var p = a.play(); if (p && p.then) p.then(function () { a.pause(); a.currentTime = 0; a.muted = false; }).catch(function () { a.muted = false; }); } catch (e) { a.muted = false; }
+    });
+    tone(440, 1, 0.0001);
+    try { if (window.speechSynthesis) { var u = new SpeechSynthesisUtterance(" "); u.volume = 0; speechSynthesis.speak(u); } } catch (e) { /* sem voz */ }
+  }
+  function bip(k) {
+    if (!som) return;
+    var a = players[k];
+    if (!a) { tone(SONS[k][0], SONS[k][1], 0.3); return; }
+    try { a.currentTime = 0; var p = a.play(); if (p && p.catch) p.catch(function () { tone(SONS[k][0], SONS[k][1], 0.3); }); } catch (e) { tone(SONS[k][0], SONS[k][1], 0.3); }
+  }
+  // voz em português (usa a voz do próprio celular)
+  var vozPt = null;
+  function pegaVoz() { try { var vs = speechSynthesis.getVoices(); vozPt = vs.filter(function (x) { return /pt[-_]BR/i.test(x.lang); })[0] || vs.filter(function (x) { return /^pt/i.test(x.lang); })[0] || null; } catch (e) { vozPt = null; } }
+  if (window.speechSynthesis) { pegaVoz(); speechSynthesis.onvoiceschanged = pegaVoz; }
+  function fala(t, atraso) {
+    if (!vozOn || !window.speechSynthesis || !t) return;
+    setTimeout(function () {
+      try { speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(t); u.lang = "pt-BR"; if (vozPt) u.voice = vozPt; u.rate = 1.05; u.volume = 1; speechSynthesis.speak(u); } catch (e) { /* sem voz */ }
+    }, atraso || 0);
+  }
+  function frase(seg, rondas) {
+    if (seg.k === "prep") return "Prepare";
+    if (seg.k === "rest") return "Descanso";
+    if (seg.k === "cyclerest") return "Intervalo entre ciclos";
+    if (mode === "amrap") return "Valendo!";
+    if (mode === "emom") return seg.label + (rondas === 1 ? ", último" : "");
+    return rondas === 1 ? "Última ronda! Exercício" : "Exercício";
   }
   function vibra(p) { try { navigator.vibrate && navigator.vibrate(p); } catch (e) { /* sem vibração */ } }
 
@@ -268,8 +328,12 @@ body.de-app .app { height: calc(100% - 32px); }
     $("cLeft").textContent = Object.keys(ciclos).length;
     // bipes
     if (running) {
-      if (idx !== lastIdx) { if (lastIdx !== -1) { tone(seg.k === "work" ? 990 : 520, 450, 0.3); vibra(300); } lastIdx = idx; }
-      if (rem <= 3 && rem >= 1) { var key = idx + ":" + rem; if (key !== lastBeep) { lastBeep = key; tone(660, 130, 0.22); } }
+      if (idx !== lastIdx) {
+        if (lastIdx !== -1) { bip(seg.k === "work" ? "longo" : "descanso"); vibra(300); fala(frase(seg, rondas), som ? 450 : 0); }
+        else if (e < 0.5) fala(frase(seg, rondas));
+        lastIdx = idx;
+      }
+      if (rem <= 3 && rem >= 1) { var key = idx + ":" + rem; if (key !== lastBeep) { lastBeep = key; bip("curto"); } }
     }
   }
   function finish() {
@@ -277,7 +341,7 @@ body.de-app .app { height: calc(100% - 32px); }
     $("stage").dataset.k = "done"; $("phase").textContent = "Fim do treino";
     $("big").textContent = "00:00"; $("next").style.visibility = "hidden";
     $("total").textContent = "00:00"; $("rLeft").textContent = 0; $("cLeft").textContent = 0;
-    tone(990, 250); setTimeout(function () { tone(990, 250); }, 330); setTimeout(function () { tone(1320, 600); }, 660); vibra([300, 120, 300, 120, 600]);
+    bip("fim"); vibra([300, 120, 300, 120, 600]); fala("Fim do treino. Bom trabalho!", som ? 900 : 0);
     setPlay();
   }
   function setPlay() {
@@ -291,7 +355,7 @@ body.de-app .app { height: calc(100% - 32px); }
   function toggle() {
     if (finished) reset();
     if (running) { acc = elapsed(); running = false; wake(false); }
-    else { tone(0.0001 + 1, 1, 0.0001); t0 = performance.now(); running = true; wake(true); requestAnimationFrame(loop); }
+    else { liberaSom(); t0 = performance.now(); running = true; wake(true); requestAnimationFrame(loop); }
     setPlay(); render();
   }
   function reset() { running = false; finished = false; acc = 0; lastIdx = -1; lastBeep = ""; laps = []; lastLap = 0; $("laps").innerHTML = ""; wake(false); build(); setPlay(); render(); }
@@ -334,12 +398,26 @@ body.de-app .app { height: calc(100% - 32px); }
     $("presets").innerHTML = M.presets.map(function (p, i) { return '<button class="chip" data-p="' + i + '">' + p[0] + "</button>"; }).join("");
     $("fields").innerHTML = M.campos.map(function (f) {
       var v = c[f[0]];
-      return '<div class="field"><span>' + f[1] + '</span><div class="step"><button data-f="' + f[0] + '" data-d="-1" aria-label="Diminuir ' + f[1] + '">−</button><output>' + (f[2] === "s" ? fmt(v) : v) + '</output><button data-f="' + f[0] + '" data-d="1" aria-label="Aumentar ' + f[1] + '">+</button></div></div>';
+      var meio = f[2] === "s"
+        ? '<div class="tin"><input inputmode="numeric" pattern="[0-9]*" maxlength="2" id="in-' + f[0] + '-m" data-in="' + f[0] + '" data-part="m" value="' + String(Math.floor(v / 60)).padStart(2, "0") + '" aria-label="' + f[1] + ': minutos">:<input inputmode="numeric" pattern="[0-9]*" maxlength="2" id="in-' + f[0] + '-s" data-in="' + f[0] + '" data-part="s" value="' + String(v % 60).padStart(2, "0") + '" aria-label="' + f[1] + ': segundos"></div>'
+        : '<div class="tin"><input class="n" inputmode="numeric" pattern="[0-9]*" maxlength="2" id="in-' + f[0] + '" data-in="' + f[0] + '" data-part="n" value="' + v + '" aria-label="' + f[1] + '"></div>';
+      return '<div class="field"><span>' + f[1] + '</span><div class="step"><button data-f="' + f[0] + '" data-d="-1" aria-label="Diminuir ' + f[1] + '">−</button>' + meio + '<button data-f="' + f[0] + '" data-d="1" aria-label="Aumentar ' + f[1] + '">+</button></div></div>';
     }).join("");
     build();
     $("summary").innerHTML = "Duração total: <b>" + fmt(total) + "</b>";
-    $("somChk").checked = som;
+    $("somChk").checked = som; $("vozChk").checked = vozOn;
   }
+  function lerCampo(f) {
+    var campo = MODES[mode].campos.filter(function (x) { return x[0] === f; })[0]; if (!campo) return;
+    var num = function (el) { var n = parseInt((el && el.value || "").replace(/\D/g, ""), 10); return isNaN(n) ? 0 : n; };
+    var v;
+    if (campo[2] === "n") v = Math.max(1, Math.min(99, num($("in-" + f))));
+    else v = Math.max(minimo(f), Math.min(3600, num($("in-" + f + "-m")) * 60 + Math.min(59, num($("in-" + f + "-s")))));
+    cfg[mode][f] = v; persist(); drawSheet();
+  }
+  $("fields").addEventListener("change", function (ev) { var el = ev.target.closest("[data-in]"); if (el) lerCampo(el.dataset.in); });
+  $("fields").addEventListener("focusin", function (ev) { var el = ev.target.closest("[data-in]"); if (el) setTimeout(function () { try { el.select(); } catch (e) {} }, 0); });
+  $("fields").addEventListener("keydown", function (ev) { if (ev.key === "Enter") { var el = ev.target.closest("[data-in]"); if (el) el.blur(); } });
   $("presets").addEventListener("click", function (ev) {
     var b = ev.target.closest("[data-p]"); if (!b) return;
     Object.assign(cfg[mode], MODES[mode].presets[+b.dataset.p][1]); persist(); drawSheet();
@@ -350,8 +428,9 @@ body.de-app .app { height: calc(100% - 32px); }
     cfg[mode][f] = Math.max(minimo(f), passo(cfg[mode][f], campo[2], +b.dataset.d)); persist(); drawSheet();
   });
   $("somChk").addEventListener("change", function () { som = $("somChk").checked; persist(); });
+  $("vozChk").addEventListener("change", function () { vozOn = $("vozChk").checked; persist(); if (vozOn) { liberaSom(); fala("Voz ligada"); } });
   function openSheet() { if (running) toggle(); drawSheet(); $("sheet").hidden = false; $("doneBtn").focus(); }
-  function closeSheet() { $("sheet").hidden = true; reset(); }
+  function closeSheet() { var a = document.activeElement; if (a && a.dataset && a.dataset.in) lerCampo(a.dataset.in); $("sheet").hidden = true; reset(); }
   $("cfgBtn").addEventListener("click", openSheet);
   $("doneBtn").addEventListener("click", closeSheet);
   $("sheet").addEventListener("click", function (ev) { if (ev.target === $("sheet")) closeSheet(); });

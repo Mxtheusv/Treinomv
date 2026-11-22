@@ -2915,6 +2915,16 @@ function startApp() {
     upsert("TRÍCEPS COICE HALTERES", { grupoMuscular: "Tríceps", tipoExercicio: "Extensão", equipamento: "Halteres", exec: "Tronco inclinado à frente, braço junto ao corpo e cotovelo dobrado a 90°. Estenda o antebraço para trás até o braço ficar reto, sem mexer o ombro, e volte controlando." });
     upsert("TRÍCEPS COICE POLIA", { grupoMuscular: "Tríceps", tipoExercicio: "Extensão", equipamento: "Polia/Cabo", exec: "De lado para a polia alta, cotovelo junto ao tronco e antebraço para baixo. Estenda o braço para trás até ficar reto e volte controlando, sem mover o ombro." });
     upsert("TRÍCEPS ROSCA BARRA RETA POLIA", { grupoMuscular: "Tríceps", tipoExercicio: "Extensão", equipamento: "Polia/Cabo", exec: "De frente para a polia alta, barra reta com pegada na largura dos ombros e cotovelos junto ao corpo. Empurre para baixo até estender os braços e volte controlando." });
+    // HYROX: as 8 estações da prova (e a corrida entre elas), usadas no modelo "HYROX — Preparação para a prova".
+    upsert("CONDICIONAMENTO CORRIDA", { grupoMuscular: "Cardio/Condicionamento", tipoExercicio: "Corrida/Sprint", equipamento: "Peso corporal", exec: "Corrida no ritmo indicado. No HYROX são 8 trechos de 1 km, um antes de cada estação: saia da estação respirando e retome o ritmo nos primeiros 200 m." });
+    upsert("CONDICIONAMENTO SKIERG", { grupoMuscular: "Cardio/Condicionamento", tipoExercicio: "Outro", equipamento: "Máquina", exec: "Em pé de frente para o SkiErg, puxe as alças de cima para baixo dobrando o quadril e os joelhos levemente, como uma remada de esqui. A força vem do tronco e do quadril, não só dos braços. Na prova: 1000 m." });
+    upsert("CONDICIONAMENTO REMO ERGÔMETRO", { grupoMuscular: "Cardio/Condicionamento", tipoExercicio: "Remada", equipamento: "Máquina", exec: "Empurre primeiro com as pernas, depois incline o tronco para trás e por último puxe com os braços até o abdômen. Na volta, a ordem inversa: braços, tronco e pernas. Na prova: 1000 m." });
+    upsert("CONDICIONAMENTO TRENÓ EMPURRAR", { grupoMuscular: "Corpo todo", tipoExercicio: "Outro", equipamento: "Outro", exec: "Mãos nas hastes do trenó, braços firmes e tronco inclinado à frente. Empurre com passos curtos e rápidos, apoiando o antepé. Na prova (Open): 50 m, 152 kg homem e 102 kg mulher, com o trenó." });
+    upsert("CONDICIONAMENTO TRENÓ PUXAR", { grupoMuscular: "Corpo todo", tipoExercicio: "Puxada", equipamento: "Outro", exec: "De frente para o trenó, puxe a corda mão após mão, usando as pernas e o quadril, e não só os braços. Mantenha os pés atrás da linha. Na prova (Open): 50 m, 103 kg homem e 78 kg mulher, com o trenó." });
+    upsert("CONDICIONAMENTO BURPEE SALTO HORIZONTAL", { grupoMuscular: "Corpo todo", tipoExercicio: "Salto", equipamento: "Peso corporal", exec: "Desça ao chão com o peito encostando, levante e salte para a frente com os dois pés juntos. Repita até completar a distância. Na prova: 80 m (burpee broad jump)." });
+    upsert("CONDICIONAMENTO CAMINHADA DO FAZENDEIRO", { grupoMuscular: "Corpo todo", tipoExercicio: "Outro", equipamento: "Kettlebell", exec: "Um kettlebell em cada mão, braços estendidos, ombros para trás e abdômen firme. Caminhe com passos rápidos sem deixar o tronco balançar. Na prova (Open): 200 m, 2 x 24 kg homem e 2 x 16 kg mulher." });
+    upsert("COXA AFUNDO ANDANDO SANDBAG", { grupoMuscular: "Coxa (quadríceps)", tipoExercicio: "Avanço/Afundo", equipamento: "Outro", exec: "Sandbag apoiado nos ombros, atrás do pescoço. Dê um passo à frente e desça até o joelho de trás encostar no chão, depois avance com a outra perna. Na prova (Open): 100 m, 20 kg homem e 10 kg mulher." });
+    upsert("COXA AGACHAMENTO WALL BALL", { grupoMuscular: "Corpo todo", tipoExercicio: "Agachar", equipamento: "Bolinha", exec: "Bola no peito, agache abaixo da linha do joelho e, na subida, arremesse a bola no alvo da parede. Receba já descendo para o próximo agachamento. Na prova (Open): 100 repetições, bola de 6 kg homem e 4 kg mulher." });
     // Trainer added these 10 straight into the exported acervo list (no
     // filmed clip yet -- video/exec stay blank until he sends one, same as
     // any acervo item without a video). grupoMuscular/tipoExercicio filled
@@ -4085,6 +4095,22 @@ function startApp() {
         { nome: "TREINO B — DIA DE PERNA", blocos: [
           { t: "PERNAS E GLÚTEO", ex: [["COXA LEG PRESS HORIZONTAL", 2, "12", "60s"], ["COXA CADEIRA ADUTORA MÁQUINA", 2, "15", "45s"], ["GLÚTEO ELEVAÇÃO PESO CORPORAL PONTE", 2, "12", "45s"]] }
         ] }
+      ] },
+    { nome: "HYROX — Preparação para a prova (Intermediário)", nivel: "Intermediário", freq: "3x/semana (A, B, C) + 1 corrida leve",
+      desc: "Para quem vai correr o HYROX: 8 trechos de 1 km de corrida, cada um seguido de uma estação (SkiErg, trenó empurrar, trenó puxar, burpee com salto, remo, caminhada do fazendeiro, afundo com sandbag e wall ball). A: força para as estações. B: corrida sob fadiga. C: estações de motor. As cargas de prova estão na explicação de cada exercício.",
+      dias: [
+        { nome: "TREINO A — FORÇA PARA AS ESTAÇÕES", blocos: [
+          { t: "FORÇA", ex: [["COXA AGACHAMENTO FRONTAL BARRA", 4, "6", "2min", "Base para o wall ball e o afundo."], ["POSTERIOR DE COXA TERRA BARRA", 4, "5", "2min30", "Base para o trenó e o fazendeiro."], ["COSTAS REMADA BAIXA COM BARRA", 3, "8", "90s", "Base para o trenó puxar e o remo."]] },
+          { t: "TRENÓ (BI-SET)", chain: true, ex: [["CONDICIONAMENTO TRENÓ EMPURRAR", 4, "25 m", "", "Carga um pouco acima da de prova. Passos curtos."], ["CONDICIONAMENTO TRENÓ PUXAR", 4, "25 m", "2min", "Puxe com as pernas, não só com os braços."]] },
+          { t: "PEGADA E CORE", ex: [["CONDICIONAMENTO CAMINHADA DO FAZENDEIRO", 3, "50 m", "60s", "Carga de prova ou acima."], ["ABDÔMEN CORE PRANCHA", 3, "45s", "45s"]] }
+        ] },
+        { nome: "TREINO B — CORRIDA SOB FADIGA", blocos: [
+          { t: "CIRCUITO (4 RODADAS)", chain: true, ex: [["CONDICIONAMENTO CORRIDA", 4, "1 km", "", "Ritmo de prova: forte, mas sustentável."], ["COXA AGACHAMENTO WALL BALL", 4, "25", "", "Sem pausa: receba a bola já descendo."], ["COXA AFUNDO ANDANDO SANDBAG", 4, "25 m", "2min", "Descanse só no fim de cada rodada."]] }
+        ], aero: [{ tipo: "Corrida (rua/pista)", texto: "10 min leve antes do circuito, para aquecer" }] },
+        { nome: "TREINO C — ESTAÇÕES DE MOTOR", blocos: [
+          { t: "ERGÔMETROS (3 RODADAS)", chain: true, ex: [["CONDICIONAMENTO SKIERG", 3, "500 m", "", "Ritmo de prova."], ["CONDICIONAMENTO REMO ERGÔMETRO", 3, "500 m", "", "Pernas primeiro, braços por último."], ["CONDICIONAMENTO BURPEE SALTO HORIZONTAL", 3, "20 m", "2min", "Ritmo constante: não acelere no começo."]] },
+          { t: "PEGADA E POTÊNCIA (3 RODADAS)", chain: true, ex: [["CONDICIONAMENTO CAMINHADA DO FAZENDEIRO", 3, "100 m", "", "Carga de prova."], ["COXA AGACHAMENTO WALL BALL", 3, "20", "", "Bola de prova."], ["POSTERIOR DE COXA KETTLEBELL SWING", 3, "15", "90s", "Quadril explode, braços só guiam."]] }
+        ], aero: [{ tipo: "Corrida (rua/pista)", texto: "Em outro dia da semana: 30 a 40 min contínuos em ritmo confortável (dá para conversar)" }] }
       ] },
     { nome: "Introdução ao LPO (Levantamento Olímpico)", nivel: "Intermediário", freq: "2x/semana (A e B), junto com o treino de força",
       desc: "Ensina o clean (arremesso) e o snatch (arranque) por partes: posição de recepção, puxada e o movimento completo. Cargas leves, foco em técnica e velocidade da barra. Dá para começar com bastão ou barra vazia.",

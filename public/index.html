@@ -4112,6 +4112,41 @@ function startApp() {
           { t: "PEGADA E POTÊNCIA (3 RODADAS)", chain: true, ex: [["CONDICIONAMENTO CAMINHADA DO FAZENDEIRO", 3, "100 m", "", "Carga de prova."], ["COXA AGACHAMENTO WALL BALL", 3, "20", "", "Bola de prova."], ["POSTERIOR DE COXA KETTLEBELL SWING", 3, "15", "90s", "Quadril explode, braços só guiam."]] }
         ], aero: [{ tipo: "Corrida (rua/pista)", texto: "Em outro dia da semana: 30 a 40 min contínuos em ritmo confortável (dá para conversar)" }] }
       ] },
+    { nome: "HYROX — Primeira prova (Iniciante)", nivel: "Iniciante", freq: "2 a 3x/semana (A, B, C)",
+      desc: "Para quem vai fazer o primeiro HYROX (ou a categoria Doubles) e quer chegar inteiro: distâncias e cargas menores, técnica das 8 estações e base de corrida. Quando ficar fácil, passe para o modelo Intermediário.",
+      dias: [
+        { nome: "TREINO A — FORÇA BASE E TÉCNICA", blocos: [
+          { t: "FORÇA", ex: [["COXA AGACHAMENTO HALTERES", 3, "12", "90s", "Base para o wall ball e o afundo."], ["COXA LEG PRESS INCLINADO", 3, "12", "90s"], ["COSTAS REMADA SENTADA MÁQUINA", 3, "12", "90s", "Base para o trenó puxar e o remo."]] },
+          { t: "TRENÓ (TÉCNICA)", chain: true, ex: [["CONDICIONAMENTO TRENÓ EMPURRAR", 3, "15 m", "", "Carga leve: aprenda a postura e os passos curtos."], ["CONDICIONAMENTO TRENÓ PUXAR", 3, "15 m", "2min", "Carga leve, puxando com as pernas."]] },
+          { t: "PEGADA E CORE", ex: [["CONDICIONAMENTO CAMINHADA DO FAZENDEIRO", 3, "30 m", "60s", "Comece abaixo da carga de prova."], ["ABDÔMEN CORE PRANCHA", 3, "30s", "45s"]] }
+        ] },
+        { nome: "TREINO B — CORRIDA E ESTAÇÕES LEVES", blocos: [
+          { t: "CIRCUITO (3 RODADAS)", chain: true, ex: [["CONDICIONAMENTO CORRIDA", 3, "500 m", "", "Ritmo confortável. Pode alternar com caminhada."], ["COXA AGACHAMENTO WALL BALL", 3, "10", "", "Bola leve, foco em agachar abaixo do joelho."], ["COXA AFUNDO ANDANDO SANDBAG", 3, "10 m", "2min", "Sem carga ou com sandbag leve."]] }
+        ], aero: [{ tipo: "Corrida (rua/pista)", texto: "10 min de caminhada rápida ou trote leve antes, para aquecer" }] },
+        { nome: "TREINO C — MOTOR", blocos: [
+          { t: "ERGÔMETROS (3 RODADAS)", chain: true, ex: [["CONDICIONAMENTO SKIERG", 3, "250 m", "", "Ritmo moderado, aprendendo o movimento."], ["CONDICIONAMENTO REMO ERGÔMETRO", 3, "250 m", "", "Pernas primeiro, braços por último."], ["CONDICIONAMENTO BURPEE SALTO HORIZONTAL", 3, "10 m", "2min", "Sem pressa: um burpee bem feito por vez."]] }
+        ], aero: [{ tipo: "Corrida (rua/pista)", texto: "20 a 25 min contínuos em ritmo leve (pode intercalar caminhada)" }] }
+      ] },
+    { nome: "HYROX — Competidor (Avançado)", nivel: "Avançado", freq: "4x/semana (A, B, C, D) + rodagem longa",
+      desc: "Para quem já competiu e quer baixar o tempo, inclusive na categoria Pro: força máxima, corrida acima do ritmo de prova e simulados das duas metades da prova. Faça o C e o D em dias separados, com pelo menos 48 h entre eles.",
+      dias: [
+        { nome: "TREINO A — FORÇA MÁXIMA", blocos: [
+          { t: "FORÇA", ex: [["COXA AGACHAMENTO FRONTAL BARRA", 5, "4", "2min30", "Carga pesada, técnica perfeita."], ["POSTERIOR DE COXA TERRA BARRA", 5, "3", "3min"], ["COSTAS REMADA BAIXA COM BARRA", 4, "6", "2min"]] },
+          { t: "TRENÓ PESADO (BI-SET)", chain: true, ex: [["CONDICIONAMENTO TRENÓ EMPURRAR", 5, "20 m", "", "Acima da carga da sua categoria."], ["CONDICIONAMENTO TRENÓ PUXAR", 5, "20 m", "2min30", "Acima da carga da sua categoria."]] },
+          { t: "PEGADA", ex: [["CONDICIONAMENTO CAMINHADA DO FAZENDEIRO", 4, "50 m", "90s", "Acima da carga de prova."]] }
+        ] },
+        { nome: "TREINO B — CORRIDA ACIMA DO RITMO", blocos: [
+          { t: "INTERVALADO", ex: [["CONDICIONAMENTO CORRIDA", 6, "1 km", "90s", "5 a 10 s por km mais rápido que o seu ritmo de prova."]] },
+          { t: "CORRIDA COMPROMETIDA (3 RODADAS)", chain: true, ex: [["COXA AGACHAMENTO WALL BALL", 3, "30", "", "Bola da sua categoria."], ["CONDICIONAMENTO CORRIDA", 3, "400 m", "90s", "Saia do wall ball direto para a corrida, em ritmo de prova."]] }
+        ], aero: [{ tipo: "Corrida (rua/pista)", texto: "15 min leve antes, com 4 acelerações de 20 s" }] },
+        { nome: "TREINO C — SIMULADO 1ª METADE", blocos: [
+          { t: "ESTAÇÕES 1 A 4 (SEM PAUSA)", chain: true, ex: [["CONDICIONAMENTO CORRIDA", 1, "1 km", ""], ["CONDICIONAMENTO SKIERG", 1, "1000 m", ""], ["CONDICIONAMENTO CORRIDA", 1, "1 km", ""], ["CONDICIONAMENTO TRENÓ EMPURRAR", 1, "50 m", "", "Carga de prova."], ["CONDICIONAMENTO CORRIDA", 1, "1 km", ""], ["CONDICIONAMENTO TRENÓ PUXAR", 1, "50 m", "", "Carga de prova."], ["CONDICIONAMENTO CORRIDA", 1, "1 km", ""], ["CONDICIONAMENTO BURPEE SALTO HORIZONTAL", 1, "80 m", "", "Anote o tempo total para comparar."]] },
+          { t: "CORE", ex: [["ABDÔMEN CORE PRANCHA", 3, "60s", "45s"]] }
+        ] },
+        { nome: "TREINO D — SIMULADO 2ª METADE", blocos: [
+          { t: "ESTAÇÕES 5 A 8 (SEM PAUSA)", chain: true, ex: [["CONDICIONAMENTO CORRIDA", 1, "1 km", ""], ["CONDICIONAMENTO REMO ERGÔMETRO", 1, "1000 m", ""], ["CONDICIONAMENTO CORRIDA", 1, "1 km", ""], ["CONDICIONAMENTO CAMINHADA DO FAZENDEIRO", 1, "200 m", "", "Carga de prova."], ["CONDICIONAMENTO CORRIDA", 1, "1 km", ""], ["COXA AFUNDO ANDANDO SANDBAG", 1, "100 m", "", "Carga de prova."], ["CONDICIONAMENTO CORRIDA", 1, "1 km", ""], ["COXA AGACHAMENTO WALL BALL", 1, "100", "", "Anote o tempo total para comparar."]] }
+        ], aero: [{ tipo: "Corrida (rua/pista)", texto: "Em outro dia da semana: rodagem de 50 a 60 min em ritmo confortável" }] }
+      ] },
     { nome: "Introdução ao LPO (Levantamento Olímpico)", nivel: "Intermediário", freq: "2x/semana (A e B), junto com o treino de força",
       desc: "Ensina o clean (arremesso) e o snatch (arranque) por partes: posição de recepção, puxada e o movimento completo. Cargas leves, foco em técnica e velocidade da barra. Dá para começar com bastão ou barra vazia.",
       dias: [

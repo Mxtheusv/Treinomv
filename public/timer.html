@@ -108,6 +108,16 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 .sheet-card > * { flex-shrink: 0; }
 .done-btn { min-height: 54px; height: 54px; border-radius: 999px; background: var(--gold); color: var(--gold-ink); font-weight: 700; font-size: 17px; }
 @media (max-height: 700px) { .cnt b { font-size: 48px; } .play { width: 92px; height: 92px; } .lap { width: 80px; height: 80px; } .ttl #total { font-size: 28px; } }
+/* celular ou tablet deitado: modo telão, só a fase e o tempo para os atletas */
+#lsInfo { display: none; }
+@media (orientation: landscape) and (pointer: coarse) {
+  .top, .ctrl, .tabs, .voltar, #next, #laps { display: none !important; }
+  .app, body.de-app .app { max-width: none; height: 100%; }
+  .stage { gap: 0; padding: 8px max(16px, env(safe-area-inset-right, 0px)) 8px max(16px, env(safe-area-inset-left, 0px)); cursor: pointer; }
+  #phase { font-size: min(15vh, 9vw); }
+  #big, .stage[data-k="crono"] #big { font-size: min(70vh, 37vw); line-height: .82; }
+  #lsInfo { display: block; font-family: var(--display); font-weight: 700; font-size: min(9vh, 5vw); line-height: 1; text-transform: uppercase; opacity: .85; font-variant-numeric: tabular-nums; }
+}
 @media (prefers-reduced-motion: reduce) { .stage, .play { transition: none; } }
 html { height: 100%; }
 body { margin: 0; height: 100%; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
@@ -129,6 +139,7 @@ body.de-app .app { height: calc(100% - 32px); }
   <main class="stage" id="stage" data-k="idle" aria-live="polite">
     <div id="phase">PRONTO</div>
     <div id="big">00:10</div>
+    <div id="lsInfo"></div>
     <div class="next" id="next"><span id="nextLbl">EXERCÍCIO</span><b id="nextT">00:20</b></div>
     <ol id="laps" hidden></ol>
   </main>
@@ -305,6 +316,7 @@ body.de-app .app { height: calc(100% - 32px); }
       $("big").innerHTML = fmt(s) + '<span class="dec">.' + d + "</span>";
       $("total").textContent = fmt(s);
       $("rLeft").textContent = laps.length;
+      $("lsInfo").textContent = running ? (laps.length ? laps.length + (laps.length === 1 ? " volta" : " voltas") : "") : (ms ? "Pausado · toque para continuar" : "Toque na tela para iniciar");
       return;
     }
     var e = elapsed() / 1000;
@@ -326,6 +338,7 @@ body.de-app .app { height: calc(100% - 32px); }
     for (var j = idx; j < seq.length; j++) if (seq[j].k === "work") { rondas++; ciclos[seq[j].cycle] = 1; }
     $("rLeft").textContent = rondas;
     $("cLeft").textContent = Object.keys(ciclos).length;
+    $("lsInfo").textContent = !running && started ? "Pausado · toque para continuar" : (!started ? "Toque na tela para iniciar" : (mode === "amrap" ? "AMRAP" : (rondas === 1 ? "Última ronda" : rondas + " rondas para terminar")));
     // bipes
     if (running) {
       if (idx !== lastIdx) {
@@ -340,7 +353,7 @@ body.de-app .app { height: calc(100% - 32px); }
     finished = true; running = false; acc = total * 1000; wake(false);
     $("stage").dataset.k = "done"; $("phase").textContent = "Fim do treino";
     $("big").textContent = "00:00"; $("next").style.visibility = "hidden";
-    $("total").textContent = "00:00"; $("rLeft").textContent = 0; $("cLeft").textContent = 0;
+    $("total").textContent = "00:00"; $("rLeft").textContent = 0; $("cLeft").textContent = 0; $("lsInfo").textContent = "Toque para começar de novo";
     bip("fim"); vibra([300, 120, 300, 120, 600]); fala("Fim do treino. Bom trabalho!", som ? 900 : 0);
     setPlay();
   }
@@ -440,6 +453,8 @@ body.de-app .app { height: calc(100% - 32px); }
   });
 
   $("playBtn").addEventListener("click", toggle);
+  var deitado = window.matchMedia ? window.matchMedia("(orientation: landscape) and (pointer: coarse)") : null;
+  $("stage").addEventListener("click", function () { if (deitado && deitado.matches) toggle(); });
   $("resetBtn").addEventListener("click", reset);
   $("lapBtn").addEventListener("click", lap);
   document.querySelectorAll(".tab").forEach(function (t) { t.addEventListener("click", function () { if (t.dataset.mode !== mode) setMode(t.dataset.mode); }); });

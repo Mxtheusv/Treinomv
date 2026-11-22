@@ -229,7 +229,7 @@ body.de-app .app { height: calc(100% - 32px); }
 
   // ---- relógio ----
   var acc = 0, t0 = 0, running = false, finished = false, lastIdx = -1, lastBeep = "", laps = [], lastLap = 0;
-  function elapsed() { return acc + (running ? performance.now() - t0 : 0); }
+  function elapsed() { return acc + (running ? Date.now() - t0 : 0); } // relógio real: ao voltar para a página o tempo está certo
   function fmt(sec) { sec = Math.max(0, sec); var m = Math.floor(sec / 60), s = sec % 60; return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0"); }
 
   // ---- som (só começa depois de tocar em Iniciar) ----
@@ -262,7 +262,7 @@ body.de-app .app { height: calc(100% - 32px); }
   try { Object.keys(SONS).forEach(function (k) { var a = new Audio(wav(SONS[k][0], SONS[k][1], 0.8)); a.preload = "auto"; players[k] = a; }); } catch (e) { players = {}; }
   function liberaSom() { // precisa acontecer dentro de um toque (regra dos celulares)
     if (liberado) return; liberado = true;
-    try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch (e) { /* sem controle de sessão */ }
+    try { if (navigator.audioSession) navigator.audioSession.type = "transient"; /* abaixa a música do Spotify só durante o bipe/voz, sem pausar */ } catch (e) { /* sem controle de sessão */ }
     Object.keys(players).forEach(function (k) {
       var a = players[k]; a.muted = true;
       try { var p = a.play(); if (p && p.then) p.then(function () { a.pause(); a.currentTime = 0; a.muted = false; }).catch(function () { a.muted = false; }); } catch (e) { a.muted = false; }
@@ -304,7 +304,12 @@ body.de-app .app { height: calc(100% - 32px); }
       if (!on && lock) { lock.release(); lock = null; }
     } catch (e) { /* sem wake lock */ }
   }
-  document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible" && running) wake(true); });
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState !== "visible" || !running) return;
+    wake(true);
+    var antes = lastIdx; render();
+    if (lastIdx === antes && !finished && mode !== "crono") { var sg = seq[lastIdx]; if (sg) fala(sg.label || LBL[sg.k]); }
+  });
 
   // ---- desenho ----
   function render() {
@@ -368,7 +373,7 @@ body.de-app .app { height: calc(100% - 32px); }
   function toggle() {
     if (finished) reset();
     if (running) { acc = elapsed(); running = false; wake(false); }
-    else { liberaSom(); t0 = performance.now(); running = true; wake(true); requestAnimationFrame(loop); }
+    else { liberaSom(); t0 = Date.now(); running = true; wake(true); requestAnimationFrame(loop); }
     setPlay(); render();
   }
   function reset() { running = false; finished = false; acc = 0; lastIdx = -1; lastBeep = ""; laps = []; lastLap = 0; $("laps").innerHTML = ""; wake(false); build(); setPlay(); render(); }

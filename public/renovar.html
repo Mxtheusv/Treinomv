@@ -193,6 +193,17 @@
   .depo-quem b { font-weight: 700; }
   .depo-aviso { font-size: 14px; color: var(--faint); margin-top: 24px; }
   @media (max-width: 760px) { .depo-destaque { grid-template-columns: 1fr; } .depo-destaque img { max-width: 420px; } }
+
+  /* conquistas do aluno (vêm do app) */
+  .conq-sec { padding: 56px 0 10px; }
+  .conq-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: 22px; }
+  .conq { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 18px; opacity: 0; transform: translateY(14px); animation: conqEntra .55s cubic-bezier(.2,.7,.2,1) forwards; }
+  .conq b { display: block; font: italic 900 46px/1 var(--display); font-variant-numeric: tabular-nums; color: var(--ink); }
+  .conq.ouro b { color: var(--gold); }
+  .conq span { display: block; margin-top: 6px; color: var(--soft); font-size: 15px; line-height: 1.35; }
+  @keyframes conqEntra { to { opacity: 1; transform: none; } }
+  @media (max-width: 760px) { .conq-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .conq b { font-size: 38px; } }
+  @media (prefers-reduced-motion: reduce) { .conq { animation: none; opacity: 1; transform: none; } }
   @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .btn, .sticky { transition: none; } }
 
   /* renovação: botões dos planos, formas de pagamento e Pix */
@@ -243,6 +254,14 @@
       <div class="phone"><img src="/lp/hist.jpg" width="560" height="1149" alt="Tela do app com o histórico de treinos do aluno"></div>
     </div>
   </div>
+
+  <section class="conq-sec" id="conquistas" hidden aria-labelledby="conq-t">
+    <div class="wrap">
+      <div class="eyebrow">Sua evolução até aqui</div>
+      <h2 id="conq-t" style="margin-top:12px">Olha o que você já conquistou</h2>
+      <div class="conq-grid" id="r-conq"></div>
+    </div>
+  </section>
 
   <section class="alt" id="video">
     <div class="wrap">
@@ -341,6 +360,28 @@
       d = JSON.parse(new TextDecoder().decode(bytes)) || {};
     }
   } catch (e) { d = {}; }
+
+  // Conquistas do aluno: números sobem na tela (só aparece quando o app manda os dados)
+  (function () {
+    var q = d.q; if (!q || !(q.t > 0)) return;
+    var itens = [
+      { v: q.t, txt: q.t === 1 ? "treino feito" : "treinos feitos", ouro: true },
+      { v: q.r, txt: q.r === 1 ? "recorde de carga" : "recordes de carga" },
+      { v: q.sem, txt: q.sem === 1 ? "semana seguida treinando" : "semanas seguidas treinando" },
+      { v: q.c, suf: "%", txt: "mais carga" + (q.ce ? " em " + String(q.ce).toLowerCase() : ""), ouro: true }
+    ].filter(function (it) { return it.v > 0; });
+    if (!itens.length) return;
+    var box = $("r-conq"), reduz = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    itens.forEach(function (it, i) {
+      var c = el("div", "conq" + (it.ouro ? " ouro" : "")), b = el("b", null, reduz ? it.v + (it.suf || "") : "0" + (it.suf || ""));
+      c.style.animationDelay = (i * 140) + "ms"; c.appendChild(b); c.appendChild(el("span", null, it.txt)); box.appendChild(c);
+      if (!reduz) setTimeout(function () {
+        var t0 = performance.now();
+        (function passo(t) { var k = Math.min(1, (t - t0) / 1100); b.textContent = Math.round(it.v * (1 - Math.pow(1 - k, 3))) + (it.suf || ""); if (k < 1) requestAnimationFrame(passo); })(t0);
+      }, 200 + i * 140);
+    });
+    $("conquistas").hidden = false;
+  })();
   // Sem dados (página aberta direto): planos padrão da consultoria.
   var planos = Array.isArray(d.p) && d.p.length ? d.p : [
     { nome: "Mensal", preco: "R$ 120", periodo: "/ mês", desc: "Pague mês a mês." },

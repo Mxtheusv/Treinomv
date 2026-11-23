@@ -245,6 +245,31 @@
   .btn:active { transform: translateY(2px) scale(.96); }
   .btn.pop { animation: pop .42s cubic-bezier(.3,1.6,.5,1); }
   @keyframes pop { 0% { transform: scale(.94); } 55% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
+  /* raspadinha do mês grátis */
+  .presente { padding: 70px 0; }
+  .presente .wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
+  .presente p { color: var(--soft); margin-top: 14px; max-width: 34em; }
+  .cupom-palco { position: relative; display: grid; place-items: center; min-height: 280px; }
+  .cupom { position: relative; width: min(100%, 400px); aspect-ratio: 16 / 10; border-radius: 20px; user-select: none; -webkit-user-select: none; touch-action: none; }
+  .cupom-fundo { position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(135deg, #1b2a52, #0f1a35); border: 2px dashed rgba(255,194,32,.6); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 4px; padding: 16px; }
+  .cupom-fundo small { font-weight: 700; font-size: 12px; letter-spacing: .18em; color: var(--soft); }
+  .cupom-fundo b { font: italic 900 clamp(46px, 9vw, 64px)/.9 var(--display); color: var(--gold); text-transform: uppercase; }
+  .cupom-fundo span { font-size: 14.5px; color: var(--ink); }
+  .cupom canvas { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: inherit; cursor: grab; transition: opacity .5s ease; }
+  .cupom canvas.sumiu { opacity: 0; pointer-events: none; }
+  .cupom-dica { margin-top: 12px; font-size: 13.5px; color: var(--faint); text-align: center; }
+  .cupom-cta { margin-top: 18px; }
+  .confete { position: absolute; left: 50%; top: 45%; width: 8px; height: 12px; border-radius: 2px; pointer-events: none; animation: cai 1.3s cubic-bezier(.2,.7,.3,1) forwards; }
+  @keyframes cai { from { transform: translate(0,0) rotate(0); opacity: 1; } to { transform: translate(var(--dx), var(--dy)) rotate(var(--r)); opacity: 0; } }
+  @media (max-width: 860px) { .presente .wrap { grid-template-columns: 1fr; gap: 24px; } }
+  /* botão principal com borda de luz */
+  @property --ang { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+  .btn.brilho { position: relative; isolation: isolate; }
+  .btn.brilho::before { content: ""; position: absolute; inset: -3px; border-radius: inherit; z-index: -1; background: conic-gradient(from var(--ang), transparent 0 55%, #fff6d6 70%, var(--gold) 80%, transparent 92%); animation: gira 2.6s linear infinite; }
+  .btn.brilho::after { content: ""; position: absolute; inset: -9px; border-radius: inherit; z-index: -2; background: conic-gradient(from var(--ang), transparent 0 55%, rgba(255,194,32,.5) 75%, transparent 92%); filter: blur(13px); animation: gira 2.6s linear infinite; }
+  @keyframes gira { to { --ang: 360deg; } }
+  @media (prefers-reduced-motion: reduce) { .btn.brilho::before, .btn.brilho::after, .confete { animation: none; } }
   @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .btn, .sticky { transition: none; } .w, .shimmer, .btn.pop { animation: none; } .shimmer { -webkit-text-fill-color: var(--gold); } .plano { transition: none; } }
 </style>
 </head>
@@ -268,7 +293,7 @@
         <h1 aria-label="Treine como atleta, viva como gente."><span class="w" style="--i:0" aria-hidden="true">Treine</span> <span class="w" style="--i:1" aria-hidden="true">como</span> <span class="w" style="--i:2" aria-hidden="true">atleta,</span> <em><span class="w" style="--i:3" aria-hidden="true">viva</span> <span class="w" style="--i:4" aria-hidden="true">como</span> <span class="w" style="--i:5" aria-hidden="true">gente.</span></em></h1>
         <p class="lead">Treino montado para você, com a organização da <b>preparação física de atletas</b>, adaptada para quem treina por saúde, estética ou para se sentir melhor.</p>
         <div class="hero-cta">
-          <a class="btn" href="#form">Quero conhecer</a>
+          <a class="btn brilho" href="#form">Quero conhecer</a>
           <a class="btn ghost" href="#como">Ver como funciona</a>
         </div>
         <p class="hero-note">Sem cobrança para começar. Você conhece o método, <span class="shimmer">testa 1 mês</span> se fizer sentido e decide depois.</p>
@@ -479,6 +504,26 @@
     </div>
   </section>
 
+  <section class="presente" id="presente" aria-labelledby="presente-t">
+    <div class="wrap">
+      <div>
+        <div class="eyebrow">Um presente para você</div>
+        <h2 id="presente-t" style="margin-top:12px">Raspe e descubra</h2>
+        <p>Antes de conversar com a gente, tem uma surpresa guardada aqui. Raspe o cartão com o dedo ou o mouse.</p>
+      </div>
+      <div class="cupom-palco" id="cupomPalco">
+        <div style="display:flex;flex-direction:column;align-items:center;width:100%">
+          <div class="cupom" id="cupom">
+            <div class="cupom-fundo"><small>SEU PRESENTE</small><b>1 mês grátis</b><span>de consultoria completa: treino, app e acompanhamento</span></div>
+            <canvas id="raspa" role="img" aria-label="Cartão para raspar. Por baixo: 1 mês grátis de consultoria completa."></canvas>
+          </div>
+          <div class="cupom-dica" id="cupomDica">Arraste o dedo ou o mouse para raspar</div>
+          <a class="btn brilho cupom-cta" href="#form" id="cupomCta" hidden>Quero meu mês grátis</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section class="form-sec" id="form">
     <div class="wrap form-grid">
       <div>
@@ -522,7 +567,7 @@
           <div class="hp" aria-hidden="true"><label>Não preencha<input id="f-site" name="site" tabindex="-1" autocomplete="off"></label></div>
           <label class="consent"><input id="f-consent" name="consentimento" type="checkbox"><span>Autorizo o uso das informações de saúde que informei para montar meu treino. Necessário só se você preencher o campo de lesões. Veja a <a href="/privacidade.html">política de privacidade</a>.</span></label>
           <p class="erro" id="erro" role="alert"></p>
-          <button class="btn" type="submit" id="enviar">Enviar e conversar</button>
+          <button class="btn brilho" type="submit" id="enviar">Enviar e conversar</button>
           <p class="fine">Ao enviar, você concorda em ser contatado pelo WhatsApp. Não enviamos spam.</p>
         </form>
         <div class="ok" id="ok" role="status">
@@ -577,6 +622,45 @@
     });
     c.addEventListener("pointerleave", function () { c.classList.remove("inclinado"); c.style.transform = ""; });
   });
+})();
+</script>
+<script>
+(function () {
+  // raspadinha do mês grátis
+  var cv = document.getElementById("raspa"), cupom = document.getElementById("cupom"); if (!cv || !cv.getContext) return;
+  var ctx = cv.getContext("2d"), raspando = false, revelado = false, ultimo = null;
+  var reduz = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function cobre() {
+    var r = cupom.getBoundingClientRect(); if (!r.width) return;
+    var dpr = window.devicePixelRatio || 1; cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var g = ctx.createLinearGradient(0, 0, r.width, r.height); g.addColorStop(0, "#c9cfdf"); g.addColorStop(.5, "#eef1f8"); g.addColorStop(1, "#aab2c8");
+    ctx.globalCompositeOperation = "source-over"; ctx.fillStyle = g; ctx.fillRect(0, 0, r.width, r.height);
+    ctx.fillStyle = "rgba(30,40,70,.6)"; ctx.textAlign = "center"; ctx.font = "italic 900 26px 'Barlow Condensed', sans-serif"; ctx.fillText("RASPE AQUI", r.width / 2, r.height / 2 - 2);
+    ctx.font = "600 13px Barlow, sans-serif"; ctx.fillText("tem um presente pra você", r.width / 2, r.height / 2 + 20);
+    for (var i = 0; i < 180; i++) { ctx.fillStyle = "rgba(255,255,255," + (Math.random() * .35) + ")"; ctx.fillRect(Math.random() * r.width, Math.random() * r.height, 2, 2); }
+  }
+  function pos(e) { var r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+  function risca(p) { ctx.globalCompositeOperation = "destination-out"; ctx.lineWidth = 40; ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.beginPath(); ctx.moveTo((ultimo || p).x, (ultimo || p).y); ctx.lineTo(p.x, p.y); ctx.stroke(); ultimo = p; }
+  function quanto() { var d = ctx.getImageData(0, 0, cv.width, cv.height).data, v = 0, n = 0; for (var i = 3; i < d.length; i += 64) { n++; if (d[i] < 40) v++; } return v / n; }
+  function revela() {
+    if (revelado) return; revelado = true; cv.classList.add("sumiu");
+    document.getElementById("cupomDica").hidden = true; document.getElementById("cupomCta").hidden = false;
+    if (reduz) return;
+    var palco = document.getElementById("cupomPalco"), cores = ["#ffc220", "#2e6bff", "#ffffff", "#38d39f"];
+    for (var i = 0; i < 46; i++) {
+      var c = document.createElement("i"); c.className = "confete"; c.style.background = cores[i % 4];
+      c.style.setProperty("--dx", (Math.random() * 380 - 190) + "px"); c.style.setProperty("--dy", (Math.random() * 230 - 170) + "px"); c.style.setProperty("--r", (Math.random() * 720 - 360) + "deg");
+      palco.appendChild(c); setTimeout(function (el) { el.remove(); }, 1400, c);
+    }
+  }
+  cv.addEventListener("pointerdown", function (e) { if (revelado) return; raspando = true; ultimo = null; try { cv.setPointerCapture(e.pointerId); } catch (er) {} risca(pos(e)); });
+  cv.addEventListener("pointermove", function (e) { if (raspando) risca(pos(e)); });
+  function solta() { if (!raspando) return; raspando = false; ultimo = null; if (quanto() > .45) revela(); }
+  cv.addEventListener("pointerup", solta); cv.addEventListener("pointercancel", solta);
+  cv.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); revela(); } });
+  cv.tabIndex = 0;
+  window.addEventListener("resize", function () { if (!revelado) cobre(); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(cobre); else cobre();
 })();
 </script>
 <div class="sticky" id="sticky"><a class="btn" href="#form">Quero conhecer</a></div>

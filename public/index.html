@@ -2915,6 +2915,10 @@ function startApp() {
     upsert("TRÍCEPS COICE HALTERES", { grupoMuscular: "Tríceps", tipoExercicio: "Extensão", equipamento: "Halteres", exec: "Tronco inclinado à frente, braço junto ao corpo e cotovelo dobrado a 90°. Estenda o antebraço para trás até o braço ficar reto, sem mexer o ombro, e volte controlando." });
     upsert("TRÍCEPS COICE POLIA", { grupoMuscular: "Tríceps", tipoExercicio: "Extensão", equipamento: "Polia/Cabo", exec: "De lado para a polia alta, cotovelo junto ao tronco e antebraço para baixo. Estenda o braço para trás até ficar reto e volte controlando, sem mover o ombro." });
     upsert("TRÍCEPS ROSCA BARRA RETA POLIA", { grupoMuscular: "Tríceps", tipoExercicio: "Extensão", equipamento: "Polia/Cabo", exec: "De frente para a polia alta, barra reta com pegada na largura dos ombros e cotovelos junto ao corpo. Empurre para baixo até estender os braços e volte controlando." });
+    // Core e mobilidade com animação própria (dead bug, bird dog e flexores do quadril).
+    upsert("ABDÔMEN CORE ANTI-HIPEREXTENSÃO DEAD BUG", { grupoMuscular: "Abdômen/Core", tipoExercicio: "Core", equipamento: "Peso corporal", exec: "Deitado de barriga para cima, braços apontando para o teto e pernas em mesa (quadril e joelhos a 90°). Cole a lombar no chão e, sem deixar ela sair, estenda devagar um braço para trás da cabeça e a perna do lado oposto. Volte e troque o lado. Solte o ar enquanto estende." });
+    upsert("ABDÔMEN CORE ANTI-ROTAÇÃO BIRD DOG", { grupoMuscular: "Abdômen/Core", tipoExercicio: "Core", equipamento: "Peso corporal", exec: "Em 4 apoios, mãos embaixo dos ombros e joelhos embaixo do quadril. Estenda um braço à frente e a perna do lado oposto para trás, até ficarem na linha do tronco, sem girar o quadril nem arquear a lombar. Segure 1 a 2 segundos, volte e troque o lado." });
+    upsert("MOBILIDADE QUADRIL EXTENSÃO SEMI-AJOELHADO (FLEXORES DO QUADRIL)", { grupoMuscular: "Mobilidade", tipoExercicio: "Mobilidade", equipamento: "Peso corporal", exec: "Semi-ajoelhado, joelho de trás no chão e pé da frente apoiado com o joelho a 90°. Contraia o glúteo da perna de trás, encaixe o quadril (barriga firme) e leve o quadril para a frente até sentir a frente do quadril alongar. Segure e volte, sem arquear a lombar." });
     // HYROX: as 8 estações da prova (e a corrida entre elas), usadas no modelo "HYROX — Preparação para a prova".
     upsert("CONDICIONAMENTO CORRIDA", { grupoMuscular: "Cardio/Condicionamento", tipoExercicio: "Corrida/Sprint", equipamento: "Peso corporal", exec: "Corrida no ritmo indicado. No HYROX são 8 trechos de 1 km, um antes de cada estação: saia da estação respirando e retome o ritmo nos primeiros 200 m." });
     upsert("CONDICIONAMENTO SKIERG", { grupoMuscular: "Cardio/Condicionamento", tipoExercicio: "Outro", equipamento: "Máquina", exec: "Em pé de frente para o SkiErg, puxe as alças de cima para baixo dobrando o quadril e os joelhos levemente, como uma remada de esqui. A força vem do tronco e do quadril, não só dos braços. Na prova: 1000 m." });
@@ -4781,6 +4785,17 @@ function startApp() {
   function animMusculosPorPadrao(nome) {
     var n = nome.normalize ? nome.normalize("NFD").replace(/[\u0300-\u036f]/g, "") : nome;
     var a = "/exercicios/anim-";
+    // Mobilidade e core: uma animação por família (as variações de posição usam a mesma).
+    if (/DEAD ?BUG|INSETO MORTO/.test(n)) return a + "dead-bug.mp4";
+    if (/BIRD ?DOG|PERDIGUEIRO/.test(n)) return a + "bird-dog.mp4";
+    if (/GATO.*CAMELO|CAT.?COW/.test(n)) return a + "gato-camelo.mp4";
+    if (/MOBILIDADE QUADRIL ROTACAO/.test(n) && /SENTADO|90\/90/.test(n)) return a + "mob-quadril-rotacao.mp4";
+    if (/MOBILIDADE QUADRIL ABDUCAO ROCKING/.test(n) && !/DE PE/.test(n)) return a + "mob-rocking-adutor.mp4";
+    if (/MOBILIDADE QUADRIL EXTENSAO|FLEXORES DO QUADRIL/.test(n)) return a + "mob-flexor-quadril.mp4";
+    if (/ANJINHO|WALL ANGEL|WALL SLIDE/.test(n)) return a + "mob-anjinho.mp4";
+    if (/MOBILIDADE OMBRO FLEXAO/.test(n)) return a + "mob-ombro-flexao.mp4";
+    if (/MOBILIDADE OMBRO EXTENSAO/.test(n)) return a + "mob-ombro-extensao.mp4";
+    if (/MOBILIDADE OMBRO ROTACAO (BILATERAL|UNILATERAL)/.test(n)) return a + "mob-ombro-rotacao.mp4";
     if (/HANG (POWER )?CLEAN/.test(n)) return a + "hang-clean.mp4";
     if (/POWER CLEAN|\bCLEAN\b.*BARRA|ARREMESSO.*BARRA/.test(n) && !/PULL|KETTLEBELL|MEDICINE|BOLA/.test(n)) return a + "power-clean.mp4";
     if (/CLEAN PULL|SNATCH PULL|PUXADA ALTA/.test(n)) return a + "clean-pull.mp4";

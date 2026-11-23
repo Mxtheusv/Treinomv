@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Um presente pra você · Matheus Venâncio</title>
+<meta name="theme-color" content="#080d1a">
+<link rel="icon" href="/icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@1,800;1,900&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #080d1a; --panel: #101a31; --line: rgba(140,165,225,.18); --ink: #eef2ff; --soft: #a3b0d0; --faint: #7d8bb0; --gold: #ffc220; --gold-ink: #1a1300;
+    --display: "Barlow Condensed", "Arial Narrow", Impact, sans-serif; --body: "Barlow", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { min-height: 100%; }
+  body { margin: 0; background: radial-gradient(900px 480px at 85% -10%, rgba(46,107,255,.28), transparent 62%), var(--bg); color: var(--ink); font: 17px/1.55 var(--body); -webkit-font-smoothing: antialiased;
+    padding: calc(28px + env(safe-area-inset-top, 0px)) max(18px, env(safe-area-inset-right, 0px)) calc(36px + env(safe-area-inset-bottom, 0px)) max(18px, env(safe-area-inset-left, 0px)); }
+  main { max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 18px; }
+  .marca { display: flex; align-items: center; gap: 10px; font: italic 900 19px/1 var(--display); text-transform: uppercase; }
+  .marca img { width: 36px; height: 36px; border-radius: 9px; }
+  .eyebrow { font-weight: 700; font-size: 13px; letter-spacing: .16em; text-transform: uppercase; color: var(--gold); }
+  h1 { margin: 0; font: italic 900 clamp(38px, 10vw, 58px)/.95 var(--display); text-transform: uppercase; text-wrap: balance; }
+  h1 em { color: var(--gold); font-style: italic; }
+  p { margin: 0; color: var(--soft); }
+  .palco { position: relative; width: 100%; display: grid; place-items: center; padding: 6px 0; }
+  .cupom { position: relative; width: min(100%, 420px); aspect-ratio: 16 / 10; border-radius: 20px; user-select: none; -webkit-user-select: none; touch-action: none; }
+  .cupom-fundo { position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(135deg, #1b2a52, #0f1a35); border: 2px dashed rgba(255,194,32,.6); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 18px; }
+  .cupom-fundo small { font-weight: 700; font-size: 12px; letter-spacing: .18em; color: var(--soft); }
+  .cupom-fundo b { font: italic 900 clamp(32px, 8.5vw, 46px)/.95 var(--display); color: var(--gold); text-transform: uppercase; text-wrap: balance; }
+  .cupom-fundo span { font-size: 14px; color: var(--ink); }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: inherit; cursor: grab; transition: opacity .5s ease; }
+  canvas.sumiu { opacity: 0; pointer-events: none; }
+  .dica { font-size: 14px; color: var(--faint); }
+  @property --ang { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+  .btn { position: relative; isolation: isolate; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; font: 700 18px/1 var(--body); padding: 19px 34px; border-radius: 999px; background: var(--gold); color: var(--gold-ink); }
+  .btn::before { content: ""; position: absolute; inset: -3px; border-radius: inherit; z-index: -1; background: conic-gradient(from var(--ang), transparent 0 55%, #fff6d6 70%, var(--gold) 80%, transparent 92%); animation: gira 2.6s linear infinite; }
+  .btn::after { content: ""; position: absolute; inset: -9px; border-radius: inherit; z-index: -2; background: conic-gradient(from var(--ang), transparent 0 55%, rgba(255,194,32,.5) 75%, transparent 92%); filter: blur(13px); animation: gira 2.6s linear infinite; }
+  @keyframes gira { to { --ang: 360deg; } }
+  .btn:focus-visible, canvas:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+  .depois { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .nota { font-size: 13px; color: var(--faint); }
+  .confete { position: absolute; left: 50%; top: 45%; width: 8px; height: 12px; border-radius: 2px; pointer-events: none; animation: cai 1.3s cubic-bezier(.2,.7,.3,1) forwards; }
+  @keyframes cai { from { transform: translate(0,0) rotate(0); opacity: 1; } to { transform: translate(var(--dx), var(--dy)) rotate(var(--r)); opacity: 0; } }
+  [hidden] { display: none !important; }
+  @media (prefers-reduced-motion: reduce) { .btn::before, .btn::after, .confete { animation: none; } }
+</style>
+</head>
+<body>
+<main>
+  <div class="marca"><img src="/icons/icon-192.png" alt="" width="36" height="36">Matheus Venâncio</div>
+  <div class="eyebrow">Um presente pra você</div>
+  <h1><span id="v-nome">Sentimos</span> <em id="v-falta">sua falta</em></h1>
+  <p id="v-lead">Seu treino ficou guardado do jeito que você deixou. Pra você voltar com tudo, separei um presente. Raspe o cartão com o dedo.</p>
+  <div class="palco" id="palco">
+    <div class="cupom" id="cupom">
+      <div class="cupom-fundo"><small>SEU PRESENTE DE VOLTA</small><b id="v-presente">Desconto na 1ª mensalidade</b><span>para voltar a treinar comigo</span></div>
+      <canvas id="raspa" tabindex="0" role="img" aria-label="Cartão para raspar com o seu presente"></canvas>
+    </div>
+  </div>
+  <div class="dica" id="dica">Arraste o dedo para raspar</div>
+  <div class="depois" id="depois" hidden>
+    <a class="btn" id="v-cta" href="https://wa.me/" target="_blank" rel="noopener">Quero voltar</a>
+    <p class="nota">Me chama no WhatsApp e eu já monto o seu treino de volta.</p>
+  </div>
+</main>
+<script>
+(function () {
+  function $(id) { return document.getElementById(id); }
+  var d = {};
+  try {
+    var m = /[#&]d=([^&]+)/.exec(location.hash);
+    if (m) {
+      var b64 = decodeURIComponent(m[1]).replace(/-/g, "+").replace(/_/g, "/"); while (b64.length % 4) b64 += "=";
+      var bin = atob(b64), bytes = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      d = JSON.parse(new TextDecoder().decode(bytes)) || {};
+    }
+  } catch (e) { d = {}; }
+  var nome = String(d.n || "").trim().split(/\s+/)[0].slice(0, 30), presente = String(d.p || "").trim().slice(0, 80) || "Desconto na 1ª mensalidade";
+  var whats = String(d.w || "").replace(/\D/g, "");
+  if (nome) { $("v-nome").textContent = nome + ","; $("v-falta").textContent = "sentimos sua falta"; }
+  $("v-presente").textContent = presente;
+  var txt = "Oi, Matheus! Raspei o presente (" + presente + ") e quero voltar a treinar 💪";
+  $("v-cta").href = "https://wa.me/" + whats + "?text=" + encodeURIComponent(txt);
+
+  var cv = $("raspa"), cupom = $("cupom"), ctx = cv.getContext("2d"), raspando = false, revelado = false, ultimo = null;
+  var reduz = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function cobre() {
+    var r = cupom.getBoundingClientRect(); if (!r.width) return;
+    var dpr = window.devicePixelRatio || 1; cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var g = ctx.createLinearGradient(0, 0, r.width, r.height); g.addColorStop(0, "#c9cfdf"); g.addColorStop(.5, "#eef1f8"); g.addColorStop(1, "#aab2c8");
+    ctx.globalCompositeOperation = "source-over"; ctx.fillStyle = g; ctx.fillRect(0, 0, r.width, r.height);
+    ctx.fillStyle = "rgba(30,40,70,.6)"; ctx.textAlign = "center"; ctx.font = "italic 900 26px 'Barlow Condensed', sans-serif"; ctx.fillText("RASPE AQUI", r.width / 2, r.height / 2 - 2);
+    ctx.font = "600 13px Barlow, sans-serif"; ctx.fillText(nome ? nome + ", é pra você" : "é pra você", r.width / 2, r.height / 2 + 20);
+    for (var i = 0; i < 180; i++) { ctx.fillStyle = "rgba(255,255,255," + (Math.random() * .35) + ")"; ctx.fillRect(Math.random() * r.width, Math.random() * r.height, 2, 2); }
+  }
+  function pos(e) { var r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+  function risca(p) { ctx.globalCompositeOperation = "destination-out"; ctx.lineWidth = 40; ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.beginPath(); ctx.moveTo((ultimo || p).x, (ultimo || p).y); ctx.lineTo(p.x, p.y); ctx.stroke(); ultimo = p; }
+  function quanto() { var dd = ctx.getImageData(0, 0, cv.width, cv.height).data, v = 0, n = 0; for (var i = 3; i < dd.length; i += 64) { n++; if (dd[i] < 40) v++; } return v / n; }
+  function revela() {
+    if (revelado) return; revelado = true; cv.classList.add("sumiu"); $("dica").hidden = true; $("depois").hidden = false;
+    if (reduz) return;
+    var palco = $("palco"), cores = ["#ffc220", "#2e6bff", "#ffffff", "#38d39f"];
+    for (var i = 0; i < 50; i++) {
+      var c = document.createElement("i"); c.className = "confete"; c.style.background = cores[i % 4];
+      c.style.setProperty("--dx", (Math.random() * 380 - 190) + "px"); c.style.setProperty("--dy", (Math.random() * 240 - 180) + "px"); c.style.setProperty("--r", (Math.random() * 720 - 360) + "deg");
+      palco.appendChild(c); setTimeout(function (el) { el.remove(); }, 1400, c);
+    }
+  }
+  cv.addEventListener("pointerdown", function (e) { if (revelado) return; raspando = true; ultimo = null; try { cv.setPointerCapture(e.pointerId); } catch (er) {} risca(pos(e)); });
+  cv.addEventListener("pointermove", function (e) { if (raspando) risca(pos(e)); });
+  function solta() { if (!raspando) return; raspando = false; ultimo = null; if (quanto() > .45) revela(); }
+  cv.addEventListener("pointerup", solta); cv.addEventListener("pointercancel", solta);
+  cv.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); revela(); } });
+  window.addEventListener("resize", function () { if (!revelado) cobre(); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(cobre); else cobre();
+})();
+</script>
+</body>
+</html>

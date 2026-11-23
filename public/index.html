@@ -7458,6 +7458,7 @@ function startApp() {
           '<div class="tr-more-menu">' +
           '<button type="button" class="tr-resumo-btn" data-resumo="' + escapeAttr(slug) + '" aria-expanded="' + (aberto ? "true" : "false") + '">' + (aberto ? "📊 Fechar resumo" : "📊 Ver resumo") + '</button>' +
           (statusKey === "sumido" ? chamarBotaoHtml(slug).replace(/ class="sa-cta-ghost" style="[^"]*"/, "") : "") +
+          '<button type="button" data-volta="' + escapeAttr(slug) + '">🎁 Chamar de volta (raspadinha)</button>' +
           '<button type="button" data-copy="' + escapeAttr(slug) + '">📋 Copiar convite</button>' +
           '<button type="button" data-metas-de="' + escapeAttr(slug) + '">🎯 Metas do aluno</button>' +
           '<button type="button" data-presencial="' + escapeAttr(slug) + '">' + (s.presencial ? '🏋️ Tirar de presencial' : '🏋️ Marcar como presencial') + '</button>' +
@@ -11263,6 +11264,51 @@ function startApp() {
   // Página de renovação (/renovar.html): benefícios, videochamada mensal, planos e pagamento.
   // Os dados vão no próprio endereço, então a página não precisa de login.
   // Conquistas mostradas na página de renovação: treinos, recordes, semanas seguidas e o maior ganho de carga.
+  // "Chamar de volta": link de uma página com raspadinha e o presente (desconto na 1ª mensalidade) para quem parou.
+  function voltaUrl(s, presente) {
+    var dados = { n: (s && s.nome) || "", p: presente || "", w: String((state.data.planosVenda || {}).whats || "").replace(/\D/g, "") };
+    var bytes = new TextEncoder().encode(JSON.stringify(dados)), bin = "";
+    for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return location.origin + "/volta.html#d=" + btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+  function voltaAbrir(slug) {
+    var s = state.data.students[slug]; if (!s) return;
+    var velho = document.getElementById("voltaModal"); if (velho) velho.remove();
+    var ultimo = ""; try { ultimo = localStorage.getItem("voltaPresente") || ""; } catch (e) { ultimo = ""; }
+    var ov = document.createElement("div"); ov.className = "sa-modal-overlay"; ov.id = "voltaModal";
+    var primeiro = String(s.nome || "").split(/\s+/)[0] || "aluno";
+    ov.innerHTML = '<div class="sa-modal"><h3 class="sa-display">CHAMAR DE VOLTA 🎁</h3>' +
+      '<p class="sa-modal-sub">' + escapeHtml(primeiro) + ' recebe um link com uma raspadinha. Ao raspar, aparece o presente e um botão para te chamar no WhatsApp.</p>' +
+      '<label for="voltaPresente" style="display:block;font-weight:700;font-size:13px;margin:12px 0 6px">Qual é o presente?</label>' +
+      '<input id="voltaPresente" type="text" maxlength="80" placeholder="Ex.: 1º mês por R$ 60" value="' + escapeAttr(ultimo) + '" style="width:100%;font:600 16px Barlow,sans-serif;padding:12px 14px;border-radius:12px;border:1px solid var(--sa-border);background:var(--sa-bg,#0b1224);color:inherit">' +
+      '<p class="sa-modal-sub" style="margin-top:6px">Escreva o desconto da 1ª mensalidade do jeito que quer que apareça.</p>' +
+      '<a id="voltaWa" class="sa-cta" href="#" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none;margin-top:14px">📲 Abrir WhatsApp com a mensagem</a>' +
+      '<button type="button" id="voltaCopiar" class="sa-cta-ghost" style="width:100%;margin-top:8px">📋 Copiar link</button>' +
+      '<button type="button" id="voltaFechar" class="sa-cta-ghost" style="width:100%;margin-top:8px">Fechar</button></div>';
+    document.body.appendChild(ov);
+    var inp = ov.querySelector("#voltaPresente"), wa = ov.querySelector("#voltaWa");
+    function msg() {
+      var pr = inp.value.trim();
+      return "Oi, " + primeiro + "! Senti sua falta nos treinos 💛 Separei um presente pra você voltar. Raspa aqui pra descobrir: " + voltaUrl(s, pr);
+    }
+    function atualiza() { wa.href = "https://wa.me/?text=" + encodeURIComponent(msg()); try { localStorage.setItem("voltaPresente", inp.value.trim()); } catch (e) { /* sem armazenamento */ } }
+    inp.addEventListener("input", atualiza); atualiza();
+    wa.addEventListener("click", function (e) { if (!inp.value.trim()) { e.preventDefault(); showToast("Escreva o presente antes de enviar", true); inp.focus(); } });
+    ov.querySelector("#voltaCopiar").addEventListener("click", function () {
+      if (!inp.value.trim()) { showToast("Escreva o presente antes de copiar", true); inp.focus(); return; }
+      var t = msg();
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(function () { showToast("Mensagem com o link copiada"); }).catch(function () { showLinkFallback(t); });
+      else showLinkFallback(t);
+    });
+    function fecha() { if (ov.parentNode) ov.parentNode.removeChild(ov); }
+    ov.querySelector("#voltaFechar").addEventListener("click", fecha);
+    ov.addEventListener("click", function (e) { if (e.target === ov) fecha(); });
+    setTimeout(function () { try { inp.focus(); } catch (e) {} }, 50);
+  }
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest("[data-volta]"); if (!b) return;
+    state.rosterOpenMenu = null; voltaAbrir(b.getAttribute("data-volta"));
+  });
   function renovConquistas(s) {
     var dias = {};
     (s.sessoes || []).forEach(function (ss) { if (ss && ss.date) dias[String(ss.date).slice(0, 10)] = 1; });

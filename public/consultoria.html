@@ -229,7 +229,23 @@
   .atleta-fotos img { width: 100%; height: auto; aspect-ratio: 4 / 5; object-fit: cover; }
   .atleta-fotos figcaption { font-size: 12.5px; color: var(--faint); padding: 9px 12px 11px; }
   @media (max-width: 860px) { .atleta { grid-template-columns: 1fr; gap: 30px; } .atleta-fotos { margin-bottom: 40px; } }
-  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .btn, .sticky { transition: none; } }
+
+  /* efeitos: título com desfoque, brilho na oferta, cartões que inclinam, botão que "salta" */
+  .hero h1 { text-wrap: wrap; }
+  .w { display: inline-block; animation: blurIn .75s cubic-bezier(.2,.7,.2,1) both; animation-delay: calc(var(--i) * 85ms + 80ms); }
+  @keyframes blurIn { from { opacity: 0; filter: blur(14px); transform: translateY(14px); } to { opacity: 1; filter: blur(0); transform: none; } }
+  .shimmer { font-weight: 700; color: var(--gold); background: linear-gradient(100deg, var(--gold) 0%, var(--gold) 38%, #fff6d6 50%, var(--gold) 62%, var(--gold) 100%); background-size: 240% 100%; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; animation: shimmer 3.2s linear infinite; }
+  @keyframes shimmer { from { background-position: 120% 0; } to { background-position: -120% 0; } }
+  .planos { perspective: 1100px; }
+  .plano { transition: transform .35s cubic-bezier(.2,.7,.2,1), box-shadow .35s ease; transform-style: preserve-3d; }
+  .plano::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity .3s ease; background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), rgba(255,255,255,.09), transparent 45%); }
+  .plano.inclinado { transition: transform .08s linear, box-shadow .35s ease; box-shadow: 0 30px 70px rgba(0,0,0,.35); }
+  .plano.inclinado::after { opacity: 1; }
+  .btn { transition: transform .14s cubic-bezier(.3,1.6,.5,1), box-shadow .2s ease; }
+  .btn:active { transform: translateY(2px) scale(.96); }
+  .btn.pop { animation: pop .42s cubic-bezier(.3,1.6,.5,1); }
+  @keyframes pop { 0% { transform: scale(.94); } 55% { transform: scale(1.05); } 100% { transform: scale(1); } }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .btn, .sticky { transition: none; } .w, .shimmer, .btn.pop { animation: none; } .shimmer { -webkit-text-fill-color: var(--gold); } .plano { transition: none; } }
 </style>
 </head>
 <body>
@@ -249,13 +265,13 @@
     <div class="wrap">
       <div>
         <div class="eyebrow">Consultoria de treino</div>
-        <h1>Treine como atleta, <em>viva como gente.</em></h1>
+        <h1 aria-label="Treine como atleta, viva como gente."><span class="w" style="--i:0" aria-hidden="true">Treine</span> <span class="w" style="--i:1" aria-hidden="true">como</span> <span class="w" style="--i:2" aria-hidden="true">atleta,</span> <em><span class="w" style="--i:3" aria-hidden="true">viva</span> <span class="w" style="--i:4" aria-hidden="true">como</span> <span class="w" style="--i:5" aria-hidden="true">gente.</span></em></h1>
         <p class="lead">Treino montado para você, com a organização da <b>preparação física de atletas</b>, adaptada para quem treina por saúde, estética ou para se sentir melhor.</p>
         <div class="hero-cta">
           <a class="btn" href="#form">Quero conhecer</a>
           <a class="btn ghost" href="#como">Ver como funciona</a>
         </div>
-        <p class="hero-note">Sem cobrança para começar. Você conhece o método, testa 1 mês se fizer sentido e decide depois.</p>
+        <p class="hero-note">Sem cobrança para começar. Você conhece o método, <span class="shimmer">testa 1 mês</span> se fizer sentido e decide depois.</p>
         <ul class="provas" aria-label="Credenciais">
           <li><b>CREF</b> 038618-G/SC</li>
           <li><b>Licença B</b> CBF de Preparador Físico</li>
@@ -459,7 +475,7 @@
           <p class="sub">Pagamento de R$ 480 a cada 6 meses.</p>
         </article>
       </div>
-      <p class="planos-note">Todos os planos começam com 1 mês de teste, sem pagar, se fizer sentido para você. Todos incluem uma videochamada por mês, agendada com você. Depois do teste, pague com cartão de crédito ou Pix.</p>
+      <p class="planos-note">Todos os planos começam com <span class="shimmer">1 mês de teste, sem pagar</span>, se fizer sentido para você. Todos incluem uma videochamada por mês, agendada com você. Depois do teste, pague com cartão de crédito ou Pix.</p>
     </div>
   </section>
 
@@ -541,6 +557,28 @@
   </div>
 </footer>
 
+<script>
+(function () {
+  var reduz = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // botões "saltam" ao tocar
+  if (!reduz) document.addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest(".btn"); if (!b) return;
+    b.classList.remove("pop"); void b.offsetWidth; b.classList.add("pop");
+    setTimeout(function () { b.classList.remove("pop"); }, 450);
+  });
+  // cartões de plano inclinam acompanhando o mouse (no celular ficam parados)
+  if (reduz || !(window.matchMedia && matchMedia("(hover: hover) and (pointer: fine)").matches)) return;
+  Array.prototype.forEach.call(document.querySelectorAll(".plano"), function (c) {
+    c.addEventListener("pointermove", function (e) {
+      var r = c.getBoundingClientRect(), px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
+      c.classList.add("inclinado");
+      c.style.transform = "rotateX(" + ((0.5 - py) * 9).toFixed(2) + "deg) rotateY(" + ((px - 0.5) * 11).toFixed(2) + "deg) translateZ(6px)";
+      c.style.setProperty("--mx", (px * 100).toFixed(1) + "%"); c.style.setProperty("--my", (py * 100).toFixed(1) + "%");
+    });
+    c.addEventListener("pointerleave", function () { c.classList.remove("inclinado"); c.style.transform = ""; });
+  });
+})();
+</script>
 <div class="sticky" id="sticky"><a class="btn" href="#form">Quero conhecer</a></div>
 
 <script>

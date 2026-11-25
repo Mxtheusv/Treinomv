@@ -9253,7 +9253,9 @@ function startApp() {
       ((det || t.det) ? '<div class="tec-det"><span>No seu treino</span><b>' + escapeHtml(det || t.det) + '</b></div>' : "") +
       tecVizHtml(t) +
       '<div class="tec-sec">COMO FAZER</div><ol class="tec-steps">' + t.passos.map(function (p) { return '<li>' + escapeHtml(p) + '</li>'; }).join("") + '</ol>' +
-      '<div class="tec-cuidado"><b>Atenção:</b> ' + escapeHtml(t.cuidado) + '</div></div>';
+      // A "Atenção" é dica de prescrição para o professor: não aparece para o
+      // aluno nem no atendimento presencial (tela que o aluno vê junto).
+      (isStudentView() ? "" : '<div class="tec-cuidado"><b>Atenção (só para você):</b> ' + escapeHtml(t.cuidado) + '</div>') + '</div>';
     document.body.appendChild(ov);
     function fecha() { if (ov.parentNode) ov.parentNode.removeChild(ov); document.removeEventListener("keydown", esc); }
     function esc(e) { if (e.key === "Escape") fecha(); }

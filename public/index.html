@@ -3731,7 +3731,7 @@ function startApp() {
         ] },
         { nome: "TREINO C — SUPERIOR (ombro e braços)", blocos: [
           { t: "OMBRO E COSTAS", ex: [["OMBRO DESENVOLVIMENTO HALTERES SENTADO", 4, "8", "2min"], ["COSTAS PUXADA POLIA/CABO PEGADA FECHADA", 4, "10", "90s"], ["PEITO SUPINO INCLINADO MÁQUINA", 3, "10", "90s"], ["COSTAS REMADA SENTADA MÁQUINA", 3, "10", "90s"], ["COSTAS CRUCIFIXO INVERSO HALTERES", 3, "15", "45s"]] },
-          { t: "BRAÇOS", ex: [["BÍCEPS ROSCA BARRA W", 3, "10", "60s", "Última série em drop set.", "dropset"], ["TRÍCEPS ROSCA BARRA POLIA FRANCESA", 3, "12", "60s"]] }
+          { t: "BRAÇOS", ex: [["BÍCEPS ROSCA BARRA W", 3, "10", "60s", "Última série em drop set.", "dropset"], ["TRÍCEPS ROSCA FRANCÊS BARRA POLIA", 3, "12", "60s"]] }
         ] },
         { nome: "TREINO D — INFERIOR (posterior e glúteo)", blocos: [
           { t: "POSTERIOR E GLÚTEO", ex: [["POSTERIOR DE COXA STIFF BARRA", 4, "8", "2min"], ["GLÚTEO ELEVAÇÃO PÉLVICA BARRA HIP THRUST", 4, "10", "2min"], ["COXA AFUNDO BÚLGARO HALTERES", 3, "10", "90s", "10 por lado."], ["POSTERIOR DE COXA FLEXÃO MÁQUINA MESA", 3, "12", "60s", "Última série em drop set.", "dropset"], ["GLÚTEO MÁQUINA ABDUTORA", 3, "15", "45s"]] },
@@ -4484,7 +4484,7 @@ function startApp() {
     [/elevacao.*lateral|lateral.*elevacao/, "Em pé, tronco reto e halteres ao lado do corpo. Sem balançar o tronco, eleve os halteres pelos lados com leve flexão nos cotovelos, como quem derrama água de um copo, até a altura dos ombros. Desça devagar, inspirando."],
     [/elevacao.*frontal|frontal/, "Em pé, halteres à frente das coxas. Suba os braços à frente até a altura dos ombros sem balançar o tronco e desça controlando."],
     // ---- tríceps ----
-    [/triceps.*francesa|francesa/, "De costas para a polia alta, corda/barra acima da cabeça, cotovelos fixos apontando para frente. Estenda os cotovelos sem mover o ombro e volte controlando."],
+    [/triceps.*frances|frances/, "De costas para a polia alta, corda/barra acima da cabeça, cotovelos fixos apontando para frente. Estenda os cotovelos sem mover o ombro e volte controlando."],
     [/triceps.*(extensao|rosca).*(polia|cabo|corda|barra reta)/, "Em pé de frente para a polia alta, cotovelos colados ao corpo. Estenda os cotovelos até abrir bem a corda/barra sem mover o ombro, segure 1 segundo e volte controlando."],
     [/triceps.*(testa|supino)/, "Deitado, halteres acima do peito (testa: braços perpendiculares ao chão). Flexione só os cotovelos levando os halteres perto da testa e estenda de volta, mantendo os cotovelos apontados para frente e fixos."],
     // ---- costas ----
@@ -4616,7 +4616,7 @@ function startApp() {
     [/elevacao lateral.*maquina/, "0584"],
     [/elevacao lateral/, "0334"],
     // ---- triceps ----
-    [/triceps.*francesa/, "0194"],
+    [/triceps.*frances/, "0194"],
     [/triceps.*corda/, "0200"],
     [/triceps.*barra reta/, "0201"],
     [/triceps.*testa/, "0351"],
@@ -4725,8 +4725,8 @@ function startApp() {
     "COSTAS REMADA BAIXA COM HALTER": "/exercicios/anim-serrote.mp4",
     "TRÍCEPS MERGULHO PARALELAS": "/exercicios/anim-mergulho.mp4",
     "TRÍCEPS MERGULHO BANCO": "/exercicios/anim-mergulho-banco.mp4",
-    "TRÍCEPS ROSCA CORDA POLIA FRANCESA": "/exercicios/anim-francesa.mp4",
-    "TRÍCEPS ROSCA BARRA POLIA FRANCESA": "/exercicios/anim-francesa.mp4",
+    "TRÍCEPS ROSCA FRANCÊS CORDA POLIA": "/exercicios/anim-francesa.mp4",
+    "TRÍCEPS ROSCA FRANCÊS BARRA POLIA": "/exercicios/anim-francesa.mp4",
     "BÍCEPS ROSCA SCOTT HALTERES": "/exercicios/anim-scott.mp4",
     "BÍCEPS ROSCA SCOTT BARRA W": "/exercicios/anim-scott.mp4",
     "OMBRO ENCOLHIMENTO HALTERES": "/exercicios/anim-encolhimento.mp4",
@@ -5476,6 +5476,41 @@ function startApp() {
   // never during startApp()'s own synchronous top-to-bottom pass -- by the
   // time any such callback runs, every function/var below it in the file
   // (CATALOG_RENOMEACAO_PADRAO included) has already been assigned.
+  // 2026-11-24: o treinador pediu "não existe tríceps rosca francesa, troca
+  // todos e as variações" -> o nome certo é TRÍCEPS ROSCA FRANCÊS. Varre o
+  // acervo, os planos, os modelos e o histórico atrás de qualquer nome com
+  // FRANCESA (inclusive variações digitadas à mão) e renomeia em cascata.
+  // "TRÍCEPS ROSCA BARRA POLIA FRANCESA" -> "TRÍCEPS ROSCA FRANCÊS BARRA POLIA".
+  // Idempotente: depois da primeira passada não sobra nenhum FRANCESA.
+  function nomeFrances(n) {
+    var u = normNome(n);
+    if (!/\bFRANCESA\b/.test(u)) return null;
+    var sem = u.replace(/\s*\bFRANCESA\b/, "").replace(/\s+/g, " ").trim();
+    if (/^TR[IÍ]CEPS(\s|$)/.test(sem)) return sem.replace(/^TR[IÍ]CEPS(\s+ROSCA)?/, "TRÍCEPS ROSCA FRANCÊS");
+    return u.replace(/\bFRANCESA\b/, "FRANCÊS");
+  }
+  function renomearFrancesa() {
+    var nomes = {};
+    function ver(n) { if (n && nomeFrances(n)) nomes[n] = true; }
+    CATALOG.forEach(function (it) { ver(it.nome); });
+    Object.keys(state.data.students || {}).forEach(function (slug) {
+      var s = state.data.students[slug] || {};
+      (s.plans || []).forEach(function (p) { containerExercises(p, true).forEach(function (e) { ver(e.nome); }); });
+      (s.sessoes || []).forEach(function (ses) {
+        (ses.cargasLog || []).forEach(function (c) { ver(c.exercicio); });
+        (ses.obsLog || []).forEach(function (c) { ver(c.exercicio); });
+      });
+    });
+    (state.data.templates || []).forEach(function (t) { containerExercises(t, true).forEach(function (e) { ver(e.nome); }); });
+    if (state.data.__template) containerExercises(state.data.__template, true).forEach(function (e) { ver(e.nome); });
+    var mudou = false;
+    Object.keys(nomes).forEach(function (n) {
+      var r = applyExerciseRename(n, nomeFrances(n));
+      if (r.placed || r.merged || r.renamedCatalog) mudou = true;
+    });
+    return mudou;
+  }
+
   function reaplicarCascatasDeNomenclatura() {
     var mergeResult = mergeDuplicateCatalogEntries();
     var renameResult = padronizarNomesAcervo();
@@ -5484,7 +5519,8 @@ function startApp() {
       extraCascaded += cascadeRenameExercise(par[0], par[1]);
     });
     var pend = (typeof reaplicarRenomeacoesPendentes === "function") ? reaplicarRenomeacoesPendentes() : false;
-    return mergeResult.merged > 0 || renameResult.renamed > 0 || extraCascaded > 0 || pend;
+    var franc = renomearFrancesa();
+    return mergeResult.merged > 0 || renameResult.renamed > 0 || extraCascaded > 0 || pend || franc;
   }
 
   // One-time acervo cleanup (2026-09-30): merges the duplicate entries found
@@ -5534,13 +5570,13 @@ function startApp() {
       // to depend on.
       upsertVideo("BÍCEPS ROSCA HALTERES", { grupoMuscular: "Bíceps", tipoExercicio: "Flexão", equipamento: "Halteres", video: "/exercicios/biceps-rosca-halteres.mp4", exec: "Em pé, halteres ao lado do corpo com os dois braços subindo juntos. Flexione o cotovelo sem balançar o tronco e desça controlando até estender o braço." });
       upsertVideo("OMBRO ELEVAÇÃO HALTERES FRONTAL", { grupoMuscular: "Ombro", tipoExercicio: "Elevação", equipamento: "Halteres", video: "/exercicios/ombro-elevacao-halteres-frontal.mp4", exec: "Em pé, halteres à frente das coxas. Suba os braços à frente até a altura dos ombros sem balançar o tronco e desça controlando." });
-      upsertVideo("TRÍCEPS ROSCA CORDA POLIA FRANCESA", { grupoMuscular: "Tríceps", tipoExercicio: "Extensão", equipamento: "Polia/Cabo", video: "/exercicios/triceps-rosca-corda-polia-francesa.mp4", exec: "De costas para a polia alta com a corda acima da cabeça, cotovelos fixos apontando para frente. Estenda os cotovelos sem mover o ombro e desça controlando." });
+      upsertVideo("TRÍCEPS ROSCA FRANCÊS CORDA POLIA", { grupoMuscular: "Tríceps", tipoExercicio: "Extensão", equipamento: "Polia/Cabo", video: "/exercicios/triceps-rosca-corda-polia-francesa.mp4", exec: "De costas para a polia alta com a corda acima da cabeça, cotovelos fixos apontando para frente. Estenda os cotovelos sem mover o ombro e desça controlando." });
       upsertVideo("TRÍCEPS TESTA BARRA POLIA", { grupoMuscular: "Tríceps", tipoExercicio: "Extensão", equipamento: "Polia/Cabo", video: "/exercicios/triceps-testa-barra-polia.mp4", exec: "De costas para a polia alta com a barra reta acima da cabeça, cotovelos fixos apontando para frente. Estenda os cotovelos sem mover o ombro e desça controlando." });
       upsertVideo("BÍCEPS ROSCA MARTELO HALTERES", { grupoMuscular: "Bíceps", tipoExercicio: "Flexão", equipamento: "Halteres", video: "/exercicios/biceps-rosca-martelo-halteres.mp4", exec: "Em pé, halteres ao lado do corpo com pegada neutra (martelo). Flexione o cotovelo sem girar o punho nem balançar o tronco e desça controlando." });
       upsertVideo("BÍCEPS ROSCA HALTERES ALTERNADA", { grupoMuscular: "Bíceps", tipoExercicio: "Flexão", equipamento: "Halteres", video: "/exercicios/biceps-rosca-halteres-alternada.mp4", exec: "Em pé, halteres ao lado do corpo. Flexione um braço por vez sem balançar o tronco, alternando os lados, e desça controlando." });
       upsertVideo("OMBRO ELEVAÇÃO LATERAL COM HALTER", { video: "/exercicios/ombro-elevacao-halteres-lateral.mp4" });
       upsertVideo("BÍCEPS ROSCA BARRA POLIA", { grupoMuscular: "Bíceps", tipoExercicio: "Flexão", equipamento: "Polia/Cabo", video: "/exercicios/biceps-rosca-barra-polia.mp4", exec: "De frente para a polia baixa com a barra reta, cotovelos fixos junto ao corpo. Flexione o cotovelo sem balançar o tronco e desça controlando." });
-      upsertVideo("TRÍCEPS ROSCA BARRA POLIA FRANCESA", { grupoMuscular: "Tríceps", tipoExercicio: "Extensão", equipamento: "Polia/Cabo", video: "/exercicios/triceps-rosca-barra-polia-francesa.mp4", exec: "De costas para a polia alta com a barra reta acima da cabeça, cotovelos fixos apontando para frente. Estenda os cotovelos sem mover o ombro e desça controlando." });
+      upsertVideo("TRÍCEPS ROSCA FRANCÊS BARRA POLIA", { grupoMuscular: "Tríceps", tipoExercicio: "Extensão", equipamento: "Polia/Cabo", video: "/exercicios/triceps-rosca-barra-polia-francesa.mp4", exec: "De costas para a polia alta com a barra reta acima da cabeça, cotovelos fixos apontando para frente. Estenda os cotovelos sem mover o ombro e desça controlando." });
       upsertVideo("BÍCEPS ROSCA CORDA POLIA", { grupoMuscular: "Bíceps", tipoExercicio: "Flexão", equipamento: "Polia/Cabo", video: "/exercicios/biceps-rosca-corda-polia.mp4", exec: "De frente para a polia baixa com a corda, cotovelos fixos junto ao corpo. Flexione o cotovelo sem balançar o tronco e desça controlando." });
       upsertVideo("TRÍCEPS ROSCA CORDA POLIA", { video: "/exercicios/triceps-rosca-corda-polia.mp4" });
       upsertVideo("TRÍCEPS TESTA CORDA POLIA", { grupoMuscular: "Tríceps", tipoExercicio: "Extensão", equipamento: "Polia/Cabo", video: "/exercicios/triceps-testa-corda-polia.mp4", exec: "De costas para a polia alta com a corda acima da cabeça, cotovelos fixos apontando para frente. Estenda os cotovelos sem mover o ombro e desça controlando." });
@@ -8079,6 +8115,7 @@ function startApp() {
   function leadNotasText(lead) {
     return [
       "Formulário de novo contato:",
+      (lead.origem ? "Origem: " + lead.origem : ""),
       "WhatsApp: " + (lead.whats || "—"),
       "Idade: " + (lead.idade || "—"),
       "Peso: " + (lead.peso ? lead.peso + " kg" : "—"),
@@ -8088,7 +8125,7 @@ function startApp() {
       "Tempo por sessão: " + (lead.tempo || "—"),
       "Onde treina: " + (lead.local || "—"),
       "Restrições/lesões: " + (lead.restricoes || "—")
-    ].join("\n");
+    ].filter(Boolean).join("\n");
   }
 
   function renderLeadsSection() {
@@ -8100,7 +8137,7 @@ function startApp() {
     var cardsHtml = leads.slice().sort(function (a, b) { return (b.criadoEm || 0) - (a.criadoEm || 0); }).map(function (lead) {
       var when = lead.criadoEm ? new Date(lead.criadoEm).toLocaleDateString("pt-BR") : "";
       var fields = [
-        ["WhatsApp", lead.whats], ["Idade", lead.idade], ["Peso", lead.peso ? lead.peso + " kg" : ""],
+        ["Origem", lead.origem], ["WhatsApp", lead.whats], ["Idade", lead.idade], ["Peso", lead.peso ? lead.peso + " kg" : ""],
         ["Objetivo", lead.objetivo], ["Experiência", lead.experiencia],
         ["Vezes/semana", lead.dias], ["Tempo/sessão", lead.tempo], ["Onde treina", lead.local]
       ].filter(function (f) { return f[1]; }).map(function (f) {
@@ -9217,7 +9254,9 @@ function startApp() {
       ((det || t.det) ? '<div class="tec-det"><span>No seu treino</span><b>' + escapeHtml(det || t.det) + '</b></div>' : "") +
       tecVizHtml(t) +
       '<div class="tec-sec">COMO FAZER</div><ol class="tec-steps">' + t.passos.map(function (p) { return '<li>' + escapeHtml(p) + '</li>'; }).join("") + '</ol>' +
-      '<div class="tec-cuidado"><b>Atenção:</b> ' + escapeHtml(t.cuidado) + '</div></div>';
+      // A "Atenção" é dica de prescrição para o professor: não aparece para o
+      // aluno nem no atendimento presencial (tela que o aluno vê junto).
+      (isStudentView() ? "" : '<div class="tec-cuidado"><b>Atenção (só para você):</b> ' + escapeHtml(t.cuidado) + '</div>') + '</div>';
     document.body.appendChild(ov);
     function fecha() { if (ov.parentNode) ov.parentNode.removeChild(ov); document.removeEventListener("keydown", esc); }
     function esc(e) { if (e.key === "Escape") fecha(); }

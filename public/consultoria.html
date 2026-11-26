@@ -271,11 +271,30 @@
   @keyframes gira { to { --ang: 360deg; } }
   @media (prefers-reduced-motion: reduce) { .btn.brilho::before, .btn.brilho::after, .confete { animation: none; } }
   @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .btn, .sticky { transition: none; } .w, .shimmer, .btn.pop { animation: none; } .shimmer { -webkit-text-fill-color: var(--gold); } .plano { transition: none; } }
+  /* Black Friday 2026 (some sozinha depois de 30/11 23:59) */
+  .bf-bar { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; padding: 8px 16px; background: #000; color: #fff; text-decoration: none; font: 700 13.5px/1.2 var(--body); letter-spacing: .02em; border-bottom: 1px solid rgba(255,194,32,.35); text-align: center; }
+  .bf-bar b { color: var(--gold); font-family: var(--display); font-style: italic; font-weight: 900; text-transform: uppercase; font-size: 16px; letter-spacing: .04em; }
+  .bf-bar .bf-t { font-variant-numeric: tabular-nums; color: var(--gold); white-space: nowrap; }
+  .bf { position: relative; overflow: hidden; margin: 0 0 22px; padding: 28px 26px; border-radius: 22px; background: radial-gradient(600px 260px at 100% 0, rgba(255,194,32,.20), transparent 60%), #000; border: 1.5px solid var(--gold); display: grid; grid-template-columns: 1.2fr .8fr; gap: 24px; align-items: center; }
+  .bf h3 { font-size: clamp(34px, 6vw, 52px); margin: 8px 0 10px; }
+  .bf h3 em { color: var(--gold); font-style: italic; }
+  .bf .sub { color: var(--soft); }
+  .bf ul { list-style: none; padding: 0; margin: 16px 0 0; display: grid; gap: 8px; }
+  .bf li { padding-left: 28px; position: relative; }
+  .bf li::before { content: "+"; position: absolute; left: 0; top: -1px; width: 20px; height: 20px; border-radius: 50%; background: var(--gold); color: var(--gold-ink); font-weight: 900; display: grid; place-items: center; font-size: 15px; line-height: 1; }
+  .bf-lado { text-align: center; }
+  .bf-cont { display: flex; justify-content: center; gap: 8px; margin-bottom: 16px; }
+  .bf-cont div { min-width: 62px; padding: 10px 6px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line); }
+  .bf-cont b { display: block; font: 900 italic 34px/1 var(--display); color: var(--gold); font-variant-numeric: tabular-nums; }
+  .bf-cont span { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--soft); }
+  .bf-escolhida { margin: 0 0 16px; padding: 12px 14px; border-radius: 12px; background: rgba(255,194,32,.12); border: 1px solid rgba(255,194,32,.4); color: var(--ink); font-weight: 600; }
+  @media (max-width: 760px) { .bf { grid-template-columns: 1fr; padding: 24px 20px; } }
 </style>
 </head>
 <body>
 
 <header class="top">
+  <a class="bf-bar" id="bfBar" href="#black" hidden><b>Black Friday</b><span>3 meses por R$ 240 + bônus</span><span class="bf-t" id="bfBarT"></span></a>
   <div class="wrap">
     <a class="brand" href="#topo" aria-label="Início">
       <img src="/icons/icon-192.png" alt="" width="36" height="36">
@@ -482,6 +501,22 @@
         <h2>Depois do mês de teste, você escolhe o seu ritmo</h2>
         <p>Quanto mais tempo você se compromete, menor o valor por mês.</p>
       </div>
+      <article class="bf" id="black" hidden aria-labelledby="bf-t">
+        <div>
+          <div class="eyebrow">Black Friday · só até segunda, 30/11</div>
+          <h3 id="bf-t">3 meses por <em>R$ 240</em></h3>
+          <p class="sub">É o preço de 2 meses do plano mensal: R$ 80 por mês, sem precisar fechar 6 meses.</p>
+          <ul>
+            <li>Avaliação inicial por vídeo</li>
+            <li>Plano de corrida ou de HYROX de bônus</li>
+            <li>Só 10 vagas nessa condição</li>
+          </ul>
+        </div>
+        <div class="bf-lado">
+          <div class="bf-cont" aria-label="Tempo restante"><div><b id="bfD">0</b><span>dias</span></div><div><b id="bfH">00</b><span>horas</span></div><div><b id="bfM">00</b><span>min</span></div></div>
+          <a class="btn brilho" href="#form" id="bfCta">Quero a Black Friday</a>
+        </div>
+      </article>
       <div class="planos">
         <article class="plano">
           <h3>Mensal</h3>
@@ -538,6 +573,7 @@
       </div>
       <div>
         <form id="lead" novalidate>
+          <p class="bf-escolhida" id="bfEsc" hidden>Condição Black Friday escolhida: 3 meses por R$ 240 + bônus.</p>
           <label>Seu nome
             <input id="f-nome" name="nome" autocomplete="name" required maxlength="120" placeholder="Como você se chama?">
           </label>
@@ -680,7 +716,7 @@
     var feito = function () { $("ok-nome").textContent = nome.split(/\s+/)[0]; form.style.display = "none"; ok.style.display = "block"; ok.scrollIntoView({ behavior: "smooth", block: "center" }); };
     if ($("f-site").value) { feito(); return; } // isca para robôs: finge que deu certo e não envia
     btn.disabled = true; btn.textContent = "Enviando...";
-    var lead = { nome: nome, whats: whats, objetivo: $("f-obj").value, experiencia: $("f-exp").value, local: $("f-local").value, restricoes: $("f-rest").value.trim(), consentimento: !!$("f-consent").checked };
+    var lead = { nome: nome, whats: whats, objetivo: $("f-obj").value, experiencia: $("f-exp").value, local: $("f-local").value, restricoes: $("f-rest").value.trim(), consentimento: !!$("f-consent").checked, origem: (window.bfEscolhida ? "Black Friday" : "") };
     fetch("/api/lead", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ lead: lead }) })
       .then(function (r) {
         if (r.ok) { feito(); return; }
@@ -707,6 +743,30 @@
   if (st && alvo && "IntersectionObserver" in window) {
     new IntersectionObserver(function (es) { st.classList.toggle("off", es[0].isIntersecting); }, { threshold: 0.15 }).observe(alvo);
   }
+})();
+</script>
+<script>
+(function () {
+  var FIM = new Date("2026-11-30T23:59:59-03:00").getTime();
+  var bar = document.getElementById("bfBar"), card = document.getElementById("black");
+  if (!bar || !card || Date.now() >= FIM) return;
+  bar.hidden = false; card.hidden = false; document.documentElement.style.scrollPaddingTop = "110px";
+  function dois(n) { return (n < 10 ? "0" : "") + n; }
+  function tick() {
+    var r = FIM - Date.now();
+    if (r <= 0) { bar.hidden = true; card.hidden = true; document.getElementById("bfEsc").hidden = true; window.bfEscolhida = false; return; }
+    var m = Math.floor(r / 60000), d = Math.floor(m / 1440), h = Math.floor((m % 1440) / 60), mi = m % 60;
+    document.getElementById("bfD").textContent = d;
+    document.getElementById("bfH").textContent = dois(h);
+    document.getElementById("bfM").textContent = dois(mi);
+    document.getElementById("bfBarT").textContent = "termina em " + (d ? d + "d " : "") + h + "h " + dois(mi) + "min";
+    setTimeout(tick, 20000);
+  }
+  tick();
+  document.getElementById("bfCta").addEventListener("click", function () {
+    window.bfEscolhida = true;
+    document.getElementById("bfEsc").hidden = false;
+  });
 })();
 </script>
 </body>

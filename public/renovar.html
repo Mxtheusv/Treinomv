@@ -224,6 +224,12 @@
   .pix-acoes { display: flex; flex-wrap: wrap; gap: 10px; }
   .pix-ok { color: var(--teal); font-size: 15px; min-height: 1em; }
   @media (max-width: 860px) { .formas { grid-template-columns: 1fr; } .pagamento { padding: 22px 18px; } .pix-acoes .btn { width: 100%; } }
+  .bf { margin: 0 auto 0; padding: 26px 22px; border-radius: 22px; background: radial-gradient(600px 260px at 100% 0, rgba(255,194,32,.22), transparent 60%), #000; border: 1.5px solid var(--gold); }
+  .bf h2 { margin: 8px 0 10px; }
+  .bf h2 em { color: var(--gold); font-style: italic; }
+  .bf p { color: var(--soft); }
+  .bf .bf-t { margin: 12px 0 18px; color: var(--gold); font-weight: 700; }
+  .bf-sec { padding: 34px 0 0; }
 </style>
 </head>
 <body>
@@ -255,6 +261,15 @@
     </div>
   </div>
 
+  <section class="bf-sec" id="black" hidden aria-labelledby="bf-t">
+    <div class="wrap"><div class="bf">
+      <div class="eyebrow">Black Friday · só até segunda, 30/11</div>
+      <h2 id="bf-t">3 meses por <em>R$ 240</em></h2>
+      <p>É o preço de 2 meses do plano mensal, com bônus: avaliação inicial por vídeo e plano de corrida ou de HYROX. Só 10 vagas.</p>
+      <p class="bf-t" id="bfT"></p>
+      <a class="btn" id="bfCta" href="#planos">Quero a Black Friday</a>
+    </div></div>
+  </section>
   <section class="conq-sec" id="conquistas" hidden aria-labelledby="conq-t">
     <div class="wrap">
       <div class="eyebrow">Sua evolução até aqui</div>
@@ -398,6 +413,15 @@
   if (nome) $("r-ola").textContent = nome + ", bora continuar";
   function linkSeguro(u) { u = String(u || "").trim(); return /^https:\/\/[^\s"'<>]+$/i.test(u) ? u : ""; }
   function wa(txt) { return whats ? "https://wa.me/" + whats + "?text=" + encodeURIComponent(txt) : ""; }
+  (function () {
+    var FIM = new Date("2026-11-30T23:59:59-03:00").getTime(), agora = Date.now();
+    if (agora >= FIM) return;
+    var m = Math.floor((FIM - agora) / 60000), dd = Math.floor(m / 1440), hh = Math.floor((m % 1440) / 60);
+    $("bfT").textContent = dd > 0 ? "Termina em " + dd + (dd === 1 ? " dia" : " dias") + " e " + hh + "h" : "Termina hoje à meia-noite";
+    var link = wa("Oi, Matheus! Quero a Black Friday: 3 meses por R$ 240 + bônus 💪");
+    if (link) { $("bfCta").href = link; $("bfCta").target = "_blank"; $("bfCta").rel = "noopener"; }
+    $("black").hidden = false;
+  })();
   var temCartao = false;
   var box = $("r-planos");
   planos.forEach(function (p) {

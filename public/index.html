@@ -1290,6 +1290,13 @@
   /* Aviso do mês grátis na tela Hoje do aluno */
   .sa-gratis-card { border-color: rgba(var(--sa-teal-rgb),.55); background: linear-gradient(135deg, rgba(var(--sa-teal-rgb),.12), var(--sa-panel) 65%); }
   .sa-gratis-card .sa-card-eyebrow { color: var(--sa-teal); }
+  .sa-bf-card { border: 1.5px solid #ffc220; background: radial-gradient(420px 200px at 100% 0, rgba(255,194,32,.25), transparent 60%), #05080f; color: #eef2ff; }
+  .sa-bf-card .sa-card-eyebrow { color: #ffc220; }
+  .sa-bf-titulo { font-size: 34px; line-height: .95; margin: 6px 0 8px; color: #fff; }
+  .sa-bf-titulo em { color: #ffc220; font-style: italic; }
+  .sa-bf-texto { color: #c7d0ea; font-size: 14.5px; line-height: 1.45; }
+  .sa-bf-tempo { margin-top: 8px; font-weight: 700; color: #ffc220; font-size: 13.5px; }
+  .sa-bf-card .sa-cta { background: #ffc220; color: #1a1300; display: block; text-align: center; text-decoration: none; margin-top: 12px; }
   .sa-gratis-card.fim { border-color: var(--sa-accent); background: linear-gradient(135deg, rgba(var(--sa-gold-rgb),.14), var(--sa-panel) 65%); }
   .sa-gratis-card.fim .sa-card-eyebrow { color: var(--sa-accent-text); }
   .sa-gratis-data { font-size: 22px; margin-top: 6px; }
@@ -3418,6 +3425,27 @@ function startApp() {
   var LIMIAR_VENCIMENTO_PLANO_DIAS = 7;
   // Days from today until plan.endDate -- negative once it's already past.
   // null when the trainer never set an endDate at all (most plans today).
+  // Black Friday 2026: cartão para quem está no mês grátis, é aluno online ou tem o plano
+  // terminando em até 30 dias. Some sozinho depois de 30/11 23:59 (horário de Brasília).
+  var BF_FIM = new Date("2026-11-30T23:59:59-03:00").getTime();
+  function saBlackFridayHtml(s, plan) {
+    var agora = Date.now();
+    if (agora >= BF_FIM || !s || state.atendimento) return "";
+    var dias = plan ? diasAteVencimentoPlano(plan) : null;
+    if (!(s.mesGratisEm || s.online || (dias !== null && dias <= 30))) return "";
+    var pv = (state.data && state.data.planosVenda) || {};
+    var msg = "Oi, Matheus! Quero a Black Friday: 3 meses por R$ 240 + bônus 💪";
+    var href = waLinkForPhone(pv.whats, msg) || renovarUrl(s, !!s.mesGratisEm);
+    var m = Math.floor((BF_FIM - agora) / 60000), d = Math.floor(m / 1440), h = Math.floor((m % 1440) / 60);
+    var resta = d > 0 ? "Termina em " + d + (d === 1 ? " dia" : " dias") + " e " + h + "h" : "Termina hoje à meia-noite";
+    return '<div class="sa-card sa-bf-card"><div class="sa-card-inner">' +
+      '<div class="sa-card-eyebrow"><span class="sa-dot"></span>BLACK FRIDAY · ATÉ SEGUNDA</div>' +
+      '<div class="sa-bf-titulo sa-display">3 meses por <em>R$ 240</em></div>' +
+      '<div class="sa-bf-texto">O preço de 2 meses do plano mensal, com bônus: avaliação por vídeo e plano de corrida ou de HYROX. Só 10 vagas.</div>' +
+      '<div class="sa-bf-tempo">⏳ ' + resta + '</div>' +
+      '<a class="sa-cta" href="' + escapeAttr(href) + '"' + (/^https:/.test(href) ? ' target="_blank" rel="noopener"' : '') + '>Quero a Black Friday</a>' +
+      '</div></div>';
+  }
   // Tela Hoje do aluno: até quando vai o mês grátis. Na última semana, aparece o botão dos planos.
   function saMesGratisAvisoHtml(s, plan) {
     if (!s || !s.mesGratisEm || !plan || !plan.endDate || isPlanExpired(plan)) return "";
@@ -11569,6 +11597,7 @@ function startApp() {
       '<div class="panel expired-panel">' +
       '<div class="expired-icon">⏳</div>' +
       '<h2>' + (gratisAcabou ? 'Seu mês grátis terminou' : 'Seu plano expirou') + '</h2>' +
+      saBlackFridayHtml(s, plan) +
       (temPlanos ? '<a class="sa-cta" href="' + escapeAttr(urlRenovar) + '" style="display:block;text-align:center;text-decoration:none;margin:14px 0">Ver benefícios e formas de pagamento</a>' : '') +
       corpo + '</div>';
     // Fim do mês grátis ou do plano de aluno online: abre a página de renovação uma vez por sessão (o personal vendo como aluno não é levado).
@@ -12162,6 +12191,7 @@ function startApp() {
       '<div class="sa-subtitle">' + escapeHtml(plan.microciclo || "") + '</div>' +
       // Ordem pensada para o aluno: o treino de hoje logo no começo; progresso (meta da semana com
       // os dias + fogo do mês) num bloco só, depois; avisos e dicas por último.
+      saBlackFridayHtml(s, plan) +
       saMesGratisAvisoHtml(s, plan) +
       reavCardAlunoHtml(s, plan) +
       novidadeHtml +

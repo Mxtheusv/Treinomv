@@ -707,7 +707,7 @@ async function postAuth(req: Request, deps: Deps, now: number): Promise<Response
 }
 
 const LEAD_FIELDS: Record<string, number> = {
-  nome: 120, whats: 40, idade: 20, peso: 20, objetivo: 100, experiencia: 100, dias: 60, tempo: 100, local: 100, restricoes: 1500,
+  nome: 120, whats: 40, idade: 20, peso: 20, objetivo: 100, experiencia: 100, dias: 60, tempo: 100, local: 100, restricoes: 1500, origem: 60,
 };
 async function postLead(req: Request, deps: Deps, now: number): Promise<Response> {
   const body = await readJson(req);
@@ -732,7 +732,7 @@ async function postLead(req: Request, deps: Deps, now: number): Promise<Response
   st.data = { ...(st.data || {}), leads };
   st.version = (st.version || 0) + 1;
   await deps.kv.set(STATE_STORE, STATE_KEY, st);
-  await avisa(deps, now, ["trainer"], "Novo aluno interessado", String(lead.nome), "lead");
+  await avisa(deps, now, ["trainer"], lead.origem ? "Novo aluno interessado (" + String(lead.origem) + ")" : "Novo aluno interessado", String(lead.nome), "lead");
   return reply(200, { ok: true });
 }
 

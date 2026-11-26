@@ -8115,6 +8115,7 @@ function startApp() {
   function leadNotasText(lead) {
     return [
       "Formulário de novo contato:",
+      (lead.origem ? "Origem: " + lead.origem : ""),
       "WhatsApp: " + (lead.whats || "—"),
       "Idade: " + (lead.idade || "—"),
       "Peso: " + (lead.peso ? lead.peso + " kg" : "—"),
@@ -8124,7 +8125,7 @@ function startApp() {
       "Tempo por sessão: " + (lead.tempo || "—"),
       "Onde treina: " + (lead.local || "—"),
       "Restrições/lesões: " + (lead.restricoes || "—")
-    ].join("\n");
+    ].filter(Boolean).join("\n");
   }
 
   function renderLeadsSection() {
@@ -8136,7 +8137,7 @@ function startApp() {
     var cardsHtml = leads.slice().sort(function (a, b) { return (b.criadoEm || 0) - (a.criadoEm || 0); }).map(function (lead) {
       var when = lead.criadoEm ? new Date(lead.criadoEm).toLocaleDateString("pt-BR") : "";
       var fields = [
-        ["WhatsApp", lead.whats], ["Idade", lead.idade], ["Peso", lead.peso ? lead.peso + " kg" : ""],
+        ["Origem", lead.origem], ["WhatsApp", lead.whats], ["Idade", lead.idade], ["Peso", lead.peso ? lead.peso + " kg" : ""],
         ["Objetivo", lead.objetivo], ["Experiência", lead.experiencia],
         ["Vezes/semana", lead.dias], ["Tempo/sessão", lead.tempo], ["Onde treina", lead.local]
       ].filter(function (f) { return f[1]; }).map(function (f) {

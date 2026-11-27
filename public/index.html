@@ -620,6 +620,24 @@
   /* Sugestão de carga dentro do cartão do aluno: usa os tokens do app do aluno (tema escuro). */
   .sa-ex-card .ex-load-note { margin: 8px 0 0; font-size: 13px; color: var(--sa-text-muted); }
   .sa-ex-card .ex-load-note strong { color: var(--sa-text); }
+  .mn-card .sa-mood-label { margin-bottom: 10px; }
+  .mn-abas { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+  .mn-aba { border: 1px solid var(--sa-border-soft); background: transparent; color: var(--sa-text-muted); border-radius: 999px; padding: 7px 12px; font: 700 13px/1 "Barlow", sans-serif; cursor: pointer; }
+  .mn-aba.on { background: var(--sa-accent); border-color: var(--sa-accent); color: #1a1300; }
+  .mn-mes { font-size: 22px; margin-bottom: 10px; }
+  .mn-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .mn-tile { border: 1px solid var(--sa-border-soft); border-radius: 12px; padding: 10px 8px; text-align: center; background: rgba(0,0,0,.12); }
+  .mn-tile b { display: block; font-family: "Saira Condensed", sans-serif; font-size: 26px; line-height: 1; color: var(--sa-accent); }
+  .mn-tile span { display: block; margin-top: 4px; font-size: 11.5px; color: var(--sa-text-muted); }
+  .mn-tile i { display: block; margin-top: 4px; font-style: normal; font-size: 10.5px; font-weight: 700; }
+  .mn-tile i.up { color: #34d399; } .mn-tile i.down { color: #f87171; }
+  .mn-evo { margin-top: 10px; font-size: 13.5px; color: var(--sa-text-muted); }
+  .mn-evo b { color: var(--sa-text); } .mn-evo span { color: #34d399; font-weight: 700; }
+  .mn-txt { margin-top: 12px; padding: 12px 14px; border-radius: 12px; background: rgba(var(--sa-gold-rgb),.10); border-left: 3px solid var(--sa-accent); font-size: 14.5px; line-height: 1.5; color: var(--sa-text); }
+  .mn-esc { color: var(--sa-text-muted); }
+  .mn-ass { margin-top: 6px; text-align: right; font-size: 12.5px; font-weight: 700; color: var(--sa-text-muted); }
+  .mn-aviso { display: flex; gap: 12px; align-items: center; width: 100%; text-align: left; padding: 14px 16px; border: 1px solid rgba(var(--sa-gold-rgb),.5); background: rgba(var(--sa-gold-rgb),.10); color: var(--sa-text); font: 500 14px/1.4 "Barlow", sans-serif; cursor: pointer; }
+  .mn-aviso > span:first-child { font-size: 26px; }
   .sa-sug { margin: 10px 0 0; border: 1px solid var(--sa-border-soft); border-radius: 12px; background: rgba(var(--sa-gold-rgb),.08); }
   .sa-sug-subir { border-color: rgba(52,211,153,.45); background: rgba(52,211,153,.10); }
   .sa-sug-baixar { border-color: rgba(248,113,113,.4); background: rgba(248,113,113,.08); }
@@ -3293,6 +3311,11 @@ function startApp() {
       versao: 17,
       titulo: "Técnicas com a carga de cada queda ⚡",
       texto: "Nos exercícios com técnica, o treino agora mostra o esquema direitinho. No drop set, cada série tem um campo para a carga de cada queda (ex.: 40 → 30 → 20 kg). Na pirâmide, cada série mostra as repetições (S1 · 12). Toque em 'Como fazer' para ver o passo a passo."
+    },
+    {
+      versao: 25,
+      titulo: "Novo: seu mês em números 📊",
+      texto: "No Histórico apareceu o card Seu mês em números: dias treinados, treinos, séries, quanto você levantou, recordes e a sua maior evolução de carga. Quando o mês fecha, chega também um recado sobre o seu mês."
     },
     {
       versao: 24,
@@ -12267,6 +12290,7 @@ function startApp() {
       // Ordem pensada para o aluno: o treino de hoje logo no começo; progresso (meta da semana com
       // os dias + fogo do mês) num bloco só, depois; avisos e dicas por último.
       saBlackFridayHtml(s, plan) +
+      mesAvisoHojeHtml(s) +
       saMesGratisAvisoHtml(s, plan) +
       reavCardAlunoHtml(s, plan) +
       novidadeHtml +
@@ -13869,10 +13893,101 @@ function startApp() {
       '</div></div>';
   }
   // ---------- Histórico ----------
+  // ---------- "Seu mês em números" ----------
+  // Mesma conta do servidor (mesStats em netlify/lib/core.mts). O texto do mês fechado vem da IA
+  // (/api/mes, guardado lá: cada mês chama a IA uma vez só); o mês em andamento usa um texto fixo.
+  var MES_NOMES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
+  var MES_TXT = {}, MES_BUSCANDO = {};
+  function mesAnteriorIso(m) { var y = +m.slice(0, 4), mm = +m.slice(5, 7) - 1; if (mm < 1) { mm = 12; y--; } return y + "-" + String(mm).padStart(2, "0"); }
+  function mesStatsCli(s, mes) {
+    var ses = (s.sessoes || []).slice().sort(function (a, b) { return String(a.date || "").localeCompare(String(b.date || "")) || (a.ts || 0) - (b.ts || 0); });
+    var ant = mesAnteriorIso(mes), dias = {}, diasAnt = {}, treinos = 0, series = 0, volume = 0, km = 0, recordes = 0, melhor = {}, base = {}, fim = {};
+    ses.forEach(function (x) {
+      var d = String(x.date || ""), m = d.slice(0, 7), mx = {};
+      if (m === ant) diasAnt[d] = 1;
+      (x.cargasLog || []).forEach(function (c) {
+        var k = String(c.exercicio || "").trim().toUpperCase(), v = parseFloat(String(c.valor == null ? "" : c.valor).replace(",", "."));
+        if (k && v > 0 && !(mx[k] >= v)) mx[k] = v;
+      });
+      if (m < mes) { Object.keys(mx).forEach(function (k) { if (!(melhor[k] >= mx[k])) melhor[k] = mx[k]; base[k] = mx[k]; }); return; }
+      if (m !== mes) return;
+      dias[d] = 1;
+      if (x.kind === "corrida") km += (Number(x.distanciaM) || 0) / 1000;
+      else if (!x.kind || x.kind === "treino") { treinos++; series += Number(x.seriesLogadas) || 0; volume += Number(x.volumeKg) || 0; }
+      Object.keys(mx).forEach(function (k) {
+        if (melhor[k] !== undefined && mx[k] > melhor[k]) recordes++;
+        if (!(melhor[k] >= mx[k])) melhor[k] = mx[k];
+        if (base[k] === undefined) base[k] = mx[k];
+        fim[k] = mx[k];
+      });
+    });
+    var evo = null;
+    Object.keys(fim).forEach(function (k) { var g = fim[k] / base[k] - 1; if (g > 0.02 && g <= 3 && (!evo || g > evo.g)) evo = { g: g, ex: k, de: base[k], para: fim[k] }; });
+    return { mes: mes, dias: Object.keys(dias).length, diasAnt: Object.keys(diasAnt).length, treinos: treinos, series: series, volume: Math.round(volume), km: Math.round(km * 10) / 10, recordes: recordes,
+      evolucao: evo ? { ex: evo.ex, de: evo.de, para: evo.para, pct: Math.round(evo.g * 100) } : null };
+  }
+  function mesOpcoes(s) {
+    var atual = todayISO().slice(0, 7), fechado = mesAnteriorIso(atual), op = [];
+    var cap = function (t) { return t.charAt(0).toUpperCase() + t.slice(1); };
+    if (mesStatsCli(s, fechado).dias) op.push({ m: fechado, fechado: true, t: cap(MES_NOMES[+fechado.slice(5, 7) - 1]) });
+    op.push({ m: atual, fechado: false, t: cap(MES_NOMES[+atual.slice(5, 7) - 1]) + " até agora" });
+    return op;
+  }
+  function mesTextoFixo(st, nomeMes, fechado) {
+    var p = (st.dias === 1 ? "1 dia treinado" : st.dias + " dias treinados");
+    if (!fechado) {
+      var hoje = new Date(), ult = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate(), falta = ult - hoje.getDate();
+      return st.dias ? "Até agora, " + p + " em " + nomeMes + (st.recordes ? " e " + st.recordes + (st.recordes === 1 ? " recorde" : " recordes") + " de carga" : "") + ". " + (falta > 0 ? "Faltam " + falta + (falta === 1 ? " dia" : " dias") + " pro mês acabar: bora fechar forte!" : "Último dia do mês: fecha com chave de ouro!")
+        : "Ainda sem treinos em " + nomeMes + ". O primeiro treino é o que puxa os outros: bora?";
+    }
+    return p + " em " + nomeMes + (st.evolucao ? ", com " + feedNomeEx(st.evolucao.ex) + " saindo de " + fmtKgNum(st.evolucao.de) + " para " + fmtKgNum(st.evolucao.para) + " kg" : "") + ". Bora fazer o próximo mês ainda melhor!";
+  }
+  function mesNumerosHtml(s) {
+    var op = mesOpcoes(s), sel = op.filter(function (o) { return o.m === state.mesNumSel; })[0] || op[0];
+    var st = mesStatsCli(s, sel.m), nomeMes = MES_NOMES[+sel.m.slice(5, 7) - 1];
+    var chave = state.slug + ":" + sel.m, txt = sel.fechado ? MES_TXT[chave] : null;
+    var tile = function (n, t, extra) { return '<div class="mn-tile"><b>' + n + '</b><span>' + t + '</span>' + (extra || "") + '</div>'; };
+    var dif = st.dias - st.diasAnt, difHtml = sel.fechado && st.diasAnt ? '<i class="' + (dif >= 0 ? "up" : "down") + '">' + (dif > 0 ? "+" + dif : dif === 0 ? "=" : dif) + ' vs mês anterior</i>' : "";
+    var tiles = tile(st.dias, st.dias === 1 ? "dia treinado" : "dias treinados", difHtml) + tile(st.treinos, st.treinos === 1 ? "treino" : "treinos") + tile(st.series, "séries") +
+      tile(st.volume >= 1000 ? fmtKgNum(Math.round(st.volume / 100) / 10) + " t" : st.volume + " kg", "levantados") + (st.recordes ? tile(st.recordes, st.recordes === 1 ? "recorde" : "recordes") : "") +
+      (st.km ? tile(fmtKgNum(st.km), "km de corrida") : "");
+    var texto = txt ? escapeHtml(txt) : (sel.fechado && st.dias && !MES_TXT[chave + ":falhou"] ? '<span class="mn-esc">✍️ Escrevendo o seu resumo…</span>' : escapeHtml(mesTextoFixo(st, nomeMes, sel.fechado)));
+    return '<div class="sa-card mn-card"><div class="sa-card-inner">' +
+      '<div class="sa-mood-label">📊 SEU MÊS EM NÚMEROS</div>' +
+      (op.length > 1 ? '<div class="mn-abas">' + op.map(function (o) { return '<button type="button" class="mn-aba' + (o.m === sel.m ? " on" : "") + '" data-mes-num="' + o.m + '">' + escapeHtml(o.t) + '</button>'; }).join("") + '</div>' : '<div class="mn-mes sa-display">' + escapeHtml(sel.t.toUpperCase()) + '</div>') +
+      '<div class="mn-tiles">' + tiles + '</div>' +
+      (st.evolucao ? '<div class="mn-evo">🏆 Maior evolução: <b>' + escapeHtml(feedNomeEx(st.evolucao.ex)) + '</b> · ' + fmtKgNum(st.evolucao.de) + ' → ' + fmtKgNum(st.evolucao.para) + ' kg <span>(+' + st.evolucao.pct + '%)</span></div>' : '') +
+      '<div class="mn-txt" id="mnTxt" data-mes="' + sel.m + '">' + texto + '</div>' +
+      (sel.fechado && txt ? '<div class="mn-ass">— Matheus</div>' : '') +
+      '</div></div>';
+  }
+  function mesBuscaTexto(s) {
+    var el = document.getElementById("mnTxt"); if (!el) return;
+    var mes = el.getAttribute("data-mes"), chave = state.slug + ":" + mes;
+    if (mes >= todayISO().slice(0, 7) || MES_TXT[chave] || MES_TXT[chave + ":falhou"] || MES_BUSCANDO[chave]) return;
+    var st = mesStatsCli(s, mes); if (!st.dias) return;
+    var falhou = function () { MES_TXT[chave + ":falhou"] = 1; var e = document.getElementById("mnTxt"); if (e && e.getAttribute("data-mes") === mes) e.textContent = mesTextoFixo(st, MES_NOMES[+mes.slice(5, 7) - 1], true); };
+    try { var lc = localStorage.getItem("mesTxt:" + chave); if (lc) { MES_TXT[chave] = lc; render(); return; } } catch (e) {}
+    MES_BUSCANDO[chave] = 1;
+    fetch("/api/mes", { method: "POST", headers: feedHeaders({ "Content-Type": "application/json" }), body: JSON.stringify({ slug: state.slug, mes: mes }) })
+      .then(function (r) { return r.json(); })
+      .then(function (b) {
+        MES_BUSCANDO[chave] = 0;
+        if (b && b.ok && b.texto) { MES_TXT[chave] = String(b.texto); try { localStorage.setItem("mesTxt:" + chave, MES_TXT[chave]); } catch (e) {} if (state.saTab === "historico") render(); }
+        else falhou();
+      }).catch(function () { MES_BUSCANDO[chave] = 0; falhou(); });
+  }
+  // Tela Hoje, nos 7 primeiros dias do mês: aviso de que o resumo do mês passado está pronto.
+  function mesAvisoHojeHtml(s) {
+    if (new Date().getDate() > 7 || state.atendimento) return "";
+    var fechado = mesAnteriorIso(todayISO().slice(0, 7));
+    if (!mesStatsCli(s, fechado).dias) return "";
+    return '<button type="button" class="sa-card mn-aviso" data-sa-tab="historico" data-mes-ir="' + fechado + '"><span>📊</span><span><b>Seu ' + escapeHtml(MES_NOMES[+fechado.slice(5, 7) - 1]) + ' em números está pronto</b><br>Veja quanto você evoluiu no mês →</span></button>';
+  }
   function renderAbaHistorico(s) {
     var sessoes = (s.sessoes || []).slice();
     var importadas = (s.atividadesImportadas || []).slice();
-    var evolutionHtml = avAlunoHtml(s) + saCalendarioHtml(s) + saVolumeCardHtml(s) + cargaEvolutionCardHtml(s);
+    var evolutionHtml = mesNumerosHtml(s) + avAlunoHtml(s) + saCalendarioHtml(s) + saVolumeCardHtml(s) + cargaEvolutionCardHtml(s);
     var importBtn = '<button type="button" class="sa-cta-ghost" id="btnImportarRelogio" style="width:100%;text-align:center">⌚ Importar atividade do Garmin / relógio</button>' +
       '<button type="button" class="sa-cta-ghost" id="btnIntervalsHist" style="width:100%;text-align:center;margin-top:8px">🔄 Sincronizar com o Intervals.icu</button>' + corrIntervalsStatusHtml();
     if (!sessoes.length && !importadas.length) {
@@ -16808,6 +16923,13 @@ function startApp() {
     // Student's own free-text note per exercise ("doeu no ombro", "hoje foi
     // fácil"...) -- autosaves the same way cargas do, and grows with the
     // text so a longer note doesn't get clipped inside its little box.
+    Array.prototype.forEach.call(document.querySelectorAll("[data-mes-num]"), function (b) {
+      b.addEventListener("click", function () { state.mesNumSel = b.getAttribute("data-mes-num"); render(); });
+    });
+    Array.prototype.forEach.call(document.querySelectorAll("[data-mes-ir]"), function (b) {
+      b.addEventListener("click", function () { state.mesNumSel = b.getAttribute("data-mes-ir"); });
+    });
+    if (state.saTab === "historico") mesBuscaTexto(s);
     // "Usar X kg nas séries": coloca a carga sugerida nas séries ainda não feitas hoje.
     Array.prototype.forEach.call(document.querySelectorAll("[data-sug-ex]"), function (b) {
       b.addEventListener("click", function () {
@@ -19839,6 +19961,7 @@ function startApp() {
       if (u.indexOf("/api/") !== 0) return realFetch(url, init);
       var corpo;
       if (u.indexOf("/api/state") === 0) corpo = mem;
+      else if (u.indexOf("/api/mes") === 0) corpo = { ok: true, texto: "Ana, que mês! Você treinou com constância e já está colhendo resultado nas cargas. No mês que vem, bora manter 3 treinos por semana e buscar o próximo recorde 💪 (exemplo: no app de verdade, este texto é escrito pela IA com os seus números)" };
       else if (u.indexOf("/api/feed") === 0 || u.indexOf("/api/comunidade") === 0 || u.indexOf("/api/turma") === 0) corpo = { posts: [], turma: null, ok: true };
       else corpo = { ok: true, version: mem.version };
       return Promise.resolve(new Response(JSON.stringify(corpo), { status: 200, headers: { "Content-Type": "application/json" } }));

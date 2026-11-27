@@ -34,5 +34,5 @@ export default async (req: Request, context: Context) => {
 };
 
 export const config: Config = {
-  path: ["/api/state", "/api/auth", "/api/lead", "/api/feed", "/api/comunidade", "/api/turma", "/api/push", "/api/img", "/api/img/:id", "/api/estima", "/api/backup"],
+  path: ["/api/state", "/api/auth", "/api/lead", "/api/feed", "/api/comunidade", "/api/turma", "/api/push", "/api/img", "/api/img/:id", "/api/estima", "/api/mes", "/api/backup"],
 };

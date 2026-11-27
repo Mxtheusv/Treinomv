@@ -620,6 +620,36 @@
   /* Sugestão de carga dentro do cartão do aluno: usa os tokens do app do aluno (tema escuro). */
   .sa-ex-card .ex-load-note { margin: 8px 0 0; font-size: 13px; color: var(--sa-text-muted); }
   .sa-ex-card .ex-load-note strong { color: var(--sa-text); }
+  .mn-card .sa-mood-label { margin-bottom: 10px; }
+  .mn-abas { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+  .mn-aba { border: 1px solid var(--sa-border-soft); background: transparent; color: var(--sa-text-muted); border-radius: 999px; padding: 7px 12px; font: 700 13px/1 "Barlow", sans-serif; cursor: pointer; }
+  .mn-aba.on { background: var(--sa-accent); border-color: var(--sa-accent); color: #1a1300; }
+  .mn-mes { font-size: 22px; margin-bottom: 10px; }
+  .mn-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .mn-tile { border: 1px solid var(--sa-border-soft); border-radius: 12px; padding: 10px 8px; text-align: center; background: rgba(0,0,0,.12); }
+  .mn-tile b { display: block; font-family: "Saira Condensed", sans-serif; font-size: 26px; line-height: 1; color: var(--sa-accent); }
+  .mn-tile span { display: block; margin-top: 4px; font-size: 11.5px; color: var(--sa-text-muted); }
+  .mn-tile i { display: block; margin-top: 4px; font-style: normal; font-size: 10.5px; font-weight: 700; }
+  .mn-tile i.up { color: #34d399; } .mn-tile i.down { color: #f87171; }
+  .mn-evo { margin-top: 10px; font-size: 13.5px; color: var(--sa-text-muted); }
+  .mn-evo b { color: var(--sa-text); } .mn-evo span { color: #34d399; font-weight: 700; }
+  .mn-txt { margin-top: 12px; padding: 12px 14px; border-radius: 12px; background: rgba(var(--sa-gold-rgb),.10); border-left: 3px solid var(--sa-accent); font-size: 14.5px; line-height: 1.5; color: var(--sa-text); }
+  .mn-esc { color: var(--sa-text-muted); }
+  .mn-ass { margin-top: 6px; text-align: right; font-size: 12.5px; font-weight: 700; color: var(--sa-text-muted); }
+  .mn-aviso { display: flex; gap: 12px; align-items: center; width: 100%; text-align: left; padding: 14px 16px; border: 1px solid rgba(var(--sa-gold-rgb),.5); background: rgba(var(--sa-gold-rgb),.10); color: var(--sa-text); font: 500 14px/1.4 "Barlow", sans-serif; cursor: pointer; }
+  .mn-aviso > span:first-child { font-size: 26px; }
+  .sa-sug { margin: 10px 0 0; border: 1px solid var(--sa-border-soft); border-radius: 12px; background: rgba(var(--sa-gold-rgb),.08); }
+  .sa-sug-subir { border-color: rgba(52,211,153,.45); background: rgba(52,211,153,.10); }
+  .sa-sug-baixar { border-color: rgba(248,113,113,.4); background: rgba(248,113,113,.08); }
+  .sa-sug summary { list-style: none; display: flex; align-items: center; gap: 8px; padding: 10px 12px; cursor: pointer; font-size: 14px; color: var(--sa-text-muted); }
+  .sa-sug summary::-webkit-details-marker { display: none; }
+  .sa-sug summary strong { color: var(--sa-text); }
+  .sa-sug-t { flex: 1; }
+  .sa-sug-pq { font-size: 12px; font-weight: 700; color: var(--sa-accent); white-space: nowrap; }
+  .sa-sug[open] .sa-sug-pq { opacity: .6; }
+  .sa-sug-por { padding: 0 12px 12px 38px; font-size: 13.5px; line-height: 1.45; color: var(--sa-text-muted); }
+  .sa-sug-usar { margin: 8px 0 0; width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px dashed rgba(var(--sa-gold-rgb),.6); background: transparent; color: var(--sa-accent); font: 700 14px/1 "Barlow", sans-serif; cursor: pointer; }
+  .sa-sug-usar.ok { border-style: solid; background: rgba(var(--sa-gold-rgb),.14); }
   .ex-tools { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
   .ex-tool-btn {
     border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; font: inherit;
@@ -3281,6 +3311,16 @@ function startApp() {
       versao: 17,
       titulo: "Técnicas com a carga de cada queda ⚡",
       texto: "Nos exercícios com técnica, o treino agora mostra o esquema direitinho. No drop set, cada série tem um campo para a carga de cada queda (ex.: 40 → 30 → 20 kg). Na pirâmide, cada série mostra as repetições (S1 · 12). Toque em 'Como fazer' para ver o passo a passo."
+    },
+    {
+      versao: 25,
+      titulo: "Novo: seu mês em números 📊",
+      texto: "No Histórico apareceu o card Seu mês em números: dias treinados, treinos, séries, quanto você levantou, recordes e a sua maior evolução de carga. Quando o mês fecha, chega também um recado sobre o seu mês."
+    },
+    {
+      versao: 24,
+      titulo: "Sugestão de carga mais esperta 📈",
+      texto: "Em cada exercício, o app diz a carga de hoje: subir, manter e tentar +1 repetição, ou baixar um pouco. Toque em \"por quê?\" para ver o motivo e em \"Usar\" para colocar a carga nas séries. Ela usa o que você marcou da última vez (quantas repetições ainda daria) e, se você marcar que está cansado, não manda subir."
     },
     {
       versao: 23,
@@ -7478,6 +7518,16 @@ function startApp() {
         '<div class="tr-alert-settings">Avisar quando passar de <input type="number" id="inactiveThresholdInput" min="1" max="60" value="' + escapeAttr(trLimiarDias()) + '"> dias sem check-in</div>' },
       { k: "planos", t: "Plano vencendo", n: vencChips.length, html: vencChips.length ? '<div class="tr-alert-chips">' + vencChips.join("") + '</div>' : '<p class="tr-roster-meta">Nenhum plano vencendo nos próximos dias.</p>' }
     ];
+    // Carga parada: alunos que treinam mas repetem a mesma carga no mesmo exercício há 3+ treinos.
+    var paradas = allStudents.filter(function (x) { return !trSumido(x.s) && !trSemAcesso(x.s); }).map(function (x) { return { slug: x.slug, s: x.s, l: cargasParadas(x.s) }; })
+      .filter(function (x) { return x.l.length; }).sort(function (a, b) { return b.l[0].vezes - a.l[0].vezes; });
+    var paradaChips = paradas.map(function (x) {
+      var p0 = x.l[0], extra = x.l.length > 1 ? " · +" + (x.l.length - 1) + " exercício" + (x.l.length > 2 ? "s" : "") : "";
+      return chipAl(x, feedNomeEx(p0.ex) + ": " + fmtKgNum(p0.kg) + " kg há " + p0.vezes + " treinos" + extra, "var(--sa-accent)");
+    });
+    abasAl.push({ k: "carga", t: "Carga parada", n: paradaChips.length, html: paradaChips.length
+      ? '<p class="tr-roster-meta" style="margin:0 0 8px">Mesma carga nas últimas 3 vezes ou mais. Vale ajustar a carga, as repetições ou trocar a variação.</p><div class="tr-alert-chips">' + paradaChips.join("") + '</div>'
+      : '<p class="tr-roster-meta">Ninguém com carga parada. 💪</p>' });
     if (mgTotal) abasAl.push({ k: "gratis", t: "Mês grátis", n: mgChips.length, html:
       '<div class="mg-nums">' + [[mgG.teste.length, "no teste", "#8fb3ff"], [mgG.acabando.length, "acabando (7 dias)", "#ffc247"], [mgG.renovou.length, "renovaram", "#34d399"], [mgG.nao.length, "não renovaram", "#f87171"]].map(function (v) { return '<div class="mg-num"><b style="color:' + v[2] + '">' + v[0] + '</b><span>' + v[1] + '</span></div>'; }).join("") + '</div>' +
       (mgTaxa !== null ? '<p class="tr-roster-meta" style="text-align:center;margin:2px 0 8px">' + mgTaxa + '% dos que terminaram o mês grátis renovaram</p>' : '') +
@@ -8396,20 +8446,45 @@ function startApp() {
     }
     return '<div class="' + cls + '">' + txt + '</div>';
   }
-  // Sugestão de carga para a próxima sessão, com base na última vez que o exercício foi feito.
-  // Regra simples (não é IA): se a última sessão com esse exercício fez todas as séries
-  // planejadas e o PSE foi até 8, sugere +2,5 kg sobre a maior carga usada; senão, mantém.
-  // Usa só o que o app já guarda (cargasLog, seriesPorEx, pse). O app não registra as
-  // repetições feitas, então "todas as séries" é o critério de conclusão.
-  function sugestaoCargaNote(ex) {
+  // Sugestão de carga (regra fixa, não é IA): olha a última sessão em que o exercício foi feito
+  // e decide subir, manter (e tentar +1 repetição) ou baixar. Base: progressão autorregulada por
+  // repetições na reserva (RIR) e progressão dupla (primeiro repetições, depois carga).
+  //  - faltaram 2+ séries, ou PSE 10 com série faltando -> baixar um passo
+  //  - faltou 1 série -> manter
+  //  - sobrou 4+ -> subir ~7,5% ; sobrou 3 -> subir ~5%
+  //  - sobrou 1-2 -> manter a carga e tentar +1 repetição
+  //  - foi à falha (0) -> manter
+  //  - sem RIR: PSE até 7 com séries feitas -> subir ~5%; PSE 8+ -> manter
+  //  - o aluno marcou "Cansado" hoje -> nunca sobe (mantém)
+  // O passo arredonda para o que existe na academia: 1 kg (até 10), 2 kg (até 30), 2,5 kg (até 60), 5 kg (acima).
+  function passoCarga(kg) { return kg < 10 ? 1 : (kg <= 30 ? 2 : (kg < 60 ? 2.5 : 5)); }
+  function arredCarga(v, passo) { return Math.max(passo, Math.round(v / passo) * passo); }
+  function calcSugestaoCarga(o) {
+    var kg = o.kg, passo = passoCarga(kg), rir = o.rir, pse = o.pse;
+    var faltou = o.planejadas && o.feitas < o.planejadas ? o.planejadas - o.feitas : 0;
+    var subir = function (pct) { return arredCarga(Math.max(kg + passo, kg * (1 + pct)), passo); };
+    var r;
+    if (faltou >= 2 || (faltou && pse >= 10)) r = { acao: "baixar", kg: arredCarga(kg - passo, passo), por: "Na última vez faltaram " + faltou + " série" + (faltou > 1 ? "s" : "") + " com " + fmtKgNum(kg) + " kg. Baixar um pouco ajuda a completar tudo com boa execução." };
+    else if (faltou) r = { acao: "manter", kg: kg, por: "Na última vez faltou 1 série. Mantenha " + fmtKgNum(kg) + " kg e tente completar todas hoje." };
+    else if (!isNaN(rir) && rir >= 4) r = { acao: "subir", kg: subir(0.075), por: "Você fez todas as séries e disse que ainda daria 4 ou mais repetições. A carga ficou leve: dá para subir com segurança." };
+    else if (!isNaN(rir) && rir === 3) r = { acao: "subir", kg: subir(0.05), por: "Você fez todas as séries e ainda daria 3 repetições. Subir um pouco te mantém perto do esforço certo." };
+    else if (!isNaN(rir) && rir >= 1) r = { acao: "rep", kg: kg, por: "Sobraram " + rir + " repetição" + (rir > 1 ? "ões" : "") + " na última vez: a carga está no ponto. Mantenha e tente fazer 1 repetição a mais em cada série. Quando sobrar 3, a carga sobe." };
+    else if (!isNaN(rir)) r = { acao: "manter", kg: kg, por: "Na última vez você foi até a falha. Mantenha a carga até conseguir sobrar 1 ou 2 repetições." };
+    else if (isNaN(pse)) return null;
+    else if (pse <= 7) r = { acao: "subir", kg: subir(0.05), por: "Você fez todas as séries com esforço " + fmtKgNum(pse) + " de 10. Dá para subir um pouco." };
+    else r = { acao: "manter", kg: kg, por: "O esforço da última vez foi " + fmtKgNum(pse) + " de 10. Mantenha a carga mais uma vez." };
+    if (o.cansado && r.acao === "subir") r = { acao: "manter", kg: kg, por: "Pelo último treino daria para subir, mas hoje você marcou que está cansado. Mantenha " + fmtKgNum(kg) + " kg e sobe na próxima.", cansado: true };
+    return r;
+  }
+  function sugestaoCargaDados(ex) {
     var nome = ((ex && ex.nome) || "").trim();
     var s = nome ? student() : null;
-    if (!s) return "";
+    if (!s) return null;
     var k = normNome(nome), ss = s.sessoes || [], ultima = null;
     for (var i = ss.length - 1; i >= 0; i--) {
       if ((ss[i].cargasLog || []).some(function (c) { return normNome(c.exercicio) === k; })) { ultima = ss[i]; break; }
     }
-    if (!ultima) return "";
+    if (!ultima) return null;
     var pseRaw = ultima.pse;
     var pse = (pseRaw === null || pseRaw === undefined || pseRaw === "") ? NaN : parseFloat(pseRaw);
     var maxVal = 0, feitas = 0;
@@ -8418,30 +8493,53 @@ function startApp() {
       var v = parseFloat(String(c.valor).replace(",", "."));
       if (!isNaN(v) && v > maxVal) maxVal = v;
     });
-    if (!(maxVal > 0)) return "";
+    if (!(maxVal > 0)) return null;
     (ultima.seriesPorEx || []).forEach(function (x) { if (normNome(x.exercicio) === k) feitas += x.n || 0; });
     if (!feitas) feitas = ultima.cargasLog.filter(function (c) { return normNome(c.exercicio) === k; }).length;
-    var planejadas = saExSetCount(ex);
-    var txt;
     var rirE = (ultima.rirLog || []).filter(function (r) { return normNome(r.exercicio) === k; })[0];
     var rir = rirE ? parseInt(String(rirE.rir), 10) : NaN;
-    if (!isNaN(rir) && !(planejadas && feitas < planejadas)) {
-      var passo = maxVal >= 60 ? 5 : 2.5;
-      if (rir >= 4) txt = '💡 Sugestão: <strong>' + fmtKgNum(maxVal + passo) + ' kg</strong> <span class="ex-load-when">· na última vez sobraram 4+ repetições com ' + fmtKgNum(maxVal) + ' kg</span>';
-      else if (rir === 3) txt = '💡 Sugestão: <strong>' + fmtKgNum(maxVal + 2.5) + ' kg</strong> <span class="ex-load-when">· na última vez sobraram 3 repetições com ' + fmtKgNum(maxVal) + ' kg</span>';
-      else if (rir >= 1) txt = '💡 Sugestão: manter <strong>' + fmtKgNum(maxVal) + ' kg</strong> <span class="ex-load-when">· sobraram ' + rir + ' na última vez: carga no ponto certo</span>';
-      else txt = '💡 Sugestão: manter <strong>' + fmtKgNum(maxVal) + ' kg</strong> <span class="ex-load-when">· na última vez foi até a falha</span>';
-      return '<div class="ex-load-note ex-load-sugestao">' + txt + '</div>';
-    }
-    if (isNaN(pse)) return "";
-    if (planejadas && feitas < planejadas) {
-      txt = 'Sugestão: manter <strong>' + fmtKgNum(maxVal) + ' kg</strong> <span class="ex-load-when">· faltaram séries na última vez</span>';
-    } else if (pse > 8) {
-      txt = 'Sugestão: manter <strong>' + fmtKgNum(maxVal) + ' kg</strong> <span class="ex-load-when">· PSE ' + fmtKgNum(pse) + ' na última vez</span>';
-    } else {
-      txt = 'Sugestão: <strong>' + fmtKgNum(maxVal + 2.5) + ' kg</strong> <span class="ex-load-when">· última vez com PSE ' + fmtKgNum(pse) + ' e séries feitas</span>';
-    }
-    return '<div class="ex-load-note ex-load-sugestao">' + txt + '</div>';
+    var cansado = !!(s.humor && s.humor[todayISO()] === "Cansado");
+    var r = calcSugestaoCarga({ kg: maxVal, rir: rir, pse: pse, feitas: feitas, planejadas: saExSetCount(ex), cansado: cansado });
+    if (r) { r.de = maxVal; r.rir = rir; }
+    return r;
+  }
+  function sugestaoCargaNote(ex) {
+    var r = sugestaoCargaDados(ex);
+    if (!r) return "";
+    var titulo = r.acao === "subir" ? 'Hoje: <strong>' + fmtKgNum(r.kg) + ' kg</strong> <span class="ex-load-when">· subir (antes ' + fmtKgNum(r.de) + ' kg)</span>'
+      : r.acao === "baixar" ? 'Hoje: <strong>' + fmtKgNum(r.kg) + ' kg</strong> <span class="ex-load-when">· baixar um pouco</span>'
+      : r.acao === "rep" ? 'Hoje: <strong>' + fmtKgNum(r.kg) + ' kg</strong> <span class="ex-load-when">· mesma carga, +1 repetição</span>'
+      : 'Hoje: manter <strong>' + fmtKgNum(r.kg) + ' kg</strong>';
+    var icone = r.acao === "subir" ? "📈" : (r.acao === "baixar" ? "🔽" : (r.acao === "rep" ? "➕" : "⏸️"));
+    if (!isStudentView()) return '<div class="ex-load-note ex-load-sugestao">' + icone + ' Sugestão para o aluno: ' + titulo + '</div>';
+    var podeUsar = !state.trainerPreview && saExSetCount(ex) > 0;
+    return '<details class="sa-sug sa-sug-' + r.acao + '"><summary><span class="sa-sug-ic">' + icone + '</span><span class="sa-sug-t">' + titulo + '</span><span class="sa-sug-pq">por quê?</span></summary>' +
+      '<div class="sa-sug-por">' + escapeHtml(r.por) + '</div></details>' +
+      (podeUsar ? '<button type="button" class="sa-sug-usar" data-sug-ex="' + escapeAttr(ex.id) + '" data-sug-kg="' + escapeAttr(fmtKgNum(r.kg)) + '">Usar ' + escapeHtml(fmtKgNum(r.kg)) + ' kg nas séries</button>' : '');
+  }
+  // Exercícios com a carga parada: mesma carga máxima nas 3 últimas vezes, a última nos últimos 21 dias.
+  function cargasParadas(s) {
+    var porEx = {}, hoje = Date.now();
+    (s.sessoes || []).forEach(function (ses) {
+      var mx = {};
+      (ses.cargasLog || []).forEach(function (c) {
+        var v = parseFloat(String(c.valor).replace(",", ".")), k = normNome(c.exercicio);
+        if (k && !isNaN(v) && v > 0 && (!mx[k] || v > mx[k])) mx[k] = v;
+      });
+      Object.keys(mx).forEach(function (k) { (porEx[k] = porEx[k] || []).push({ d: ses.date || "", ts: ses.ts || 0, kg: mx[k] }); });
+    });
+    var out = [];
+    Object.keys(porEx).forEach(function (k) {
+      var l = porEx[k].sort(function (a, b) { return (a.ts || 0) - (b.ts || 0) || (a.d < b.d ? -1 : 1); });
+      if (l.length < 3) return;
+      var u = l.slice(-3);
+      if (u[0].kg !== u[1].kg || u[1].kg !== u[2].kg) return;
+      if (u[2].ts && hoje - u[2].ts > 21 * 864e5) return;
+      var n = 3;
+      for (var i = l.length - 4; i >= 0 && l[i].kg === u[2].kg; i--) n++;
+      out.push({ ex: k, kg: u[2].kg, vezes: n });
+    });
+    return out.sort(function (a, b) { return b.vezes - a.vezes; });
   }
   function progBadgeHtml(cat) {
     var mi = cat && mobInfo(cat);
@@ -12192,6 +12290,7 @@ function startApp() {
       // Ordem pensada para o aluno: o treino de hoje logo no começo; progresso (meta da semana com
       // os dias + fogo do mês) num bloco só, depois; avisos e dicas por último.
       saBlackFridayHtml(s, plan) +
+      mesAvisoHojeHtml(s) +
       saMesGratisAvisoHtml(s, plan) +
       reavCardAlunoHtml(s, plan) +
       novidadeHtml +
@@ -13794,10 +13893,101 @@ function startApp() {
       '</div></div>';
   }
   // ---------- Histórico ----------
+  // ---------- "Seu mês em números" ----------
+  // Mesma conta do servidor (mesStats em netlify/lib/core.mts). O texto do mês fechado vem da IA
+  // (/api/mes, guardado lá: cada mês chama a IA uma vez só); o mês em andamento usa um texto fixo.
+  var MES_NOMES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
+  var MES_TXT = {}, MES_BUSCANDO = {};
+  function mesAnteriorIso(m) { var y = +m.slice(0, 4), mm = +m.slice(5, 7) - 1; if (mm < 1) { mm = 12; y--; } return y + "-" + String(mm).padStart(2, "0"); }
+  function mesStatsCli(s, mes) {
+    var ses = (s.sessoes || []).slice().sort(function (a, b) { return String(a.date || "").localeCompare(String(b.date || "")) || (a.ts || 0) - (b.ts || 0); });
+    var ant = mesAnteriorIso(mes), dias = {}, diasAnt = {}, treinos = 0, series = 0, volume = 0, km = 0, recordes = 0, melhor = {}, base = {}, fim = {};
+    ses.forEach(function (x) {
+      var d = String(x.date || ""), m = d.slice(0, 7), mx = {};
+      if (m === ant) diasAnt[d] = 1;
+      (x.cargasLog || []).forEach(function (c) {
+        var k = String(c.exercicio || "").trim().toUpperCase(), v = parseFloat(String(c.valor == null ? "" : c.valor).replace(",", "."));
+        if (k && v > 0 && !(mx[k] >= v)) mx[k] = v;
+      });
+      if (m < mes) { Object.keys(mx).forEach(function (k) { if (!(melhor[k] >= mx[k])) melhor[k] = mx[k]; base[k] = mx[k]; }); return; }
+      if (m !== mes) return;
+      dias[d] = 1;
+      if (x.kind === "corrida") km += (Number(x.distanciaM) || 0) / 1000;
+      else if (!x.kind || x.kind === "treino") { treinos++; series += Number(x.seriesLogadas) || 0; volume += Number(x.volumeKg) || 0; }
+      Object.keys(mx).forEach(function (k) {
+        if (melhor[k] !== undefined && mx[k] > melhor[k]) recordes++;
+        if (!(melhor[k] >= mx[k])) melhor[k] = mx[k];
+        if (base[k] === undefined) base[k] = mx[k];
+        fim[k] = mx[k];
+      });
+    });
+    var evo = null;
+    Object.keys(fim).forEach(function (k) { var g = fim[k] / base[k] - 1; if (g > 0.02 && g <= 3 && (!evo || g > evo.g)) evo = { g: g, ex: k, de: base[k], para: fim[k] }; });
+    return { mes: mes, dias: Object.keys(dias).length, diasAnt: Object.keys(diasAnt).length, treinos: treinos, series: series, volume: Math.round(volume), km: Math.round(km * 10) / 10, recordes: recordes,
+      evolucao: evo ? { ex: evo.ex, de: evo.de, para: evo.para, pct: Math.round(evo.g * 100) } : null };
+  }
+  function mesOpcoes(s) {
+    var atual = todayISO().slice(0, 7), fechado = mesAnteriorIso(atual), op = [];
+    var cap = function (t) { return t.charAt(0).toUpperCase() + t.slice(1); };
+    if (mesStatsCli(s, fechado).dias) op.push({ m: fechado, fechado: true, t: cap(MES_NOMES[+fechado.slice(5, 7) - 1]) });
+    op.push({ m: atual, fechado: false, t: cap(MES_NOMES[+atual.slice(5, 7) - 1]) + " até agora" });
+    return op;
+  }
+  function mesTextoFixo(st, nomeMes, fechado) {
+    var p = (st.dias === 1 ? "1 dia treinado" : st.dias + " dias treinados");
+    if (!fechado) {
+      var hoje = new Date(), ult = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate(), falta = ult - hoje.getDate();
+      return st.dias ? "Até agora, " + p + " em " + nomeMes + (st.recordes ? " e " + st.recordes + (st.recordes === 1 ? " recorde" : " recordes") + " de carga" : "") + ". " + (falta > 0 ? "Faltam " + falta + (falta === 1 ? " dia" : " dias") + " pro mês acabar: bora fechar forte!" : "Último dia do mês: fecha com chave de ouro!")
+        : "Ainda sem treinos em " + nomeMes + ". O primeiro treino é o que puxa os outros: bora?";
+    }
+    return p + " em " + nomeMes + (st.evolucao ? ", com " + feedNomeEx(st.evolucao.ex) + " saindo de " + fmtKgNum(st.evolucao.de) + " para " + fmtKgNum(st.evolucao.para) + " kg" : "") + ". Bora fazer o próximo mês ainda melhor!";
+  }
+  function mesNumerosHtml(s) {
+    var op = mesOpcoes(s), sel = op.filter(function (o) { return o.m === state.mesNumSel; })[0] || op[0];
+    var st = mesStatsCli(s, sel.m), nomeMes = MES_NOMES[+sel.m.slice(5, 7) - 1];
+    var chave = state.slug + ":" + sel.m, txt = sel.fechado ? MES_TXT[chave] : null;
+    var tile = function (n, t, extra) { return '<div class="mn-tile"><b>' + n + '</b><span>' + t + '</span>' + (extra || "") + '</div>'; };
+    var dif = st.dias - st.diasAnt, difHtml = sel.fechado && st.diasAnt ? '<i class="' + (dif >= 0 ? "up" : "down") + '">' + (dif > 0 ? "+" + dif : dif === 0 ? "=" : dif) + ' vs mês anterior</i>' : "";
+    var tiles = tile(st.dias, st.dias === 1 ? "dia treinado" : "dias treinados", difHtml) + tile(st.treinos, st.treinos === 1 ? "treino" : "treinos") + tile(st.series, "séries") +
+      tile(st.volume >= 1000 ? fmtKgNum(Math.round(st.volume / 100) / 10) + " t" : st.volume + " kg", "levantados") + (st.recordes ? tile(st.recordes, st.recordes === 1 ? "recorde" : "recordes") : "") +
+      (st.km ? tile(fmtKgNum(st.km), "km de corrida") : "");
+    var texto = txt ? escapeHtml(txt) : (sel.fechado && st.dias && !MES_TXT[chave + ":falhou"] ? '<span class="mn-esc">✍️ Escrevendo o seu resumo…</span>' : escapeHtml(mesTextoFixo(st, nomeMes, sel.fechado)));
+    return '<div class="sa-card mn-card"><div class="sa-card-inner">' +
+      '<div class="sa-mood-label">📊 SEU MÊS EM NÚMEROS</div>' +
+      (op.length > 1 ? '<div class="mn-abas">' + op.map(function (o) { return '<button type="button" class="mn-aba' + (o.m === sel.m ? " on" : "") + '" data-mes-num="' + o.m + '">' + escapeHtml(o.t) + '</button>'; }).join("") + '</div>' : '<div class="mn-mes sa-display">' + escapeHtml(sel.t.toUpperCase()) + '</div>') +
+      '<div class="mn-tiles">' + tiles + '</div>' +
+      (st.evolucao ? '<div class="mn-evo">🏆 Maior evolução: <b>' + escapeHtml(feedNomeEx(st.evolucao.ex)) + '</b> · ' + fmtKgNum(st.evolucao.de) + ' → ' + fmtKgNum(st.evolucao.para) + ' kg <span>(+' + st.evolucao.pct + '%)</span></div>' : '') +
+      '<div class="mn-txt" id="mnTxt" data-mes="' + sel.m + '">' + texto + '</div>' +
+      (sel.fechado && txt ? '<div class="mn-ass">— Matheus</div>' : '') +
+      '</div></div>';
+  }
+  function mesBuscaTexto(s) {
+    var el = document.getElementById("mnTxt"); if (!el) return;
+    var mes = el.getAttribute("data-mes"), chave = state.slug + ":" + mes;
+    if (mes >= todayISO().slice(0, 7) || MES_TXT[chave] || MES_TXT[chave + ":falhou"] || MES_BUSCANDO[chave]) return;
+    var st = mesStatsCli(s, mes); if (!st.dias) return;
+    var falhou = function () { MES_TXT[chave + ":falhou"] = 1; var e = document.getElementById("mnTxt"); if (e && e.getAttribute("data-mes") === mes) e.textContent = mesTextoFixo(st, MES_NOMES[+mes.slice(5, 7) - 1], true); };
+    try { var lc = localStorage.getItem("mesTxt:" + chave); if (lc) { MES_TXT[chave] = lc; render(); return; } } catch (e) {}
+    MES_BUSCANDO[chave] = 1;
+    fetch("/api/mes", { method: "POST", headers: feedHeaders({ "Content-Type": "application/json" }), body: JSON.stringify({ slug: state.slug, mes: mes }) })
+      .then(function (r) { return r.json(); })
+      .then(function (b) {
+        MES_BUSCANDO[chave] = 0;
+        if (b && b.ok && b.texto) { MES_TXT[chave] = String(b.texto); try { localStorage.setItem("mesTxt:" + chave, MES_TXT[chave]); } catch (e) {} if (state.saTab === "historico") render(); }
+        else falhou();
+      }).catch(function () { MES_BUSCANDO[chave] = 0; falhou(); });
+  }
+  // Tela Hoje, nos 7 primeiros dias do mês: aviso de que o resumo do mês passado está pronto.
+  function mesAvisoHojeHtml(s) {
+    if (new Date().getDate() > 7 || state.atendimento) return "";
+    var fechado = mesAnteriorIso(todayISO().slice(0, 7));
+    if (!mesStatsCli(s, fechado).dias) return "";
+    return '<button type="button" class="sa-card mn-aviso" data-sa-tab="historico" data-mes-ir="' + fechado + '"><span>📊</span><span><b>Seu ' + escapeHtml(MES_NOMES[+fechado.slice(5, 7) - 1]) + ' em números está pronto</b><br>Veja quanto você evoluiu no mês →</span></button>';
+  }
   function renderAbaHistorico(s) {
     var sessoes = (s.sessoes || []).slice();
     var importadas = (s.atividadesImportadas || []).slice();
-    var evolutionHtml = avAlunoHtml(s) + saCalendarioHtml(s) + saVolumeCardHtml(s) + cargaEvolutionCardHtml(s);
+    var evolutionHtml = mesNumerosHtml(s) + avAlunoHtml(s) + saCalendarioHtml(s) + saVolumeCardHtml(s) + cargaEvolutionCardHtml(s);
     var importBtn = '<button type="button" class="sa-cta-ghost" id="btnImportarRelogio" style="width:100%;text-align:center">⌚ Importar atividade do Garmin / relógio</button>' +
       '<button type="button" class="sa-cta-ghost" id="btnIntervalsHist" style="width:100%;text-align:center;margin-top:8px">🔄 Sincronizar com o Intervals.icu</button>' + corrIntervalsStatusHtml();
     if (!sessoes.length && !importadas.length) {
@@ -16733,6 +16923,34 @@ function startApp() {
     // Student's own free-text note per exercise ("doeu no ombro", "hoje foi
     // fácil"...) -- autosaves the same way cargas do, and grows with the
     // text so a longer note doesn't get clipped inside its little box.
+    Array.prototype.forEach.call(document.querySelectorAll("[data-mes-num]"), function (b) {
+      b.addEventListener("click", function () { state.mesNumSel = b.getAttribute("data-mes-num"); render(); });
+    });
+    Array.prototype.forEach.call(document.querySelectorAll("[data-mes-ir]"), function (b) {
+      b.addEventListener("click", function () { state.mesNumSel = b.getAttribute("data-mes-ir"); });
+    });
+    if (state.saTab === "historico") mesBuscaTexto(s);
+    // "Usar X kg nas séries": coloca a carga sugerida nas séries ainda não feitas hoje.
+    Array.prototype.forEach.call(document.querySelectorAll("[data-sug-ex]"), function (b) {
+      b.addEventListener("click", function () {
+        var card = b.closest(".sa-ex-card"); if (!card) return;
+        var kg = b.getAttribute("data-sug-kg"), n = 0;
+        Array.prototype.forEach.call(card.querySelectorAll("[data-carga-ex]"), function (inp) {
+          var cell = inp.closest(".sa-set-cell");
+          if (cell && cell.classList.contains("done")) return;
+          var entry = saCurrentExMap[inp.getAttribute("data-carga-ex")]; if (!entry || entry.isComp) return;
+          if (!entry.ex.cargas) entry.ex.cargas = {};
+          entry.ex.cargas["s" + (parseInt(inp.getAttribute("data-carga-idx"), 10) + 1)] = kg;
+          inp.value = kg; n++;
+          // A carga foi escolhida hoje: quando o aluno marcar a série como feita, ela vai pro histórico.
+          var sess = s.sessaoEmAndamento;
+          if (sess) { if (!sess.typedSets) sess.typedSets = {}; sess.typedSets[entry.ex.id + ":" + inp.getAttribute("data-carga-idx")] = true; }
+        });
+        // Só preenche: a série conta como feita quando o aluno confirma (✓ ou digitando), como a carga da última vez.
+        if (n) scheduleSave();
+        b.classList.add("ok"); b.textContent = n ? "✓ " + kg + " kg nas séries · marque ✓ quando fizer" : "Todas as séries já foram feitas";
+      });
+    });
     Array.prototype.forEach.call(document.querySelectorAll("[data-rir-ex]"), function (b) {
       b.addEventListener("click", function () {
         var entry = saCurrentExMap[b.getAttribute("data-rir-ex")]; if (!entry) return;
@@ -19724,7 +19942,13 @@ function startApp() {
     // Último treino A com cargas e repetições sobrando: mostra a sugestão de carga na demonstração.
     sessoes[0].cargasLog = ["S1", "S2", "S3"].map(function (sr) { return { exercicio: "PEITO SUPINO BARRA", serie: sr, valor: "50" }; });
     sessoes[0].seriesPorEx = [{ exercicio: "PEITO SUPINO BARRA", n: 3 }];
-    sessoes[0].rirLog = [{ exercicio: "PEITO SUPINO BARRA", rir: "3" }];
+    sessoes[0].rirLog = [{ exercicio: "PEITO SUPINO BARRA", rir: "3" }, { exercicio: "COSTAS PUXADA POLIA/CABO PEGADA FECHADA", rir: "1" }];
+    sessoes[0].cargasLog = sessoes[0].cargasLog.concat(["S1", "S2", "S3"].map(function (sr) { return { exercicio: "COSTAS PUXADA POLIA/CABO PEGADA FECHADA", serie: sr, valor: "45" }; }));
+    sessoes[0].seriesPorEx.push({ exercicio: "COSTAS PUXADA POLIA/CABO PEGADA FECHADA", n: 3 });
+    // Treino B: faltaram 2 séries no agachamento hack -> a sugestão manda baixar um pouco.
+    sessoes[1].cargasLog = ["S1", "S2"].map(function (sr) { return { exercicio: "COXA AGACHAMENTO HACK", serie: sr, valor: "120" }; });
+    sessoes[1].seriesPorEx = [{ exercicio: "COXA AGACHAMENTO HACK", n: 2 }];
+    sessoes[1].pse = 9;
     sessoes.push({ id: "demoC5", date: diasAtras(5), ts: Date.now() - 5 * 86400000, kind: "corrida", nome: "Corrida leve", duracaoSeg: 1620, distanciaM: 5000 });
     var aluna = { nome: "Ana Exemplo", plans: [{ id: "dp1", label: "Plano 1", createdAt: Date.now() - 18 * 86400000, archived: false, microciclo: "Microciclo 1", startDate: null, endDate: null, rotationIdx: 0, complementarHidden: true,
       treinos: treinos, complementar: { nome: "VELOCIDADE, AGILIDADE E POTÊNCIA", protocolos: [], grupos: [], nota: "" } }],
@@ -19737,6 +19961,7 @@ function startApp() {
       if (u.indexOf("/api/") !== 0) return realFetch(url, init);
       var corpo;
       if (u.indexOf("/api/state") === 0) corpo = mem;
+      else if (u.indexOf("/api/mes") === 0) corpo = { ok: true, texto: "Ana, que mês! Você treinou com constância e já está colhendo resultado nas cargas. No mês que vem, bora manter 3 treinos por semana e buscar o próximo recorde 💪 (exemplo: no app de verdade, este texto é escrito pela IA com os seus números)" };
       else if (u.indexOf("/api/feed") === 0 || u.indexOf("/api/comunidade") === 0 || u.indexOf("/api/turma") === 0) corpo = { posts: [], turma: null, ok: true };
       else corpo = { ok: true, version: mem.version };
       return Promise.resolve(new Response(JSON.stringify(corpo), { status: 200, headers: { "Content-Type": "application/json" } }));

@@ -217,6 +217,7 @@ export async function handleApi(req: Request, deps: Deps): Promise<Response | nu
     return reply(405, { error: "method" });
   }
   if (path === "/api/estima" && req.method === "POST") return postEstima(req, deps, now);
+  if (path === "/api/mes" && req.method === "POST") return postMes(req, deps, now);
   if (path === "/api/backup" && req.method === "GET") return getBackup(req, url, deps, now);
   if (path === "/api/img" && req.method === "POST") return postImg(req, deps, now);
   if (path.startsWith("/api/img/") && req.method === "GET") return getImg(path.slice("/api/img/".length), deps);
@@ -1730,6 +1731,111 @@ async function postEstima(req: Request, deps: Deps, now: number): Promise<Respon
   min = Math.max(3, Math.min(60, min)); max = Math.max(min, Math.min(60, max));
   const conf = ["baixa", "media", "alta"].includes(r.confianca) ? r.confianca : "baixa";
   return reply(200, { ok: true, min: Math.round(min * 10) / 10, max: Math.round(max * 10) / 10, centro: Math.round((min + max) * 5) / 10, confianca: conf, obs: String(r.obs || "").slice(0, 160), ts: now });
+}
+
+// ---------- "Seu mês em números" (texto motivacional da IA) ----------
+// Os números são calculados aqui, a partir do que já está salvo (mesma conta do app, ver mesStats no index.html).
+// A IA só escreve 2 ou 3 frases sobre eles. Fica guardado por aluno e mês: cada mês fechado chama a IA uma vez só.
+const MES_LIMITE_ALUNO = 3; // chamadas novas por dia, por aluno
+function numKg(v: unknown): number { const n = parseFloat(String(v == null ? "" : v).replace(",", ".")); return Number.isFinite(n) ? n : NaN; }
+export function mesStats(rec: any, mes: string) {
+  const ses: any[] = Array.isArray(rec?.sessoes) ? rec.sessoes.slice() : [];
+  ses.sort((a, b) => String(a.date || "").localeCompare(String(b.date || "")) || (a.ts || 0) - (b.ts || 0));
+  const ant = (() => { const [y, m] = mes.split("-").map(Number); const d = new Date(Date.UTC(y, m - 2, 1)); return d.toISOString().slice(0, 7); })();
+  const dias = new Set<string>(), diasAnt = new Set<string>();
+  let treinos = 0, series = 0, volume = 0, km = 0, recordes = 0;
+  const melhor: Record<string, number> = {}, base: Record<string, number> = {}, fim: Record<string, number> = {};
+  for (const x of ses) {
+    const d = String(x.date || "");
+    const noMes = d.slice(0, 7) === mes;
+    if (d.slice(0, 7) === ant) diasAnt.add(d);
+    const mx: Record<string, number> = {};
+    for (const c of Array.isArray(x.cargasLog) ? x.cargasLog : []) {
+      const k = String(c.exercicio || "").trim().toUpperCase(), v = numKg(c.valor);
+      if (k && v > 0 && !(mx[k] >= v)) mx[k] = v;
+    }
+    if (d.slice(0, 7) < mes) { for (const k of Object.keys(mx)) { if (!(melhor[k] >= mx[k])) melhor[k] = mx[k]; base[k] = mx[k]; } continue; }
+    if (!noMes) continue;
+    dias.add(d);
+    if (x.kind === "corrida") km += (Number(x.distanciaM) || 0) / 1000;
+    else if (!x.kind || x.kind === "treino") { treinos++; series += Number(x.seriesLogadas) || 0; volume += Number(x.volumeKg) || 0; }
+    for (const k of Object.keys(mx)) {
+      if (melhor[k] !== undefined && mx[k] > melhor[k]) recordes++;
+      if (!(melhor[k] >= mx[k])) melhor[k] = mx[k];
+      if (base[k] === undefined) base[k] = mx[k];
+      fim[k] = mx[k];
+    }
+  }
+  let evo: any = null;
+  for (const k of Object.keys(fim)) {
+    const g = fim[k] / base[k] - 1;
+    if (g > 0.02 && g <= 3 && (!evo || g > evo.g)) evo = { g, ex: k, de: base[k], para: fim[k] };
+  }
+  return {
+    mes, dias: dias.size, diasAnt: diasAnt.size, treinos, series, volume: Math.round(volume), km: Math.round(km * 10) / 10, recordes,
+    evolucao: evo ? { ex: evo.ex, de: evo.de, para: evo.para, pct: Math.round(evo.g * 100) } : null,
+  };
+}
+async function postMes(req: Request, deps: Deps, now: number): Promise<Response> {
+  const body = await readJson(req);
+  if (!body || typeof body !== "object") return reply(400, { error: "bad_json" });
+  const w = await who(req, deps, now, body.slug, body);
+  if (w.err) return w.err;
+  const slug = w.slug;
+  if (!slug || !w.rec) return reply(400, { error: "aluno" });
+  const mes = String(body.mes || "");
+  const atual = new Date(now - 3 * 3600 * 1000).toISOString().slice(0, 7);
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(mes) || mes >= atual) return reply(400, { error: "mes_invalido" });
+  const st = mesStats(w.rec, mes);
+  if (!st.dias) return reply(200, { ok: false, stats: st });
+  const chave = "mes:" + slug + ":" + mes;
+  const salvo: any = await deps.kv.get(IA_STORE, chave);
+  if (salvo && salvo.texto) return reply(200, { ok: true, stats: st, texto: salvo.texto });
+  if (!deps.iaKey) return reply(200, { ok: false, stats: st, error: "sem_chave" });
+  const dia = new Date(now - 3 * 3600 * 1000).toISOString().slice(0, 10);
+  const uso: any = (await deps.kv.get(IA_STORE, IA_KEY)) || {};
+  if (uso.dia !== dia) { uso.dia = dia; uso.total = 0; uso.por = {}; }
+  if ((uso.total || 0) >= IA_LIMITE_TOTAL) return reply(200, { ok: false, stats: st, error: "limite_dia" });
+  if (!w.trainer && ((uso.mes || {})[slug] || 0) >= MES_LIMITE_ALUNO) return reply(200, { ok: false, stats: st, error: "limite_aluno" });
+  const nome = String(w.rec.nome || "").trim().split(/\s+/)[0].slice(0, 24) || "aluno";
+  const meses = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
+  const nomeMes = meses[Number(mes.slice(5, 7)) - 1];
+  const dados = {
+    aluno: nome, mes: nomeMes, dias_treinados: st.dias, dias_treinados_mes_anterior: st.diasAnt, treinos_de_musculacao: st.treinos,
+    series_feitas: st.series, volume_total_kg: st.volume, km_de_corrida: st.km, recordes_de_carga: st.recordes,
+    maior_evolucao: st.evolucao ? { exercicio: st.evolucao.ex.toLowerCase(), de_kg: st.evolucao.de, para_kg: st.evolucao.para, percentual: st.evolucao.pct } : null,
+  };
+  const pedido = "Você é o Matheus, personal trainer, escrevendo para o seu aluno no app de treino. Abaixo estão os números do mês dele, em JSON. " +
+    "Escreva de 2 a 3 frases curtas em português do Brasil, em tom próximo e animado, falando com o aluno pelo primeiro nome. " +
+    "Cite 1 ou 2 números reais do JSON (use exatamente os valores dados, nunca invente nem arredonde para cima). Se os dias treinados caíram em relação ao mês anterior, seja gentil e incentive o próximo mês, sem culpa. " +
+    "Termine com um incentivo concreto para o mês que vem. Não prometa resultados estéticos, não fale de dieta, saúde ou lesão, não use hashtags e use no máximo 1 emoji. " +
+    "Responda só com o texto, sem aspas.\n\n" + JSON.stringify(dados);
+  const fx = deps.fetch || fetch;
+  const modelos = Array.from(new Set([deps.iaModel, "claude-haiku-5-5", "claude-sonnet-5-5"].filter(Boolean))) as string[];
+  let texto = "", status = 0;
+  for (const modelo of modelos) {
+    let resp: Response;
+    try {
+      resp = await fx("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "x-api-key": deps.iaKey, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+        body: JSON.stringify({ model: modelo, max_tokens: 400, messages: [{ role: "user", content: pedido }] }),
+      });
+    } catch (e) { console.error("[mes] rede:", String(e).slice(0, 150)); break; }
+    status = resp.status;
+    if (resp.ok) {
+      const j: any = await resp.json().catch(() => null);
+      texto = limpaTexto(((j && j.content) || []).map((c: any) => (c && c.text) || "").join(" "), 600).replace(/^["“]|["”]$/g, "");
+      break;
+    }
+    console.error("[mes] modelo=" + modelo + " ->", resp.status);
+    if (resp.status === 401 || resp.status === 403 || resp.status === 429 || resp.status >= 500) break;
+  }
+  if (!texto) return reply(200, { ok: false, stats: st, error: status === 401 || status === 403 ? "ia_chave" : "ia_erro" });
+  uso.total = (uso.total || 0) + 1; uso.mes = uso.mes || {}; uso.mes[slug] = (uso.mes[slug] || 0) + 1;
+  await deps.kv.set(IA_STORE, IA_KEY, uso);
+  await deps.kv.set(IA_STORE, chave, { texto, ts: now });
+  return reply(200, { ok: true, stats: st, texto });
 }
 
 function detectaImagem(u: Uint8Array): string | null {

@@ -620,6 +620,18 @@
   /* Sugestão de carga dentro do cartão do aluno: usa os tokens do app do aluno (tema escuro). */
   .sa-ex-card .ex-load-note { margin: 8px 0 0; font-size: 13px; color: var(--sa-text-muted); }
   .sa-ex-card .ex-load-note strong { color: var(--sa-text); }
+  .sa-sug { margin: 10px 0 0; border: 1px solid var(--sa-border-soft); border-radius: 12px; background: rgba(var(--sa-gold-rgb),.08); }
+  .sa-sug-subir { border-color: rgba(52,211,153,.45); background: rgba(52,211,153,.10); }
+  .sa-sug-baixar { border-color: rgba(248,113,113,.4); background: rgba(248,113,113,.08); }
+  .sa-sug summary { list-style: none; display: flex; align-items: center; gap: 8px; padding: 10px 12px; cursor: pointer; font-size: 14px; color: var(--sa-text-muted); }
+  .sa-sug summary::-webkit-details-marker { display: none; }
+  .sa-sug summary strong { color: var(--sa-text); }
+  .sa-sug-t { flex: 1; }
+  .sa-sug-pq { font-size: 12px; font-weight: 700; color: var(--sa-accent); white-space: nowrap; }
+  .sa-sug[open] .sa-sug-pq { opacity: .6; }
+  .sa-sug-por { padding: 0 12px 12px 38px; font-size: 13.5px; line-height: 1.45; color: var(--sa-text-muted); }
+  .sa-sug-usar { margin: 8px 0 0; width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px dashed rgba(var(--sa-gold-rgb),.6); background: transparent; color: var(--sa-accent); font: 700 14px/1 "Barlow", sans-serif; cursor: pointer; }
+  .sa-sug-usar.ok { border-style: solid; background: rgba(var(--sa-gold-rgb),.14); }
   .ex-tools { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
   .ex-tool-btn {
     border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; font: inherit;
@@ -3281,6 +3293,11 @@ function startApp() {
       versao: 17,
       titulo: "Técnicas com a carga de cada queda ⚡",
       texto: "Nos exercícios com técnica, o treino agora mostra o esquema direitinho. No drop set, cada série tem um campo para a carga de cada queda (ex.: 40 → 30 → 20 kg). Na pirâmide, cada série mostra as repetições (S1 · 12). Toque em 'Como fazer' para ver o passo a passo."
+    },
+    {
+      versao: 24,
+      titulo: "Sugestão de carga mais esperta 📈",
+      texto: "Em cada exercício, o app diz a carga de hoje: subir, manter e tentar +1 repetição, ou baixar um pouco. Toque em \"por quê?\" para ver o motivo e em \"Usar\" para colocar a carga nas séries. Ela usa o que você marcou da última vez (quantas repetições ainda daria) e, se você marcar que está cansado, não manda subir."
     },
     {
       versao: 23,
@@ -7478,6 +7495,16 @@ function startApp() {
         '<div class="tr-alert-settings">Avisar quando passar de <input type="number" id="inactiveThresholdInput" min="1" max="60" value="' + escapeAttr(trLimiarDias()) + '"> dias sem check-in</div>' },
       { k: "planos", t: "Plano vencendo", n: vencChips.length, html: vencChips.length ? '<div class="tr-alert-chips">' + vencChips.join("") + '</div>' : '<p class="tr-roster-meta">Nenhum plano vencendo nos próximos dias.</p>' }
     ];
+    // Carga parada: alunos que treinam mas repetem a mesma carga no mesmo exercício há 3+ treinos.
+    var paradas = allStudents.filter(function (x) { return !trSumido(x.s) && !trSemAcesso(x.s); }).map(function (x) { return { slug: x.slug, s: x.s, l: cargasParadas(x.s) }; })
+      .filter(function (x) { return x.l.length; }).sort(function (a, b) { return b.l[0].vezes - a.l[0].vezes; });
+    var paradaChips = paradas.map(function (x) {
+      var p0 = x.l[0], extra = x.l.length > 1 ? " · +" + (x.l.length - 1) + " exercício" + (x.l.length > 2 ? "s" : "") : "";
+      return chipAl(x, feedNomeEx(p0.ex) + ": " + fmtKgNum(p0.kg) + " kg há " + p0.vezes + " treinos" + extra, "var(--sa-accent)");
+    });
+    abasAl.push({ k: "carga", t: "Carga parada", n: paradaChips.length, html: paradaChips.length
+      ? '<p class="tr-roster-meta" style="margin:0 0 8px">Mesma carga nas últimas 3 vezes ou mais. Vale ajustar a carga, as repetições ou trocar a variação.</p><div class="tr-alert-chips">' + paradaChips.join("") + '</div>'
+      : '<p class="tr-roster-meta">Ninguém com carga parada. 💪</p>' });
     if (mgTotal) abasAl.push({ k: "gratis", t: "Mês grátis", n: mgChips.length, html:
       '<div class="mg-nums">' + [[mgG.teste.length, "no teste", "#8fb3ff"], [mgG.acabando.length, "acabando (7 dias)", "#ffc247"], [mgG.renovou.length, "renovaram", "#34d399"], [mgG.nao.length, "não renovaram", "#f87171"]].map(function (v) { return '<div class="mg-num"><b style="color:' + v[2] + '">' + v[0] + '</b><span>' + v[1] + '</span></div>'; }).join("") + '</div>' +
       (mgTaxa !== null ? '<p class="tr-roster-meta" style="text-align:center;margin:2px 0 8px">' + mgTaxa + '% dos que terminaram o mês grátis renovaram</p>' : '') +
@@ -8396,20 +8423,45 @@ function startApp() {
     }
     return '<div class="' + cls + '">' + txt + '</div>';
   }
-  // Sugestão de carga para a próxima sessão, com base na última vez que o exercício foi feito.
-  // Regra simples (não é IA): se a última sessão com esse exercício fez todas as séries
-  // planejadas e o PSE foi até 8, sugere +2,5 kg sobre a maior carga usada; senão, mantém.
-  // Usa só o que o app já guarda (cargasLog, seriesPorEx, pse). O app não registra as
-  // repetições feitas, então "todas as séries" é o critério de conclusão.
-  function sugestaoCargaNote(ex) {
+  // Sugestão de carga (regra fixa, não é IA): olha a última sessão em que o exercício foi feito
+  // e decide subir, manter (e tentar +1 repetição) ou baixar. Base: progressão autorregulada por
+  // repetições na reserva (RIR) e progressão dupla (primeiro repetições, depois carga).
+  //  - faltaram 2+ séries, ou PSE 10 com série faltando -> baixar um passo
+  //  - faltou 1 série -> manter
+  //  - sobrou 4+ -> subir ~7,5% ; sobrou 3 -> subir ~5%
+  //  - sobrou 1-2 -> manter a carga e tentar +1 repetição
+  //  - foi à falha (0) -> manter
+  //  - sem RIR: PSE até 7 com séries feitas -> subir ~5%; PSE 8+ -> manter
+  //  - o aluno marcou "Cansado" hoje -> nunca sobe (mantém)
+  // O passo arredonda para o que existe na academia: 1 kg (até 10), 2 kg (até 30), 2,5 kg (até 60), 5 kg (acima).
+  function passoCarga(kg) { return kg < 10 ? 1 : (kg <= 30 ? 2 : (kg < 60 ? 2.5 : 5)); }
+  function arredCarga(v, passo) { return Math.max(passo, Math.round(v / passo) * passo); }
+  function calcSugestaoCarga(o) {
+    var kg = o.kg, passo = passoCarga(kg), rir = o.rir, pse = o.pse;
+    var faltou = o.planejadas && o.feitas < o.planejadas ? o.planejadas - o.feitas : 0;
+    var subir = function (pct) { return arredCarga(Math.max(kg + passo, kg * (1 + pct)), passo); };
+    var r;
+    if (faltou >= 2 || (faltou && pse >= 10)) r = { acao: "baixar", kg: arredCarga(kg - passo, passo), por: "Na última vez faltaram " + faltou + " série" + (faltou > 1 ? "s" : "") + " com " + fmtKgNum(kg) + " kg. Baixar um pouco ajuda a completar tudo com boa execução." };
+    else if (faltou) r = { acao: "manter", kg: kg, por: "Na última vez faltou 1 série. Mantenha " + fmtKgNum(kg) + " kg e tente completar todas hoje." };
+    else if (!isNaN(rir) && rir >= 4) r = { acao: "subir", kg: subir(0.075), por: "Você fez todas as séries e disse que ainda daria 4 ou mais repetições. A carga ficou leve: dá para subir com segurança." };
+    else if (!isNaN(rir) && rir === 3) r = { acao: "subir", kg: subir(0.05), por: "Você fez todas as séries e ainda daria 3 repetições. Subir um pouco te mantém perto do esforço certo." };
+    else if (!isNaN(rir) && rir >= 1) r = { acao: "rep", kg: kg, por: "Sobraram " + rir + " repetição" + (rir > 1 ? "ões" : "") + " na última vez: a carga está no ponto. Mantenha e tente fazer 1 repetição a mais em cada série. Quando sobrar 3, a carga sobe." };
+    else if (!isNaN(rir)) r = { acao: "manter", kg: kg, por: "Na última vez você foi até a falha. Mantenha a carga até conseguir sobrar 1 ou 2 repetições." };
+    else if (isNaN(pse)) return null;
+    else if (pse <= 7) r = { acao: "subir", kg: subir(0.05), por: "Você fez todas as séries com esforço " + fmtKgNum(pse) + " de 10. Dá para subir um pouco." };
+    else r = { acao: "manter", kg: kg, por: "O esforço da última vez foi " + fmtKgNum(pse) + " de 10. Mantenha a carga mais uma vez." };
+    if (o.cansado && r.acao === "subir") r = { acao: "manter", kg: kg, por: "Pelo último treino daria para subir, mas hoje você marcou que está cansado. Mantenha " + fmtKgNum(kg) + " kg e sobe na próxima.", cansado: true };
+    return r;
+  }
+  function sugestaoCargaDados(ex) {
     var nome = ((ex && ex.nome) || "").trim();
     var s = nome ? student() : null;
-    if (!s) return "";
+    if (!s) return null;
     var k = normNome(nome), ss = s.sessoes || [], ultima = null;
     for (var i = ss.length - 1; i >= 0; i--) {
       if ((ss[i].cargasLog || []).some(function (c) { return normNome(c.exercicio) === k; })) { ultima = ss[i]; break; }
     }
-    if (!ultima) return "";
+    if (!ultima) return null;
     var pseRaw = ultima.pse;
     var pse = (pseRaw === null || pseRaw === undefined || pseRaw === "") ? NaN : parseFloat(pseRaw);
     var maxVal = 0, feitas = 0;
@@ -8418,30 +8470,53 @@ function startApp() {
       var v = parseFloat(String(c.valor).replace(",", "."));
       if (!isNaN(v) && v > maxVal) maxVal = v;
     });
-    if (!(maxVal > 0)) return "";
+    if (!(maxVal > 0)) return null;
     (ultima.seriesPorEx || []).forEach(function (x) { if (normNome(x.exercicio) === k) feitas += x.n || 0; });
     if (!feitas) feitas = ultima.cargasLog.filter(function (c) { return normNome(c.exercicio) === k; }).length;
-    var planejadas = saExSetCount(ex);
-    var txt;
     var rirE = (ultima.rirLog || []).filter(function (r) { return normNome(r.exercicio) === k; })[0];
     var rir = rirE ? parseInt(String(rirE.rir), 10) : NaN;
-    if (!isNaN(rir) && !(planejadas && feitas < planejadas)) {
-      var passo = maxVal >= 60 ? 5 : 2.5;
-      if (rir >= 4) txt = '💡 Sugestão: <strong>' + fmtKgNum(maxVal + passo) + ' kg</strong> <span class="ex-load-when">· na última vez sobraram 4+ repetições com ' + fmtKgNum(maxVal) + ' kg</span>';
-      else if (rir === 3) txt = '💡 Sugestão: <strong>' + fmtKgNum(maxVal + 2.5) + ' kg</strong> <span class="ex-load-when">· na última vez sobraram 3 repetições com ' + fmtKgNum(maxVal) + ' kg</span>';
-      else if (rir >= 1) txt = '💡 Sugestão: manter <strong>' + fmtKgNum(maxVal) + ' kg</strong> <span class="ex-load-when">· sobraram ' + rir + ' na última vez: carga no ponto certo</span>';
-      else txt = '💡 Sugestão: manter <strong>' + fmtKgNum(maxVal) + ' kg</strong> <span class="ex-load-when">· na última vez foi até a falha</span>';
-      return '<div class="ex-load-note ex-load-sugestao">' + txt + '</div>';
-    }
-    if (isNaN(pse)) return "";
-    if (planejadas && feitas < planejadas) {
-      txt = 'Sugestão: manter <strong>' + fmtKgNum(maxVal) + ' kg</strong> <span class="ex-load-when">· faltaram séries na última vez</span>';
-    } else if (pse > 8) {
-      txt = 'Sugestão: manter <strong>' + fmtKgNum(maxVal) + ' kg</strong> <span class="ex-load-when">· PSE ' + fmtKgNum(pse) + ' na última vez</span>';
-    } else {
-      txt = 'Sugestão: <strong>' + fmtKgNum(maxVal + 2.5) + ' kg</strong> <span class="ex-load-when">· última vez com PSE ' + fmtKgNum(pse) + ' e séries feitas</span>';
-    }
-    return '<div class="ex-load-note ex-load-sugestao">' + txt + '</div>';
+    var cansado = !!(s.humor && s.humor[todayISO()] === "Cansado");
+    var r = calcSugestaoCarga({ kg: maxVal, rir: rir, pse: pse, feitas: feitas, planejadas: saExSetCount(ex), cansado: cansado });
+    if (r) { r.de = maxVal; r.rir = rir; }
+    return r;
+  }
+  function sugestaoCargaNote(ex) {
+    var r = sugestaoCargaDados(ex);
+    if (!r) return "";
+    var titulo = r.acao === "subir" ? 'Hoje: <strong>' + fmtKgNum(r.kg) + ' kg</strong> <span class="ex-load-when">· subir (antes ' + fmtKgNum(r.de) + ' kg)</span>'
+      : r.acao === "baixar" ? 'Hoje: <strong>' + fmtKgNum(r.kg) + ' kg</strong> <span class="ex-load-when">· baixar um pouco</span>'
+      : r.acao === "rep" ? 'Hoje: <strong>' + fmtKgNum(r.kg) + ' kg</strong> <span class="ex-load-when">· mesma carga, +1 repetição</span>'
+      : 'Hoje: manter <strong>' + fmtKgNum(r.kg) + ' kg</strong>';
+    var icone = r.acao === "subir" ? "📈" : (r.acao === "baixar" ? "🔽" : (r.acao === "rep" ? "➕" : "⏸️"));
+    if (!isStudentView()) return '<div class="ex-load-note ex-load-sugestao">' + icone + ' Sugestão para o aluno: ' + titulo + '</div>';
+    var podeUsar = !state.trainerPreview && saExSetCount(ex) > 0;
+    return '<details class="sa-sug sa-sug-' + r.acao + '"><summary><span class="sa-sug-ic">' + icone + '</span><span class="sa-sug-t">' + titulo + '</span><span class="sa-sug-pq">por quê?</span></summary>' +
+      '<div class="sa-sug-por">' + escapeHtml(r.por) + '</div></details>' +
+      (podeUsar ? '<button type="button" class="sa-sug-usar" data-sug-ex="' + escapeAttr(ex.id) + '" data-sug-kg="' + escapeAttr(fmtKgNum(r.kg)) + '">Usar ' + escapeHtml(fmtKgNum(r.kg)) + ' kg nas séries</button>' : '');
+  }
+  // Exercícios com a carga parada: mesma carga máxima nas 3 últimas vezes, a última nos últimos 21 dias.
+  function cargasParadas(s) {
+    var porEx = {}, hoje = Date.now();
+    (s.sessoes || []).forEach(function (ses) {
+      var mx = {};
+      (ses.cargasLog || []).forEach(function (c) {
+        var v = parseFloat(String(c.valor).replace(",", ".")), k = normNome(c.exercicio);
+        if (k && !isNaN(v) && v > 0 && (!mx[k] || v > mx[k])) mx[k] = v;
+      });
+      Object.keys(mx).forEach(function (k) { (porEx[k] = porEx[k] || []).push({ d: ses.date || "", ts: ses.ts || 0, kg: mx[k] }); });
+    });
+    var out = [];
+    Object.keys(porEx).forEach(function (k) {
+      var l = porEx[k].sort(function (a, b) { return (a.ts || 0) - (b.ts || 0) || (a.d < b.d ? -1 : 1); });
+      if (l.length < 3) return;
+      var u = l.slice(-3);
+      if (u[0].kg !== u[1].kg || u[1].kg !== u[2].kg) return;
+      if (u[2].ts && hoje - u[2].ts > 21 * 864e5) return;
+      var n = 3;
+      for (var i = l.length - 4; i >= 0 && l[i].kg === u[2].kg; i--) n++;
+      out.push({ ex: k, kg: u[2].kg, vezes: n });
+    });
+    return out.sort(function (a, b) { return b.vezes - a.vezes; });
   }
   function progBadgeHtml(cat) {
     var mi = cat && mobInfo(cat);
@@ -16733,6 +16808,27 @@ function startApp() {
     // Student's own free-text note per exercise ("doeu no ombro", "hoje foi
     // fácil"...) -- autosaves the same way cargas do, and grows with the
     // text so a longer note doesn't get clipped inside its little box.
+    // "Usar X kg nas séries": coloca a carga sugerida nas séries ainda não feitas hoje.
+    Array.prototype.forEach.call(document.querySelectorAll("[data-sug-ex]"), function (b) {
+      b.addEventListener("click", function () {
+        var card = b.closest(".sa-ex-card"); if (!card) return;
+        var kg = b.getAttribute("data-sug-kg"), n = 0;
+        Array.prototype.forEach.call(card.querySelectorAll("[data-carga-ex]"), function (inp) {
+          var cell = inp.closest(".sa-set-cell");
+          if (cell && cell.classList.contains("done")) return;
+          var entry = saCurrentExMap[inp.getAttribute("data-carga-ex")]; if (!entry || entry.isComp) return;
+          if (!entry.ex.cargas) entry.ex.cargas = {};
+          entry.ex.cargas["s" + (parseInt(inp.getAttribute("data-carga-idx"), 10) + 1)] = kg;
+          inp.value = kg; n++;
+          // A carga foi escolhida hoje: quando o aluno marcar a série como feita, ela vai pro histórico.
+          var sess = s.sessaoEmAndamento;
+          if (sess) { if (!sess.typedSets) sess.typedSets = {}; sess.typedSets[entry.ex.id + ":" + inp.getAttribute("data-carga-idx")] = true; }
+        });
+        // Só preenche: a série conta como feita quando o aluno confirma (✓ ou digitando), como a carga da última vez.
+        if (n) scheduleSave();
+        b.classList.add("ok"); b.textContent = n ? "✓ " + kg + " kg nas séries · marque ✓ quando fizer" : "Todas as séries já foram feitas";
+      });
+    });
     Array.prototype.forEach.call(document.querySelectorAll("[data-rir-ex]"), function (b) {
       b.addEventListener("click", function () {
         var entry = saCurrentExMap[b.getAttribute("data-rir-ex")]; if (!entry) return;
@@ -19724,7 +19820,13 @@ function startApp() {
     // Último treino A com cargas e repetições sobrando: mostra a sugestão de carga na demonstração.
     sessoes[0].cargasLog = ["S1", "S2", "S3"].map(function (sr) { return { exercicio: "PEITO SUPINO BARRA", serie: sr, valor: "50" }; });
     sessoes[0].seriesPorEx = [{ exercicio: "PEITO SUPINO BARRA", n: 3 }];
-    sessoes[0].rirLog = [{ exercicio: "PEITO SUPINO BARRA", rir: "3" }];
+    sessoes[0].rirLog = [{ exercicio: "PEITO SUPINO BARRA", rir: "3" }, { exercicio: "COSTAS PUXADA POLIA/CABO PEGADA FECHADA", rir: "1" }];
+    sessoes[0].cargasLog = sessoes[0].cargasLog.concat(["S1", "S2", "S3"].map(function (sr) { return { exercicio: "COSTAS PUXADA POLIA/CABO PEGADA FECHADA", serie: sr, valor: "45" }; }));
+    sessoes[0].seriesPorEx.push({ exercicio: "COSTAS PUXADA POLIA/CABO PEGADA FECHADA", n: 3 });
+    // Treino B: faltaram 2 séries no agachamento hack -> a sugestão manda baixar um pouco.
+    sessoes[1].cargasLog = ["S1", "S2"].map(function (sr) { return { exercicio: "COXA AGACHAMENTO HACK", serie: sr, valor: "120" }; });
+    sessoes[1].seriesPorEx = [{ exercicio: "COXA AGACHAMENTO HACK", n: 2 }];
+    sessoes[1].pse = 9;
     sessoes.push({ id: "demoC5", date: diasAtras(5), ts: Date.now() - 5 * 86400000, kind: "corrida", nome: "Corrida leve", duracaoSeg: 1620, distanciaM: 5000 });
     var aluna = { nome: "Ana Exemplo", plans: [{ id: "dp1", label: "Plano 1", createdAt: Date.now() - 18 * 86400000, archived: false, microciclo: "Microciclo 1", startDate: null, endDate: null, rotationIdx: 0, complementarHidden: true,
       treinos: treinos, complementar: { nome: "VELOCIDADE, AGILIDADE E POTÊNCIA", protocolos: [], grupos: [], nota: "" } }],

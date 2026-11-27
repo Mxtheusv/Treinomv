@@ -218,6 +218,11 @@ export async function handleApi(req: Request, deps: Deps): Promise<Response | nu
   }
   if (path === "/api/estima" && req.method === "POST") return postEstima(req, deps, now);
   if (path === "/api/mes" && req.method === "POST") return postMes(req, deps, now);
+  if (path === "/api/chat") {
+    if (req.method === "GET") return getChat(req, url, deps, now);
+    if (req.method === "POST") return postChat(req, deps, now);
+    return reply(405, { error: "method" });
+  }
   if (path === "/api/backup" && req.method === "GET") return getBackup(req, url, deps, now);
   if (path === "/api/img" && req.method === "POST") return postImg(req, deps, now);
   if (path.startsWith("/api/img/") && req.method === "GET") return getImg(path.slice("/api/img/".length), deps);
@@ -1731,6 +1736,83 @@ async function postEstima(req: Request, deps: Deps, now: number): Promise<Respon
   min = Math.max(3, Math.min(60, min)); max = Math.max(min, Math.min(60, max));
   const conf = ["baixa", "media", "alta"].includes(r.confianca) ? r.confianca : "baixa";
   return reply(200, { ok: true, min: Math.round(min * 10) / 10, max: Math.round(max * 10) / 10, centro: Math.round((min + max) * 5) / 10, confianca: conf, obs: String(r.obs || "").slice(0, 160), ts: now });
+}
+
+// ---------- conversa aluno <-> personal ----------
+// Uma conversa por aluno, guardada fora do estado do app (não briga com o salvamento dos treinos).
+// "idx" é o resumo para a lista do personal: última mensagem e quantas o personal ainda não leu.
+const CHAT_STORE = "treino-online-chat";
+const CHAT_MAX = 300;          // mensagens guardadas por aluno
+const CHAT_LIMITE_ALUNO = 40;  // mensagens por dia, por aluno
+async function chatLoad(deps: Deps, slug: string): Promise<any> {
+  const c: any = await deps.kv.get(CHAT_STORE, "c:" + slug);
+  return c && Array.isArray(c.msgs) ? c : { msgs: [], lidoA: 0, lidoP: 0 };
+}
+function chatNaoLidas(c: any, para: "aluno" | "personal"): number {
+  const lido = para === "aluno" ? c.lidoA || 0 : c.lidoP || 0;
+  return c.msgs.filter((m: any) => m.de !== para && m.ts > lido).length;
+}
+async function chatIndexa(deps: Deps, slug: string, c: any): Promise<void> {
+  const idx: any = (await deps.kv.get(CHAT_STORE, "idx")) || {};
+  const u = c.msgs[c.msgs.length - 1];
+  idx[slug] = u ? { txt: String(u.txt).slice(0, 90), de: u.de, ts: u.ts, nl: chatNaoLidas(c, "personal") } : undefined;
+  await deps.kv.set(CHAT_STORE, "idx", idx);
+}
+async function getChat(req: Request, url: URL, deps: Deps, now: number): Promise<Response> {
+  const lista = url.searchParams.get("lista") === "1";
+  if (lista) {
+    const w = await who(req, deps, now, null);
+    if (w.err) return w.err;
+    if (!w.trainer) return reply(403, { error: "sem_permissao" });
+    const idx: any = (await deps.kv.get(CHAT_STORE, "idx")) || {};
+    const students: Record<string, any> = w.st.data?.students || {};
+    const conversas = Object.keys(idx).filter((k) => idx[k] && students[k]).map((k) => ({ slug: k, nome: students[k].nome || k, ...idx[k] }))
+      .sort((a, b) => b.ts - a.ts);
+    return reply(200, { conversas, naoLidas: conversas.reduce((t, c) => t + (c.nl || 0), 0) });
+  }
+  const w = await who(req, deps, now, url.searchParams.get("slug"));
+  if (w.err) return w.err;
+  const slug = w.slug;
+  if (!slug) return reply(400, { error: "aluno" });
+  const c = await chatLoad(deps, slug);
+  const souAluno = !w.trainer;
+  if (url.searchParams.get("contar") === "1") return reply(200, { naoLidas: chatNaoLidas(c, souAluno ? "aluno" : "personal") });
+  if (url.searchParams.get("ler") === "1") {
+    if (souAluno) c.lidoA = now; else c.lidoP = now;
+    await deps.kv.set(CHAT_STORE, "c:" + slug, c);
+    if (!souAluno) await chatIndexa(deps, slug, c);
+  }
+  return reply(200, { msgs: c.msgs.slice(-150), lidoA: c.lidoA || 0, lidoP: c.lidoP || 0 });
+}
+async function postChat(req: Request, deps: Deps, now: number): Promise<Response> {
+  const body = await readJson(req);
+  if (!body || typeof body !== "object") return reply(400, { error: "bad_json" });
+  const w = await who(req, deps, now, body.slug, body);
+  if (w.err) return w.err;
+  const slug = w.slug;
+  if (!slug || !w.rec) return reply(400, { error: "aluno" });
+  const txt = String(body.txt == null ? "" : body.txt).replace(/\r/g, "").replace(/[\u0000-\u0008\u000b-\u001f\u007f]/g, "").replace(/\n{3,}/g, "\n\n").trim().slice(0, 1000);
+  if (!txt) return reply(400, { error: "vazio" });
+  const de = w.trainer ? "personal" : "aluno";
+  const c = await chatLoad(deps, slug);
+  if (de === "aluno") {
+    const dia = diaBR(now);
+    const hoje = c.msgs.filter((m: any) => m.de === "aluno" && diaBR(m.ts) === dia).length;
+    if (hoje >= CHAT_LIMITE_ALUNO) return reply(429, { error: "limite_dia" });
+  }
+  const tipo = body.tipo === "treino" ? "treino" : body.tipo === "exercicio" ? "exercicio" : "";
+  const msg: any = { id: "m" + now.toString(36) + Math.random().toString(36).slice(2, 6), de, txt, ts: now };
+  if (tipo) msg.tipo = tipo;
+  const ref = limpaTexto(body.ref, 80);
+  if (ref) msg.ref = ref;
+  c.msgs.push(msg);
+  if (c.msgs.length > CHAT_MAX) c.msgs = c.msgs.slice(-CHAT_MAX);
+  if (de === "aluno") c.lidoA = now; else c.lidoP = now;
+  await deps.kv.set(CHAT_STORE, "c:" + slug, c);
+  await chatIndexa(deps, slug, c);
+  if (de === "aluno") await avisa(deps, now, ["trainer"], "💬 " + nomeCurto(w.rec.nome), limpaTexto((ref ? ref + ": " : "") + txt, 150), "chat");
+  else await avisa(deps, now, [slug], "💬 Matheus respondeu", limpaTexto(txt, 150), "chat");
+  return reply(200, { ok: true, msg });
 }
 
 // ---------- "Seu mês em números" (texto motivacional da IA) ----------

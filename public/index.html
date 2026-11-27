@@ -620,6 +620,37 @@
   /* Sugestão de carga dentro do cartão do aluno: usa os tokens do app do aluno (tema escuro). */
   .sa-ex-card .ex-load-note { margin: 8px 0 0; font-size: 13px; color: var(--sa-text-muted); }
   .sa-ex-card .ex-load-note strong { color: var(--sa-text); }
+  .ch-ov { position: fixed; inset: 0; z-index: 9000; background: rgba(0,0,0,.55); display: flex; justify-content: center; align-items: stretch; }
+  .ch-box { width: min(560px, 100%); height: 100%; display: flex; flex-direction: column; background: var(--sa-bg, #0b1020); color: var(--sa-text, #eef2ff); padding-top: env(safe-area-inset-top, 0); padding-bottom: env(safe-area-inset-bottom, 0); }
+  .ch-top { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-bottom: 1px solid var(--sa-border-soft, rgba(140,165,225,.18)); }
+  .ch-x { width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--sa-border-soft, rgba(140,165,225,.25)); background: transparent; color: inherit; font-size: 20px; cursor: pointer; }
+  .ch-tit b { display: block; font-size: 17px; } .ch-tit span { font-size: 12.5px; color: var(--sa-text-muted, #a3b0d0); }
+  .ch-lista { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 8px; -webkit-overflow-scrolling: touch; }
+  .ch-vazio { margin: auto; text-align: center; color: var(--sa-text-muted, #a3b0d0); font-size: 14.5px; line-height: 1.5; max-width: 300px; }
+  .ch-dia { align-self: center; font-size: 11.5px; font-weight: 700; color: var(--sa-text-muted, #a3b0d0); background: rgba(140,165,225,.12); padding: 4px 10px; border-radius: 999px; margin: 6px 0; }
+  .ch-msg { max-width: 82%; padding: 9px 12px 6px; border-radius: 16px; font-size: 15px; line-height: 1.4; white-space: pre-wrap; word-wrap: break-word; }
+  .ch-msg.outro { align-self: flex-start; background: var(--sa-panel, #152038); border: 1px solid var(--sa-border-soft, rgba(140,165,225,.18)); border-bottom-left-radius: 4px; }
+  .ch-msg.eu { align-self: flex-end; background: var(--sa-accent, #ffc220); color: #1a1300; border-bottom-right-radius: 4px; }
+  .ch-ref { font-size: 11.5px; font-weight: 700; opacity: .75; margin-bottom: 3px; }
+  .ch-h { font-size: 10.5px; opacity: .6; text-align: right; margin-top: 2px; }
+  .ch-form { border-top: 1px solid var(--sa-border-soft, rgba(140,165,225,.18)); padding: 10px 12px; }
+  .ch-ctx { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--sa-text-muted, #a3b0d0); margin-bottom: 8px; }
+  .ch-ctx b { color: var(--sa-text, #eef2ff); } .ch-ctx button { margin-left: auto; border: 0; background: transparent; color: inherit; cursor: pointer; font-size: 14px; }
+  .ch-linha { display: flex; gap: 8px; align-items: flex-end; }
+  .ch-linha textarea { flex: 1; resize: none; border-radius: 18px; border: 1px solid var(--sa-border-soft, rgba(140,165,225,.25)); background: rgba(0,0,0,.15); color: inherit; font: 16px/1.35 "Barlow", sans-serif; padding: 10px 14px; max-height: 120px; }
+  .ch-env { width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--sa-accent, #ffc220); color: #1a1300; font-size: 18px; cursor: pointer; flex: none; }
+  .ch-env:disabled { opacity: .5; }
+  .ch-conv { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 12px; border-radius: 14px; border: 1px solid var(--sa-border-soft, rgba(140,165,225,.18)); background: transparent; color: inherit; cursor: pointer; font: inherit; }
+  .ch-conv.nl { border-color: var(--sa-accent, #ffc220); background: rgba(var(--sa-gold-rgb),.08); }
+  .ch-conv-m { flex: 1; min-width: 0; } .ch-conv-m b { display: block; font-size: 15px; }
+  .ch-conv-m span { display: block; font-size: 13px; color: var(--sa-text-muted, #a3b0d0); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ch-conv-r { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; font-size: 11.5px; color: var(--sa-text-muted, #a3b0d0); }
+  .ch-conv-r i { font-style: normal; font-weight: 800; background: var(--sa-accent, #ffc220); color: #1a1300; border-radius: 999px; min-width: 20px; padding: 2px 6px; text-align: center; }
+  .ch-nova { padding: 10px 14px; border-top: 1px solid var(--sa-border-soft, rgba(140,165,225,.18)); }
+  .ch-nova select { width: 100%; padding: 12px; border-radius: 12px; background: rgba(0,0,0,.15); color: inherit; border: 1px solid var(--sa-border-soft, rgba(140,165,225,.25)); font: 15px "Barlow", sans-serif; }
+  .ch-ex-btn { display: block; width: 100%; margin-top: 8px; padding: 8px; border: 0; background: transparent; color: var(--sa-text-muted); font: 600 13px/1.3 "Barlow", sans-serif; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+  .ch-tr-btn { position: relative; }
+  .ch-badge-tr { position: absolute; top: -6px; right: -6px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: #ef4444; color: #fff; font: 800 11px/18px "Barlow", sans-serif; text-align: center; }
   .mn-card .sa-mood-label { margin-bottom: 10px; }
   .mn-abas { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
   .mn-aba { border: 1px solid var(--sa-border-soft); background: transparent; color: var(--sa-text-muted); border-radius: 999px; padding: 7px 12px; font: 700 13px/1 "Barlow", sans-serif; cursor: pointer; }
@@ -3311,6 +3342,11 @@ function startApp() {
       versao: 17,
       titulo: "Técnicas com a carga de cada queda ⚡",
       texto: "Nos exercícios com técnica, o treino agora mostra o esquema direitinho. No drop set, cada série tem um campo para a carga de cada queda (ex.: 40 → 30 → 20 kg). Na pirâmide, cada série mostra as repetições (S1 · 12). Toque em 'Como fazer' para ver o passo a passo."
+    },
+    {
+      versao: 26,
+      titulo: "Novo: converse com o Matheus 💬",
+      texto: "No topo do app, ao lado do sininho, tem um balão: é a sua conversa com o Matheus. Mande dúvidas por ali e receba a resposta com aviso no celular. Em cada exercício também tem o botão \"Tirar dúvida deste exercício\", e o comentário que você deixa no fim do treino chega direto pra ele."
     },
     {
       versao: 25,
@@ -7572,6 +7608,7 @@ function startApp() {
           '<div class="tr-more-menu">' +
           '<button type="button" class="tr-resumo-btn" data-resumo="' + escapeAttr(slug) + '" aria-expanded="' + (aberto ? "true" : "false") + '">' + (aberto ? "📊 Fechar resumo" : "📊 Ver resumo") + '</button>' +
           (statusKey === "sumido" ? chamarBotaoHtml(slug).replace(/ class="sa-cta-ghost" style="[^"]*"/, "") : "") +
+          '<button type="button" data-chat-abrir="' + escapeAttr(slug) + '" data-chat-nome="' + escapeAttr(s.nome || slug) + '">💬 Conversa no app</button>' +
           '<button type="button" data-volta="' + escapeAttr(slug) + '">🎁 Chamar de volta (raspadinha)</button>' +
           '<button type="button" data-copy="' + escapeAttr(slug) + '">📋 Copiar convite</button>' +
           '<button type="button" data-metas-de="' + escapeAttr(slug) + '">🎯 Metas do aluno</button>' +
@@ -12745,6 +12782,7 @@ function startApp() {
             (ex.obs ? '<div class="sa-ex-note"><span class="sa-ex-note-label">📝 Observação do treinador</span>' + escapeHtml(ex.obs) + '</div>' : '') +
             rirHtml +
             obsAlunoHtml +
+            (!state.trainerPreview && !state.atendimento ? '<button type="button" class="ch-ex-btn" data-chat-ex="' + escapeAttr(ex.nome || "") + '">❓ Tirar dúvida deste exercício com o Matheus</button>' : '') +
             '</div>');
         }
         return chainLen > 1 ? '<div class="sa-chain-group">' + cardsHtml.join("") + '</div>' : cardsHtml.join("");
@@ -13681,6 +13719,7 @@ function startApp() {
         saSessoesNovas[novaSessao.id] = true;
         addCheckinToday(s);
         if (pse !== null && pse !== undefined) addFeedback(s, pse, comment);
+        if (!state.atendimento && !state.trainerPreview) chatDoTreino(state.slug, novaSessao.nome, comment, obsLog);
         if (sess.kind === "treino") saAdvanceRotation(plan);
         s.sessaoEmAndamento = null;
         state.saTab = "hoje";
@@ -13893,6 +13932,156 @@ function startApp() {
       '</div></div>';
   }
   // ---------- Histórico ----------
+  // ---------- Conversa aluno <-> personal (/api/chat) ----------
+  // Uma conversa por aluno. O aluno abre pelo balão no topo (ou "Tirar dúvida" no exercício); o personal pela
+  // lista "💬 Mensagens" ou pelo ⋯ do aluno. Os comentários do fim do treino também entram na conversa.
+  var CHAT = { slug: null, nome: "", msgs: [], timer: null, ctx: null, nl: 0, nlAt: 0 };
+  function chatApi(q) {
+    return fetch("/api/chat" + q, { headers: feedHeaders(), cache: "no-store" }).then(function (r) {
+      if (r.status === 401) { authExpired(); throw new Error("401"); }
+      return r.json();
+    });
+  }
+  function chatEnviar(slug, txt, tipo, ref) {
+    return fetch("/api/chat", { method: "POST", headers: feedHeaders({ "Content-Type": "application/json" }), body: JSON.stringify({ slug: slug, txt: txt, tipo: tipo || "", ref: ref || "" }) })
+      .then(function (r) { return r.json().then(function (b) { return { st: r.status, b: b }; }); });
+  }
+  function chatSouEu(m) { return isTrainerRole() && !(state.trainerPreview) ? m.de === "personal" : m.de === "aluno"; }
+  function chatHora(ts) { var d = new Date(ts); return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"); }
+  function chatDia(ts) {
+    var d = new Date(ts), hoje = new Date(), ontem = new Date(); ontem.setDate(hoje.getDate() - 1);
+    if (d.toDateString() === hoje.toDateString()) return "Hoje";
+    if (d.toDateString() === ontem.toDateString()) return "Ontem";
+    return String(d.getDate()).padStart(2, "0") + "/" + String(d.getMonth() + 1).padStart(2, "0");
+  }
+  function chatMsgsHtml() {
+    if (!CHAT.msgs.length) return '<div class="ch-vazio">' + (isTrainerRole() ? "Nenhuma mensagem ainda. Escreva para " + escapeHtml((CHAT.nome || "").split(" ")[0]) + "." : "Mande sua dúvida para o Matheus. Ele responde por aqui e você recebe o aviso no celular.") + '</div>';
+    var out = "", diaAnt = "";
+    CHAT.msgs.forEach(function (m) {
+      var dia = chatDia(m.ts);
+      if (dia !== diaAnt) { out += '<div class="ch-dia">' + dia + '</div>'; diaAnt = dia; }
+      var etiqueta = m.tipo === "treino" ? "📝 Comentário do treino" + (m.ref ? " · " + m.ref : "") : (m.ref ? "Sobre: " + feedNomeEx(m.ref) : "");
+      out += '<div class="ch-msg ' + (chatSouEu(m) ? "eu" : "outro") + '">' + (etiqueta ? '<div class="ch-ref">' + escapeHtml(etiqueta) + '</div>' : '') +
+        '<div class="ch-txt">' + escapeHtml(m.txt) + '</div><div class="ch-h">' + chatHora(m.ts) + '</div></div>';
+    });
+    return out;
+  }
+  function chatPinta(rolar) {
+    var l = document.getElementById("chLista"); if (!l) return;
+    var noFim = l.scrollHeight - l.scrollTop - l.clientHeight < 60;
+    l.innerHTML = chatMsgsHtml();
+    if (rolar || noFim) l.scrollTop = l.scrollHeight;
+  }
+  function chatCarrega(primeira) {
+    if (!CHAT.slug) return;
+    var slug = CHAT.slug;
+    chatApi("?slug=" + encodeURIComponent(slug) + "&ler=1").then(function (b) {
+      if (CHAT.slug !== slug) return;
+      var antes = CHAT.msgs.length;
+      CHAT.msgs = (b && b.msgs) || [];
+      if (primeira || CHAT.msgs.length !== antes) chatPinta(primeira);
+      chatBadges(true);
+    }).catch(function () { if (primeira) { var l = document.getElementById("chLista"); if (l) l.innerHTML = '<div class="ch-vazio">Sem conexão agora. Tente de novo em instantes.</div>'; } });
+  }
+  function chatFechar() {
+    var ov = document.getElementById("chatOv"); if (ov) ov.remove();
+    clearInterval(CHAT.timer); CHAT.timer = null; CHAT.slug = null; CHAT.ctx = null;
+    document.removeEventListener("visibilitychange", chatVis);
+    chatBadges(true);
+  }
+  function chatVis() { if (document.visibilityState === "visible") chatCarrega(false); }
+  function chatAbrir(slug, nome, ctx) {
+    if (!slug) return;
+    var lstOv = document.getElementById("chatListaOv"); if (lstOv) lstOv.remove();
+    chatFechar();
+    CHAT.slug = slug; CHAT.nome = nome || ""; CHAT.msgs = []; CHAT.ctx = ctx || null;
+    var ov = document.createElement("div"); ov.id = "chatOv"; ov.className = "ch-ov";
+    var titulo = isTrainerRole() && !state.trainerPreview ? (nome || slug) : "Matheus";
+    ov.innerHTML = '<div class="ch-box" role="dialog" aria-label="Conversa">' +
+      '<div class="ch-top"><button type="button" class="ch-x" id="chX" aria-label="Fechar">←</button><div class="ch-tit"><b>' + escapeHtml(titulo) + '</b><span>' + (isTrainerRole() && !state.trainerPreview ? "aluno" : "seu personal") + '</span></div></div>' +
+      '<div class="ch-lista" id="chLista"><div class="ch-vazio">Carregando…</div></div>' +
+      '<form class="ch-form" id="chForm">' + (CHAT.ctx && CHAT.ctx.ref ? '<div class="ch-ctx" id="chCtx">Sobre: <b>' + escapeHtml(feedNomeEx(CHAT.ctx.ref)) + '</b><button type="button" id="chCtxX" aria-label="Tirar">✕</button></div>' : '') +
+      '<div class="ch-linha"><textarea id="chTxt" rows="1" maxlength="1000" placeholder="' + (isTrainerRole() && !state.trainerPreview ? "Responder…" : "Escreva sua dúvida…") + '"></textarea><button type="submit" class="ch-env" id="chEnv" aria-label="Enviar">➤</button></div></form></div>';
+    document.body.appendChild(ov);
+    document.getElementById("chX").onclick = chatFechar;
+    ov.addEventListener("click", function (e) { if (e.target === ov) chatFechar(); });
+    var cx = document.getElementById("chCtxX"); if (cx) cx.onclick = function () { CHAT.ctx = null; var c = document.getElementById("chCtx"); if (c) c.remove(); };
+    var ta = document.getElementById("chTxt");
+    ta.addEventListener("input", function () { ta.style.height = "auto"; ta.style.height = Math.min(ta.scrollHeight, 120) + "px"; });
+    document.getElementById("chForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+      var txt = ta.value.trim(); if (!txt || CHAT.enviando) return;
+      CHAT.enviando = true; document.getElementById("chEnv").disabled = true;
+      var ctx = CHAT.ctx;
+      chatEnviar(CHAT.slug, txt, ctx && ctx.tipo, ctx && ctx.ref).then(function (x) {
+        CHAT.enviando = false; var bt = document.getElementById("chEnv"); if (bt) bt.disabled = false;
+        if (x.st === 429) { showToast("Você mandou muitas mensagens hoje. Continue amanhã.", true); return; }
+        if (x.st !== 200 || !x.b || !x.b.msg) { showToast("Não consegui enviar. Confira a internet.", true); return; }
+        ta.value = ""; ta.style.height = "auto";
+        CHAT.ctx = null; var c = document.getElementById("chCtx"); if (c) c.remove();
+        CHAT.msgs.push(x.b.msg); chatPinta(true);
+      }).catch(function () { CHAT.enviando = false; var bt = document.getElementById("chEnv"); if (bt) bt.disabled = false; showToast("Não consegui enviar. Confira a internet.", true); });
+    });
+    if (!CHAT.ctx) setTimeout(function () { try { ta.focus(); } catch (e) {} }, 50); else ta.focus();
+    chatCarrega(true);
+    CHAT.timer = setInterval(function () { if (document.visibilityState === "visible") chatCarrega(false); }, 8000);
+    document.addEventListener("visibilitychange", chatVis);
+  }
+  // Lista de conversas do personal.
+  function chatListaAbrir() {
+    var ov = document.createElement("div"); ov.id = "chatListaOv"; ov.className = "ch-ov";
+    ov.innerHTML = '<div class="ch-box"><div class="ch-top"><button type="button" class="ch-x" id="chLX" aria-label="Fechar">←</button><div class="ch-tit"><b>Mensagens</b><span>conversas com os alunos</span></div></div>' +
+      '<div class="ch-lista" id="chLL"><div class="ch-vazio">Carregando…</div></div>' +
+      '<div class="ch-nova"><select id="chNova"><option value="">✏️ Nova conversa com…</option>' + Object.keys(state.data.students || {}).sort(function (a, b) { return String(state.data.students[a].nome || a).localeCompare(String(state.data.students[b].nome || b)); }).map(function (k) { return '<option value="' + escapeAttr(k) + '">' + escapeHtml(state.data.students[k].nome || k) + '</option>'; }).join("") + '</select></div></div>';
+    document.body.appendChild(ov);
+    var fecha = function () { ov.remove(); chatBadges(true); };
+    document.getElementById("chLX").onclick = fecha;
+    ov.addEventListener("click", function (e) { if (e.target === ov) fecha(); });
+    document.getElementById("chNova").onchange = function () { var k = this.value; if (k) chatAbrir(k, (state.data.students[k] || {}).nome || k); };
+    chatApi("?lista=1").then(function (b) {
+      var l = document.getElementById("chLL"); if (!l) return;
+      var cs = (b && b.conversas) || [];
+      l.innerHTML = cs.length ? cs.map(function (c) {
+        return '<button type="button" class="ch-conv' + (c.nl ? " nl" : "") + '" data-chat-abrir="' + escapeAttr(c.slug) + '" data-chat-nome="' + escapeAttr(c.nome) + '">' +
+          '<span class="sa-avatar" style="background:hsl(' + avatarHue(c.slug) + ',65%,45%)">' + escapeHtml(initialsOf(c.nome)) + '</span>' +
+          '<span class="ch-conv-m"><b>' + escapeHtml(c.nome) + '</b><span>' + (c.de === "personal" ? "Você: " : "") + escapeHtml(c.txt) + '</span></span>' +
+          '<span class="ch-conv-r"><span>' + chatDia(c.ts) + '</span>' + (c.nl ? '<i>' + c.nl + '</i>' : '') + '</span></button>';
+      }).join("") : '<div class="ch-vazio">Nenhuma conversa ainda. Quando um aluno mandar uma dúvida, ela aparece aqui.</div>';
+    }).catch(function () { var l = document.getElementById("chLL"); if (l) l.innerHTML = '<div class="ch-vazio">Sem conexão agora.</div>'; });
+  }
+  // Bolinhas de não lidas (balão do aluno e botão Mensagens do personal). No máximo 1 consulta por minuto.
+  function chatBadges(forca) {
+    if (!state.slug && !isTrainerRole()) return;
+    var q = isTrainerRole() && !state.slug ? "?lista=1" : (state.slug ? "?slug=" + encodeURIComponent(state.slug) + "&contar=1" : "");
+    if (!q) return;
+    if (!forca && CHAT.nlQ === q && Date.now() - CHAT.nlAt < 60000) { chatPintaBadge(); return; }
+    CHAT.nlAt = Date.now(); CHAT.nlQ = q;
+    chatApi(q).then(function (b) { CHAT.nl = (b && b.naoLidas) || 0; chatPintaBadge(); }).catch(function () {});
+  }
+  function chatPintaBadge() {
+    Array.prototype.forEach.call(document.querySelectorAll(".ch-badge"), function (el) { el.textContent = CHAT.nl > 9 ? "9+" : CHAT.nl; el.hidden = !CHAT.nl; });
+  }
+  function chatBotaoAlunoHtml() {
+    return '<button type="button" class="sa-bell" data-chat-aluno="1" aria-label="Conversa com o Matheus"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.8 7L4 20l1.1-4.6A8 8 0 1 1 21 12z"/></svg><span class="sa-bell-n ch-badge" hidden></span></button>';
+  }
+  // Comentário do fim do treino e observações dos exercícios entram na conversa (o personal responde por lá).
+  function chatDoTreino(slug, nomeTreino, comentario, obsLog) {
+    var fila = [];
+    if (comentario && String(comentario).trim()) fila.push({ txt: String(comentario).trim(), tipo: "treino", ref: String(nomeTreino || "Treino").slice(0, 80) });
+    (obsLog || []).forEach(function (o) { if (o && o.nota) fila.push({ txt: String(o.nota), tipo: "exercicio", ref: String(o.exercicio || "").slice(0, 80) }); });
+    var vai = function () { var m = fila.shift(); if (!m) return; chatEnviar(slug, m.txt, m.tipo, m.ref).then(vai, function () {}); };
+    vai();
+  }
+  document.addEventListener("click", function (e) {
+    var t = e.target && e.target.closest ? e.target.closest("[data-chat-aluno],[data-chat-abrir],[data-chat-lista],[data-chat-ex]") : null;
+    if (!t) return;
+    if (t.hasAttribute("data-chat-aluno")) { chatAbrir(state.slug, "Matheus"); return; }
+    if (t.hasAttribute("data-chat-lista")) { chatListaAbrir(); return; }
+    if (t.hasAttribute("data-chat-ex")) { chatAbrir(state.slug, "Matheus", { tipo: "exercicio", ref: t.getAttribute("data-chat-ex") }); return; }
+    var k = t.getAttribute("data-chat-abrir"); state.rosterOpenMenu = null;
+    chatAbrir(k, t.getAttribute("data-chat-nome") || ((state.data.students || {})[k] || {}).nome || k);
+  });
+
   // ---------- "Seu mês em números" ----------
   // Mesma conta do servidor (mesStats em netlify/lib/core.mts). O texto do mês fechado vem da IA
   // (/api/mes, guardado lá: cada mês chama a IA uma vez só); o mês em andamento usa um texto fixo.
@@ -15579,7 +15768,7 @@ function startApp() {
       '<div class="sa-brand-text"><div class="sa-brand-name sa-display">TREINO ONLINE</div>' +
       '<div class="sa-brand-sub">MATHEUS VENÂNCIO · CREF 038618-G/SC</div></div></div>' +
       // À vista só o sininho; o resto num menu "⚙️ Configurações" (os botões continuam com os mesmos ids).
-      '<div class="tr-topbar-actions"><a href="/timer.html?de=app" class="tr-btn-outline" style="text-decoration:none">⏱️ Timer</a>' + trBellHtml() +
+      '<div class="tr-topbar-actions"><button type="button" class="tr-btn-outline ch-tr-btn" data-chat-lista="1">💬 Mensagens<span class="ch-badge ch-badge-tr" hidden></span></button><a href="/timer.html?de=app" class="tr-btn-outline" style="text-decoration:none">⏱️ Timer</a>' + trBellHtml() +
       '<details class="tr-cfg"><summary class="tr-btn-outline">⚙️ Configurações</summary><div class="tr-cfg-menu">' +
       '<button type="button" id="btnCopyFormLink" class="tr-btn-outline">🔗 Link pra aluno novo</button>' +
       '<button type="button" id="btnAcervo" class="tr-btn-outline">🎬 Acervo de vídeos</button>' +
@@ -16491,7 +16680,7 @@ function startApp() {
       '<div class="sa-brand"><img src="' + PDF_LOGO_DATA_URL + '" alt="">' +
       '<div class="sa-brand-text"><div class="sa-brand-name sa-display">TREINO ONLINE</div>' +
       '<div class="sa-brand-sub">MATHEUS VENÂNCIO · CREF 038618-G/SC</div></div></div>' +
-      '<div class="sa-hdr-r"><a class="sa-bell" href="/timer.html?de=app" aria-label="Timer de treino" style="text-decoration:none"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9.5 2h5M12 2v3"/></svg></a>' + saBellHtml(s) + '<button type="button" class="sa-hdr-av" data-sa-tab="perfil" aria-label="Meu perfil e foto">' + saAvatarHtml(s.nome, "sa-avatar", s.fotoUrl) + (s.fotoUrl ? "" : '<span class="sa-hdr-cam">📷</span>') + '</button></div>' +
+      '<div class="sa-hdr-r"><a class="sa-bell" href="/timer.html?de=app" aria-label="Timer de treino" style="text-decoration:none"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9.5 2h5M12 2v3"/></svg></a>' + (state.atendimento ? "" : chatBotaoAlunoHtml()) + saBellHtml(s) + '<button type="button" class="sa-hdr-av" data-sa-tab="perfil" aria-label="Meu perfil e foto">' + saAvatarHtml(s.nome, "sa-avatar", s.fotoUrl) + (s.fotoUrl ? "" : '<span class="sa-hdr-cam">📷</span>') + '</button></div>' +
       '</div>';
 
     var navHtml = '<div class="sa-nav">' + saTabsFor(s).map(function (tb) {
@@ -19100,6 +19289,7 @@ function startApp() {
     else if (state.viewAcervo) renderAcervo();
     else renderRoster();
     undoSync();
+    if (document.querySelector(".ch-badge")) chatBadges(false);
   }
 
   // ---------- roster PIN gate ----------
@@ -19955,12 +20145,22 @@ function startApp() {
       activePlanId: "dp1", checkins: sessoes.map(function (x) { return x.date; }), feedback: [], notas: "", sessoes: sessoes, humor: {}, sessaoEmAndamento: null,
       novidadesVistas: 99, criadoEm: Date.now() - 18 * 86400000, primeiroAcessoEm: Date.now() - 18 * 86400000 };
     var mem = { version: 1, data: { students: { demo: aluna }, templates: [], leads: [], alertaCheckinDias: 7 }, catalog: [] };
+    var demoChat = [
+      { id: "dm1", de: "aluno", tipo: "exercicio", ref: "PEITO SUPINO BARRA", txt: "Senti o ombro na descida do supino. É normal?", ts: Date.now() - 26 * 3600000 },
+      { id: "dm2", de: "personal", txt: "Não é pra sentir no ombro. Desce a barra mais perto da linha do mamilo e deixa os cotovelos uns 45° do corpo, sem abrir tanto. Grava uma série e me manda que eu confiro 👍", ts: Date.now() - 25 * 3600000 },
+      { id: "dm3", de: "aluno", tipo: "treino", ref: "Treino A · Peito e costas", txt: "Fiz o ajuste e melhorou muito!", ts: Date.now() - 3 * 3600000 },
+      { id: "dm4", de: "personal", txt: "Boa! Mantém assim e semana que vem a gente sobe a carga.", ts: Date.now() - 2 * 3600000 }
+    ];
     var realFetch = window.fetch.bind(window);
     window.fetch = function (url, init) {
       var u = String(url || "");
       if (u.indexOf("/api/") !== 0) return realFetch(url, init);
       var corpo;
       if (u.indexOf("/api/state") === 0) corpo = mem;
+      else if (u.indexOf("/api/chat") === 0) {
+        if (init && init.method === "POST") { var bd = {}; try { bd = JSON.parse(init.body); } catch (e) {} var nm = { id: "dm" + Date.now(), de: "aluno", txt: String(bd.txt || ""), ts: Date.now() }; if (bd.ref) nm.ref = bd.ref; if (bd.tipo) nm.tipo = bd.tipo; demoChat.push(nm); corpo = { ok: true, msg: nm }; }
+        else corpo = u.indexOf("contar=1") > 0 ? { naoLidas: 1 } : { msgs: demoChat };
+      }
       else if (u.indexOf("/api/mes") === 0) corpo = { ok: true, texto: "Ana, que mês! Você treinou com constância e já está colhendo resultado nas cargas. No mês que vem, bora manter 3 treinos por semana e buscar o próximo recorde 💪 (exemplo: no app de verdade, este texto é escrito pela IA com os seus números)" };
       else if (u.indexOf("/api/feed") === 0 || u.indexOf("/api/comunidade") === 0 || u.indexOf("/api/turma") === 0) corpo = { posts: [], turma: null, ok: true };
       else corpo = { ok: true, version: mem.version };
